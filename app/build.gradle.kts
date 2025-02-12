@@ -10,6 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.example.csc490group3"
         minSdk = 30
+        //ignore this warning it runs fine
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
