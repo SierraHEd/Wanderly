@@ -1,47 +1,47 @@
+
+
 package com.example.csc490group3
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.csc490group3.ui.theme.CSC490Group3Theme
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
         setContent {
-            CSC490Group3Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            // Initialize the NavController
+            val navController = rememberNavController()
+
+            // Set up the NavHost for navigation: Current default setting goes straight to sign up page
+            NavHost(navController = navController, startDestination = "signup") {
+                // Define the main screen as a composable
+                composable("main") {
+                    MainScreen(navController)
+                }
+                // Define the SignUp screen as a composable
+                composable("signup") {
+                    SignUpActivity(navController)
                 }
             }
         }
     }
 }
+    @Composable
+    fun MainScreen(navController: NavController) {
+        // Main Screen content
+            Button(onClick = { navController.navigate("signup") }) {
+                Text("Go to Sign Up")
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CSC490Group3Theme {
-        Greeting("Android")
+        }
     }
-}
