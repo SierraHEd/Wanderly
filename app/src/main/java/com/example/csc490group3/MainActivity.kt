@@ -85,10 +85,10 @@ fun EventRegistrationScreen() {
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .border(0.dp, Transparent, CircleShape),
+                    .border(0.dp, Color.Transparent, CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Text("Your Wanderly Event",textDecoration = TextDecoration.Underline, fontSize = 28.sp, color = Color.White, fontFamily = FontFamily.Serif)
+            Text("Your Wanderly Event",textDecoration = TextDecoration.Underline, fontSize = 28.sp, color = White, fontFamily = FontFamily.Serif)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text("Event Registration Form", fontSize = 16.sp, color = White, fontFamily = FontFamily.Serif)
