@@ -31,7 +31,7 @@ fun SplashScreen(navController : NavController) {
             }
             ))
         delay(3000)
-        navController.navigate("login_screen")
+        navController.navigate("start_up_screen")
     }
     Column (modifier = Modifier
         .fillMaxSize()

@@ -1,5 +1,6 @@
 package com.example.csc490group3
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
 
 class MainActivity : ComponentActivity() {
+    var context: Context = this
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
                         Color(0xFFE0E0E0)
                     )
                 ) {
-                    Navigation()
+                    Navigation(context)
                 }
 
             }
