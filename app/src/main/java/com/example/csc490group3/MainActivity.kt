@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
-//import io.github.jan.supabase.BuildConfig as SupabaseBuildConfig
+import io.github.jan.supabase.BuildConfig as SupabaseBuildConfig
 import io.github.jan.supabase.*
 import io.github.jan.supabase.postgrest.Postgrest
 import com.example.csc490group3.BuildConfig as AppBuildConfig

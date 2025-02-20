@@ -1,8 +1,9 @@
 import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    kotlin("plugin.serialization") version "2.1.0"
+    kotlin("android") version "2.1.10"
+    kotlin("plugin.serialization") version "2.1.10"
+    alias(libs.plugins.compose.compiler)
 }
 
 
