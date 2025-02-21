@@ -16,6 +16,13 @@ import com.example.csc490group3.ui.theme.CSC490Group3Theme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_signup)
+    }
+}
+/*
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             CSC490Group3Theme {
@@ -45,3 +52,5 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
+ */
