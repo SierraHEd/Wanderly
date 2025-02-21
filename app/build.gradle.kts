@@ -1,11 +1,19 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    kotlin("android") version "2.1.10"
+    kotlin("plugin.serialization") version "2.1.10"
+    alias(libs.plugins.compose.compiler)
 }
+
 
 android {
     namespace = "com.example.csc490group3"
     compileSdk = 35
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.example.csc490group3"
@@ -19,6 +27,13 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        //Supabase Buildconfig
+        val properties = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+        buildConfigField("String", "SUPABASE_URL", "\"${properties.getProperty("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${properties.getProperty("SUPABASE_ANON_KEY")}\"")
     }
 
     buildTypes {
@@ -67,4 +82,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //Supabase dependencies
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-android:3.1.0")
 }
