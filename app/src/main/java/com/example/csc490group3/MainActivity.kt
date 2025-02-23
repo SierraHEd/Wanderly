@@ -3,6 +3,8 @@ package com.example.csc490group3
 import android.content.Context
 import android.net.http.HttpResponseCache.install
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 
 import androidx.activity.compose.setContent
@@ -21,18 +23,16 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
+import com.example.csc490group3.model.individualUser
+import com.example.csc490group3.supabase.supabaseManagment
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
 import io.github.jan.supabase.BuildConfig as SupabaseBuildConfig
 import io.github.jan.supabase.*
 import io.github.jan.supabase.postgrest.Postgrest
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import com.example.csc490group3.BuildConfig as AppBuildConfig
-
-val supabase = createSupabaseClient(
-    supabaseUrl = AppBuildConfig.SUPABASE_URL,
-    supabaseKey = AppBuildConfig.SUPABASE_ANON_KEY
-) {
-    install(Postgrest)
-}
 
 
 class MainActivity : ComponentActivity() {
@@ -40,6 +40,25 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lifecycleScope.launch {
+                Log.d("MainActivity", "Starting addRecord coroutine")
+                Toast.makeText(this@MainActivity, "Launching addRecord", Toast.LENGTH_SHORT).show()
+            val newUser = individualUser(
+                id = null, // let the database generate the id
+                firstName = "Alice",
+                lastName = "Smith",
+                email = "alice@example.com",
+                password = "password",
+                birthday = LocalDate.parse("1990-01-01"),
+                public = true,
+                affiliation = null,
+                likedCategories = emptySet()
+            )
+
+            val success = supabaseManagment.addRecord("private_users", newUser)
+                Log.d("MainActivity", "Record insertion success: $success")
+        }
+
         setContent {
 
             CSC490Group3Theme {
