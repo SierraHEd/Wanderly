@@ -9,16 +9,21 @@
 
 package com.example.csc490group3
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -52,67 +57,80 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.csc490group3.ui.theme.Purple40
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.google.firebase.auth.FirebaseAuth
+
 
 @Composable
 fun SignUpActivity(navController: NavController) {
-//    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var retypePassword by remember { mutableStateOf("") }
-    var passwordsMatch by remember { mutableStateOf(true) }
-    var passwordErrorMessage by remember { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var retypePassword by rememberSaveable { mutableStateOf("") }
+    var passwordErrorMessage by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var retypePasswordVisible by remember { mutableStateOf(false) }
-    var isFormValid by remember { mutableStateOf(false) }
+    var retypePasswordVisible by rememberSaveable { mutableStateOf(false) }
+    var isFormValid by rememberSaveable { mutableStateOf(false) }
+    val scrollState = rememberScrollState() // Create a scroll state
     val coroutineScope = rememberCoroutineScope()
-    val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    val context = LocalContext.current
 
     // For snackbar feedback
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Helper function to validate password
-    fun isPasswordValid(password: String): Boolean {
+    //Create Supabase Client
+    val supabase = createSupabaseClient(
+        supabaseUrl = "https://bngtgtuhiycwahsknuqh.supabase.co/",
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuZ3RndHVoaXljd2Foc2tudXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDEwMDAsImV4cCI6MjA1NTUxNzAwMH0.9h6ZJ-sfIH6Le0_AuL3ExHM2E2gaJbEc95UWVV4k-d0"
+    ) {
+        install(Auth)
+        install(Postgrest)
+    }
+
+    //Function to Call to the Supabase Client and make a new account
+    suspend fun signUpNewUser(
+        email: String,
+        password: String,
+        supabase: SupabaseClient,
+        context: Context,
+        navController: NavController
+    ) {
+        try {
+            supabase.auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+            }
+            snackbarHostState.showSnackbar("Sign up successful!")
+//          navController.navigate("login_screen") navigate to log in screen
+
+        } catch (e: Exception) {
+            // Handle any exceptions that might occur during the sign-up process
+            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Validating the email field
+    fun isEmailValid(email: String): Boolean {
+        // Regex for validating a simple email structure
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        return email.matches(emailRegex.toRegex())
+    }
+
+    // Helper function to validate password length and complexity
+    fun validatePasswordComplexityAndLength(password: String): Boolean {
         val hasUpperCase = password.any { it.isUpperCase() } // at least one capital letter
         val hasNumber = password.any { it.isDigit() } // at least one number
         return password.length >= 5 && hasUpperCase && hasNumber //Minimum 5 characters
     }
 
-    // Validating the email field
-    fun isEmailValid(email: String): Boolean {
-        return email.contains("@") // Simple check for an '@' symbol in the email
-    }
-
-    // Validating password on submit and when user types into password textfields
-    fun validatePassword(): Boolean {
-        return when {
-            password != retypePassword -> {
-                passwordsMatch = false
-                passwordErrorMessage = "Passwords do not match"
-                false
-            }
-
-            password.length < 5 -> {
-                passwordsMatch = true
-                passwordErrorMessage = "Password must be at least 5 characters long"
-                false
-            }
-
-            !isPasswordValid(password) -> {
-                passwordsMatch = true
-                passwordErrorMessage =
-                    "Password must be at least 5 characters long, contain one capital letter, and one number."
-                false
-            }
-
-            else -> {
-                passwordsMatch = true
-                passwordErrorMessage = ""
-                true
-            }
-        }
+    // Helper function to check if passwords match
+    fun checkPasswordsMatch(password: String, retypePassword: String): Boolean {
+        return password == retypePassword
     }
 
     // LaunchedEffect for triggering snackbar message
@@ -121,46 +139,51 @@ fun SignUpActivity(navController: NavController) {
             snackbarHostState.showSnackbar(passwordErrorMessage)
         }
     }
-    // Launched effect to check that email and passwords pass validation
+
+// LaunchedEffect to check that email and passwords pass validation
     LaunchedEffect(password, retypePassword, email) {
-        isFormValid = password.isNotEmpty() && retypePassword.isNotEmpty() && email.isNotEmpty() &&
-                validatePassword() && isEmailValid(email) && passwordsMatch
+        // Trigger validation on password, retype password, and email fields
+        val isPasswordValid = validatePasswordComplexityAndLength(password) && checkPasswordsMatch(
+            password,
+            retypePassword
+        )
+        val isEmailValid = isEmailValid(email)
+
+        // Update isFormValid when all conditions are satisfied
+        isFormValid = email.isNotEmpty() && password.isNotEmpty() && retypePassword.isNotEmpty() &&
+                isPasswordValid && isEmailValid
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Purple40),
+            .background(Purple40)
+            .verticalScroll(scrollState), // Make the Column scrollable
+
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     )
     {
+        Spacer(modifier = Modifier.height(50.dp)) // Spacer to create space before the title
+
         //TITLE Can Swap in image for Logo or design
         Text(
             text = "Wanderly", fontSize = 32.sp, modifier = Modifier.padding(5.dp),
         )
         //Catch Phrase
         Text(
-        //Can Swap in image for Logo or design
+            //Can Swap in image for Logo or design
             text = "Do More", fontSize = 18.sp,
         )
+        Spacer(modifier = Modifier.height(50.dp)) // Spacer to create space
+
         //Activity/Page Identifier
         Text(
             text = "Sign Up",
             fontSize = 24.sp,
             modifier = Modifier.padding(20.dp)
         )
-        //DO WE NEED OR WANT A USERNAME ON SIGN UP?
-//        //Username section
-//        TextField(
-//            value = username,
-//            onValueChange = { username = it },
-//            label = { Text("Enter your username...") },
-//            modifier = Modifier
-//                .width(400.dp)
-//                .padding(20.dp)
-//                .border(width = 3.dp, color = Color.Black),
-//        )
+
         //Email section
         TextField(
             value = email,
@@ -171,13 +194,18 @@ fun SignUpActivity(navController: NavController) {
                 .padding(20.dp)
                 .border(
                     width = 3.dp,
-                    color = if (email.isEmpty()) Color.Black else if (isEmailValid(email)) Color.Green else Color.Red
-                ), // Change color logic
+                    //Change color of outline if empty, correct, or incorrect
+                    color = when {
+                        email.isEmpty() -> Color.Black
+                        isEmailValid(email) -> Color.Green
+                        else -> Color.Red
+                    }
+                )
         )
-        // Error message for password mismatch
-        if (!isEmailValid(email)) {
+        // Displaying error message only when email is invalid and when the user starts typing
+        if (email.isNotEmpty() && !isEmailValid(email)) {
             Text(
-                text = "Email must have a proper format including @ symbol",
+                text = "Email must have a proper format EX: johndoe@email.com",
                 color = Color.Red,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -189,7 +217,8 @@ fun SignUpActivity(navController: NavController) {
                 password = it
                 coroutineScope.launch {
                     delay(500) // Delay for debouncing (e.g., 500ms)
-                    validatePassword() // Live Checking if password passes validation
+                    passwordErrorMessage =
+                        if (validatePasswordComplexityAndLength(password)) "" else "Password must be at least 5 characters long, contain one capital letter, and one number."
                 }
             },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -212,17 +241,13 @@ fun SignUpActivity(navController: NavController) {
                 .padding(20.dp)
                 .border(
                     width = 3.dp,
-                    color = if (password.isEmpty()) Color.Black else if (validatePassword()) Color.Green else Color.Red
+                    color = when {
+                        password.isEmpty() -> Color.Black
+                        validatePasswordComplexityAndLength(password) -> Color.Green
+                        else -> Color.Red
+                    }
                 ),
         )
-
-        if (!passwordsMatch || password.length < 5 || !isPasswordValid(password)) {
-            Text(
-                text = passwordErrorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(start = 20.dp)
-            )
-        }
 
         //Confirm password section
         TextField(
@@ -231,7 +256,14 @@ fun SignUpActivity(navController: NavController) {
                 retypePassword = it
                 coroutineScope.launch {
                     delay(500) // Delay for debouncing (e.g., 500ms)
-                    validatePassword()// Live Checking if password passes validation
+
+                    // Check if passwords match
+                    val passwordsAreMatching = checkPasswordsMatch(password, retypePassword)
+                    passwordErrorMessage = when {
+                        !passwordsAreMatching -> "Passwords do not match"
+                        !validatePasswordComplexityAndLength(retypePassword) -> "Password must be at least 5 characters long, contain one capital letter, and one number."
+                        else -> ""
+                    }
                 }
             },
             visualTransformation = if (retypePasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -241,7 +273,7 @@ fun SignUpActivity(navController: NavController) {
                     Icons.Filled.Visibility
                 else Icons.Filled.VisibilityOff
 
-                //localized description for accessibility services
+                // localized description for accessibility services
                 val description = if (retypePasswordVisible) "Hide password" else "Show password"
 
                 IconButton(onClick = { retypePasswordVisible = !retypePasswordVisible }) {
@@ -254,59 +286,49 @@ fun SignUpActivity(navController: NavController) {
                 .padding(20.dp)
                 .border(
                     width = 3.dp,
-                    color = if (password.isEmpty()) Color.Black else if (validatePassword()) Color.Green else Color.Red
+                    color = when {
+                        retypePassword.isEmpty() -> Color.Black
+                        password != retypePassword -> Color.Red
+                        validatePasswordComplexityAndLength(retypePassword) -> Color.Green
+                        else -> Color.Red
+                    }
                 ),
-            isError = !passwordsMatch,
         )
-        // Error message for password mismatch
-        if (!passwordsMatch) {
-            Text(
-                text = "Passwords do not match",
-                color = Color.Red,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
-        }
-        val context = LocalContext.current
+
         //Create Account button - Checks textfields for validation then submits to firebase
         Button(
             onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty()) {
-                    val isValid = validatePassword()
-                    if (isValid) {
-                        //Continue validation
-                        //If successful, bind and submit to Firebase DB then transfer to Next page
-                        firebaseAuth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "Sign up Successful",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    // Proceed to the next screen (e.g., home page)
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Sign up failed: ${task.exception?.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                    }else{
+                if (email.isNotEmpty() && password.isNotEmpty() && retypePassword.isNotEmpty()) {
+                    val isPasswordValid = validatePasswordComplexityAndLength(password)
+                    val passwordsAreValid = checkPasswordsMatch(password, retypePassword)
+
+                    // If password validation passes and passwords match
+                    if (isPasswordValid && passwordsAreValid) {
+                        // Proceed to sign up the user
+                        coroutineScope.launch {
+                            signUpNewUser(email, password, supabase, context, navController)
+                        }
+                    } else {
+                        // Show failure toast if validation fails
                         Toast.makeText(
-                            context,"Sign up failed",Toast.LENGTH_LONG).show()
+                            context,
+                            "Sign up failed: Invalid form data",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
+                } else {
+                    // Show failure toast if required fields are empty
+                    Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
                 }
             },
             modifier = Modifier
                 .width(150.dp),
-            //Button will not be clickable unless all fields are completed correctly.
-            enabled = isFormValid,
-            // Can use a custom color defined in the theme for the button for uniformity
+            enabled = isFormValid, // Button will be enabled only if the form is valid
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
         ) {
             Text("Create Account", color = Color.White)
         }
+
         //Link to return to Login Page if already registered
         Row(
             verticalAlignment = Alignment.CenterVertically,
