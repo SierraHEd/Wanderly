@@ -1,7 +1,6 @@
 package com.example.csc490group3
 
 import android.content.Context
-import android.net.http.HttpResponseCache.install
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -12,27 +11,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
-import com.example.csc490group3.model.individualUser
+import com.example.csc490group3.model.privateUser
 import com.example.csc490group3.supabase.supabaseManagment
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
-import io.github.jan.supabase.BuildConfig as SupabaseBuildConfig
-import io.github.jan.supabase.*
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import com.example.csc490group3.BuildConfig as AppBuildConfig
 
 
 class MainActivity : ComponentActivity() {
@@ -41,36 +29,37 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         lifecycleScope.launch {
-                Log.d("MainActivity", "Starting addRecord coroutine")
-                Toast.makeText(this@MainActivity, "Launching addRecord", Toast.LENGTH_SHORT).show()
-            val newUser = individualUser(
-                id = null, // let the database generate the id
-                firstName = "Alice",
-                lastName = "Smith",
-                email = "alice@example.com",
-                password = "password",
-                birthday = LocalDate.parse("1990-01-01"),
-                public = true,
-                affiliation = null,
-                likedCategories = emptySet()
-            )
+            Log.d("MainActivity", "Starting addRecord coroutine")
+            Toast.makeText(this@MainActivity, "Launching retrieving record", Toast.LENGTH_SHORT)
+                .show()
 
-            val success = supabaseManagment.addRecord("private_users", newUser)
-                Log.d("MainActivity", "Record insertion success: $success")
-        }
+            val emailToTest = "alice@example.com"
+            val newUser = supabaseManagment.getPrivateUser(emailToTest)
+            if (newUser != null) {
+                Log.d("MainActivity", "User fetched: $newUser")
+                Toast.makeText(
+                    this@MainActivity,
+                    "User fetched: ${newUser.email}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Log.d("MainActivity", "No user found with email: $emailToTest")
+                Toast.makeText(this@MainActivity, "No user found", Toast.LENGTH_LONG).show()
+            }
 
-        setContent {
+            setContent {
 
-            CSC490Group3Theme {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize().background(
-                        Color(0xFFE0E0E0)
-                    )
-                ) {
-                    Navigation(context)
+                CSC490Group3Theme {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize().background(
+                            Color(0xFFE0E0E0)
+                        )
+                    ) {
+                        Navigation(context)
+                    }
+
                 }
-
             }
         }
     }
