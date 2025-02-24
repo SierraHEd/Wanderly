@@ -28,24 +28,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        lifecycleScope.launch {
-            Log.d("MainActivity", "Starting addRecord coroutine")
-            Toast.makeText(this@MainActivity, "Launching retrieving record", Toast.LENGTH_SHORT)
-                .show()
-
-            val emailToTest = "alice@example.com"
-            val newUser = supabaseManagment.getPrivateUser(emailToTest)
-            if (newUser != null) {
-                Log.d("MainActivity", "User fetched: $newUser")
-                Toast.makeText(
-                    this@MainActivity,
-                    "User fetched: ${newUser.email}",
-                    Toast.LENGTH_LONG
-                ).show()
-            } else {
-                Log.d("MainActivity", "No user found with email: $emailToTest")
-                Toast.makeText(this@MainActivity, "No user found", Toast.LENGTH_LONG).show()
-            }
 
             setContent {
 
