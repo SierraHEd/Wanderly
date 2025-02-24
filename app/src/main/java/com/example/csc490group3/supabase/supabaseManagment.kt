@@ -1,6 +1,7 @@
 package com.example.csc490group3.supabase
 
 import com.example.csc490group3.BuildConfig
+import com.example.csc490group3.model.event
 import com.example.csc490group3.model.privateUser
 import com.example.csc490group3.model.user
 import io.github.jan.supabase.SupabaseClient
@@ -26,8 +27,7 @@ object supabaseManagment {
     suspend inline fun <reified T : Any> addRecord(tableName: String, record: T): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                val response = supabase.from(tableName)
-                    .insert(listOf(record))
+                val response = supabase.from(tableName).insert(listOf(record))
                 println("Record inserted successfully.")
                 true
 
@@ -54,4 +54,22 @@ object supabaseManagment {
         }
 
     }
+
+    suspend fun deleteEvent(id: Int): event? {
+        return withContext(Dispatchers.IO) {
+            try {
+                supabase.from("events").delete {
+                    select()
+                    filter {
+                        eq("id", id)
+                    }
+                }.decodeSingle<event>()
+
+            }catch(e: Exception) {
+                println("Error deleting event: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
 }
