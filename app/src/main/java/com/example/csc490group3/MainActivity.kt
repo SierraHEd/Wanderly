@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+
             setContent {
 
                 CSC490Group3Theme {
@@ -45,4 +46,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+
