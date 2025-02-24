@@ -1,16 +1,12 @@
 import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version "2.1.10"
-    kotlin("android") version "2.1.10"
-    kotlin("plugin.serialization") version "2.1.10"
-    alias(libs.plugins.compose.compiler)
 }
-
-
 android {
     namespace = "com.example.csc490group3"
     compileSdk = 35
