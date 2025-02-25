@@ -11,8 +11,10 @@ package com.example.csc490group3
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -106,7 +109,7 @@ fun SignUpActivity(navController: NavController) {
                 this.password = password
             }
             snackbarHostState.showSnackbar("Sign up successful!")
-//          navController.navigate("login_screen") navigate to log in screen
+            navController.navigate("User_Login_Screen")
 
         } catch (e: Exception) {
             // Handle any exceptions that might occur during the sign-up process
@@ -166,22 +169,16 @@ fun SignUpActivity(navController: NavController) {
     {
         Spacer(modifier = Modifier.height(50.dp)) // Spacer to create space before the title
 
-        //TITLE Can Swap in image for Logo or design
-        Text(
-            text = "Wanderly", fontSize = 32.sp, modifier = Modifier.padding(5.dp),
+        //Logo
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription =""
         )
-        //Catch Phrase
-        Text(
-            //Can Swap in image for Logo or design
-            text = "Do More", fontSize = 18.sp,
-        )
-        Spacer(modifier = Modifier.height(50.dp)) // Spacer to create space
-
         //Activity/Page Identifier
         Text(
             text = "Sign Up",
             fontSize = 24.sp,
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(10.dp)
         )
 
         //Email section
@@ -341,8 +338,9 @@ fun SignUpActivity(navController: NavController) {
                 color = Color.Blue,
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
-                    //.clickable(onClick = { }) ready for nav bar or view change to go to Login activity
-                    .padding(start = 4.dp),
+//                 ready for nav bar or view change to go to Login activity
+                   .clickable(onClick = { navController.navigate("User_Login_Screen") })
+                   .padding(start = 4.dp),
             )
         }
         // Snackbar (Pop up message) for error feedback
