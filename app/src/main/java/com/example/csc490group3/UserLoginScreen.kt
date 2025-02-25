@@ -27,7 +27,7 @@ fun UserLoginScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             //ARGB color code
-            .background(Color(238	,224,	255))
+            .background(Color(238, 224, 255))
     ) {
         Column(
             modifier = Modifier
@@ -49,7 +49,6 @@ fun UserLoginScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
 
             Text(
                 text = "Log in",
@@ -84,20 +83,26 @@ fun UserLoginScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Text fields missing shadow/ stroke/ outline
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text("Email", fontSize = 14.sp, color = Color.Black)
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text("Password", fontSize = 14.sp, color = Color.Black)
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     //sign up button once clicked should go to home page
                     Button(
