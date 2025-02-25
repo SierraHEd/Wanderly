@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("individual")
-data class privateUser (
+data class PrivateUser (
     override val id: Int? = null,
     override val email: String,
     @SerialName("first_name")
@@ -16,7 +16,7 @@ data class privateUser (
     val birthday: LocalDate,
     val public: Boolean,
     val affiliation: String?,
-    val likedCategories: Set<category> = emptySet()
-) : user()
+    val likedCategories: Set<Category> = emptySet()
+) : User()
 
 

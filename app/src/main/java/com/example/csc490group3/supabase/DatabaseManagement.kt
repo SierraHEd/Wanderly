@@ -1,7 +1,7 @@
 package com.example.csc490group3.supabase
 
-import com.example.csc490group3.model.event
-import com.example.csc490group3.model.privateUser
+import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.PrivateUser
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,19 +36,19 @@ object DatabaseManagement {
      * Fetches a private user from the "private_users" table based on the provided email address.
      *
      * This function filters the table for records where the "email" column matches the given email,
-     * and decodes the response into a [privateUser] object.
+     * and decodes the response into a [PrivateUser] object.
      *
      * @param email The email address of the user to fetch.
-     * @return Returns a [privateUser] object if a matching record is found, or null if no match is found or an error occurs.
+     * @return Returns a [PrivateUser] object if a matching record is found, or null if no match is found or an error occurs.
      */
-    suspend fun getPrivateUser(email: String): privateUser? {
+    suspend fun getPrivateUser(email: String): PrivateUser? {
         return withContext(Dispatchers.IO) {
             try{
                 postgrest.from("private_users").select {
                     filter {
                         eq("email", email)
                     }
-                }.decodeSingle<privateUser>()
+                }.decodeSingle<PrivateUser>()
             }catch(e: Exception) {
                 println("Error fetching user record: ${e.localizedMessage}")
                 null
@@ -62,12 +62,12 @@ object DatabaseManagement {
      * Deletes an event from the "events" table based on the provided event ID.
      *
      * This function filters the "events" table for the record with the matching "id"
-     * and deletes it, decoding the result into an [event] object.
+     * and deletes it, decoding the result into an [Event] object.
      *
      * @param id The unique identifier of the event to delete.
-     * @return Returns an [event] object representing the deleted event if successful, or null if an error occurs.
+     * @return Returns an [Event] object representing the deleted event if successful, or null if an error occurs.
      */
-    suspend fun deleteEvent(id: Int): event? {
+    suspend fun deleteEvent(id: Int): Event? {
         return withContext(Dispatchers.IO) {
             try {
                 postgrest.from("events").delete {
@@ -75,7 +75,7 @@ object DatabaseManagement {
                     filter {
                         eq("id", id)
                     }
-                }.decodeSingle<event>()
+                }.decodeSingle<Event>()
 
             }catch(e: Exception) {
                 println("Error deleting event: ${e.localizedMessage}")
@@ -89,12 +89,12 @@ object DatabaseManagement {
      *
      * @return A list of [Event] objects if successful, or null if an error occurred.
      */
-    suspend fun getAllEvents(): List<event>? {
+    suspend fun getAllEvents(): List<Event>? {
         return withContext(Dispatchers.IO) {
             try{
                 val result = postgrest.from("events")
                     .select()
-                    .decodeList<event>()
+                    .decodeList<Event>()
                 result
             }catch(e: Exception) {
                 println("Error fetching events: ${e.localizedMessage}")

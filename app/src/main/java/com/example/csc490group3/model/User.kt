@@ -1,9 +1,8 @@
 package com.example.csc490group3.model
-
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class category {
-    MUSIC,
-    SPORTS
+sealed class User {
+    abstract val id: Int?
+    abstract val email: String
 }
