@@ -28,6 +28,14 @@ fun Navigation(context: Context) {
             HomeScreen(navController)
         }
 
+        composable("Home_Screen") {
+            HomeScreen(navController)
+        }
+
+        composable("register_event_screen") {
+            RegisterEventScreen(navController)
+        }
+
 
 
     }
