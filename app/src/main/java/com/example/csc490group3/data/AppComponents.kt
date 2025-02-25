@@ -29,7 +29,7 @@ import com.example.csc490group3.R
 
 @Composable
 fun ImageComponent(){
-    val image = painterResource(R.drawable.app_logo_w_bck)
+    val image = painterResource(R.drawable.app_logo)
     Image(
         painter = image,
         contentDescription = ""
@@ -81,3 +81,4 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
         }
     }
 }
+
