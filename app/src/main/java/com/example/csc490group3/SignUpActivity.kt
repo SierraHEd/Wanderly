@@ -89,8 +89,8 @@ fun SignUpActivity(navController: NavController) {
 
     //Create Supabase Client
     val supabase = createSupabaseClient(
-        supabaseUrl = "https://bngtgtuhiycwahsknuqh.supabase.co/",
-        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuZ3RndHVoaXljd2Foc2tudXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDEwMDAsImV4cCI6MjA1NTUxNzAwMH0.9h6ZJ-sfIH6Le0_AuL3ExHM2E2gaJbEc95UWVV4k-d0"
+        supabaseUrl = BuildConfig.SUPABASE_URL,
+        supabaseKey = BuildConfig.SUPABASE_ANON_KEY
     ) {
         install(Auth)
         install(Postgrest)
