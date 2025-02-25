@@ -1,16 +1,12 @@
 package com.example.csc490group3.supabase
 
-import com.example.csc490group3.BuildConfig
 import com.example.csc490group3.model.event
 import com.example.csc490group3.model.privateUser
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-object DatabaseManagment {
+object DatabaseManagement {
 
     /**
      * Inserts a record into the specified table in the Supabase database.
