@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.csc490group3.ui.theme.Purple40
+import com.example.csc490group3.ui.theme.PurpleBKG
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
@@ -160,7 +161,7 @@ fun SignUpActivity(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Purple40)
+            .background(PurpleBKG)
             .verticalScroll(scrollState), // Make the Column scrollable
 
         horizontalAlignment = Alignment.CenterHorizontally,
