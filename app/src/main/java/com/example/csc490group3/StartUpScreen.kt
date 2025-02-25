@@ -51,7 +51,7 @@ fun StartUpScreen(navController: NavController) {
         Column (modifier = Modifier.background(PurpleBKG)){
             ImageComponent()
             ImageCarousel()
-            ButtonComponent("Login", { navController.navigate("login_screen") }, true);
+            ButtonComponent("Login", { navController.navigate("User_login_Screen") }, true);
             Spacer(modifier = Modifier.height(12.dp))
             NormalTextComponent("Don't Have an Account?")
             Spacer(modifier = Modifier.height(8.dp))
