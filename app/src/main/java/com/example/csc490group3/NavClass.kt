@@ -23,5 +23,12 @@ fun Navigation(context: Context) {
         composable("sign_up_screen") {
             SignUpActivity(navController)
         }
+
+        composable("Home_Screen") {
+            HomeScreen(navController)
+        }
+
+
+
     }
 }

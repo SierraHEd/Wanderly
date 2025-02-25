@@ -106,7 +106,7 @@ fun UserLoginScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
                     //sign up button once clicked should go to home page
                     Button(
-                        onClick = { /*home page route goes here */ },
+                        onClick = { navController.navigate("Home_Screen") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                     ) {
