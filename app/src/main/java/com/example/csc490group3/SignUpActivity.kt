@@ -59,14 +59,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.csc490group3.ui.theme.Purple40
+import com.example.csc490group3.supabase.SupabaseManagement.AuthManagement.auth
 import com.example.csc490group3.ui.theme.PurpleBKG
-import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -87,25 +83,16 @@ fun SignUpActivity(navController: NavController) {
     // For snackbar feedback
     val snackbarHostState = remember { SnackbarHostState() }
 
-    //Create Supabase Client
-    val supabase = createSupabaseClient(
-        supabaseUrl = "https://bngtgtuhiycwahsknuqh.supabase.co/",
-        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuZ3RndHVoaXljd2Foc2tudXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDEwMDAsImV4cCI6MjA1NTUxNzAwMH0.9h6ZJ-sfIH6Le0_AuL3ExHM2E2gaJbEc95UWVV4k-d0"
-    ) {
-        install(Auth)
-        install(Postgrest)
-    }
-
     //Function to Call to the Supabase Client and make a new account
     suspend fun signUpNewUser(
         email: String,
         password: String,
-        supabase: SupabaseClient,
+        supabase: Auth,
         context: Context,
         navController: NavController
     ) {
         try {
-            supabase.auth.signUpWith(Email) {
+            auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
@@ -304,7 +291,7 @@ fun SignUpActivity(navController: NavController) {
                     if (isPasswordValid && passwordsAreValid) {
                         // Proceed to sign up the user
                         coroutineScope.launch {
-                            signUpNewUser(email, password, supabase, context, navController)
+                            signUpNewUser(email, password, auth, context, navController)
                         }
                     } else {
                         // Show failure toast if validation fails

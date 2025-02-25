@@ -18,10 +18,10 @@ object SupabaseManagement {
         }
     }
     object DatabaseManagement {
-        val postgrest get() = SupabaseManagement.supabase.postgrest
+        val postgrest get() = supabase.postgrest
     }
 
     object AuthManagement {
-        val auth get() = SupabaseManagement.supabase.auth
+        val auth get() = supabase.auth
     }
 }

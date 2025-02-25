@@ -16,14 +16,6 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import com.example.csc490group3.BuildConfig as AppBuildConfig
 
-val supabase = createSupabaseClient(
-    supabaseUrl = AppBuildConfig.SUPABASE_URL,
-    supabaseKey = AppBuildConfig.SUPABASE_ANON_KEY
-) {
-    install(Postgrest)
-}
-
-
 class MainActivity : ComponentActivity() {
     var context: Context = this
     override fun onCreate(savedInstanceState: Bundle?) {
