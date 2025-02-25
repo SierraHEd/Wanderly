@@ -3,26 +3,14 @@ package com.example.csc490group3.supabase
 import com.example.csc490group3.BuildConfig
 import com.example.csc490group3.model.event
 import com.example.csc490group3.model.privateUser
-import com.example.csc490group3.model.user
-import io.github.jan.supabase.SupabaseClient
+import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 
-object supabaseManagment {
-
-    val supabase by lazy {
-        createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-        ) {
-            install(Postgrest)
-        }
-    }
+object DatabaseManagment {
 
     /**
      * Inserts a record into the specified table in the Supabase database.
@@ -37,7 +25,7 @@ object supabaseManagment {
     suspend inline fun <reified T : Any> addRecord(tableName: String, record: T): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                val response = supabase.from(tableName).insert(listOf(record))
+                val response = postgrest.from(tableName).insert(listOf(record))
                 println("Record inserted successfully.")
                 true
 
@@ -60,7 +48,7 @@ object supabaseManagment {
     suspend fun getPrivateUser(email: String): privateUser? {
         return withContext(Dispatchers.IO) {
             try{
-                supabase.from("private_users").select {
+                postgrest.from("private_users").select {
                     filter {
                         eq("email", email)
                     }
@@ -86,7 +74,7 @@ object supabaseManagment {
     suspend fun deleteEvent(id: Int): event? {
         return withContext(Dispatchers.IO) {
             try {
-                supabase.from("events").delete {
+                postgrest.from("events").delete {
                     select()
                     filter {
                         eq("id", id)
@@ -95,6 +83,25 @@ object supabaseManagment {
 
             }catch(e: Exception) {
                 println("Error deleting event: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+    /**
+     * Fetches all events from the "events" table.
+     *
+     * @return A list of [Event] objects if successful, or null if an error occurred.
+     */
+    suspend fun getAllEvents(): List<event>? {
+        return withContext(Dispatchers.IO) {
+            try{
+                val result = postgrest.from("events")
+                    .select()
+                    .decodeList<event>()
+                result
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
                 null
             }
         }

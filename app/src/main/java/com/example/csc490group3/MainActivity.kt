@@ -2,8 +2,6 @@ package com.example.csc490group3
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 
 import androidx.activity.compose.setContent
@@ -15,12 +13,7 @@ import androidx.compose.ui.Alignment
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.lifecycleScope
-import com.example.csc490group3.model.privateUser
-import com.example.csc490group3.supabase.supabaseManagment
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
-import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 
 
 class MainActivity : ComponentActivity() {
