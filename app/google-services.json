@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "568148911566",
+    "project_id": "csc490group3-f4424",
+    "storage_bucket": "csc490group3-f4424.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568148911566:android:947de0667e2b99fd8f779f",
+        "android_client_info": {
+          "package_name": "com.example.csc490group3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK4UvojLiWvQtxhEP5TLMI-ERUGe-ZgSw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -17,5 +17,18 @@ fun Navigation(context: Context) {
         composable("start_up_screen") {
             StartUpScreen(navController)
         }
+        composable("User_Login_Screen") {
+            UserLoginScreen(navController)
+        }
+        composable("sign_up_screen") {
+            SignUpActivity(navController)
+        }
+
+        composable("Home_Screen") {
+            HomeScreen(navController)
+        }
+
+
+
     }
 }

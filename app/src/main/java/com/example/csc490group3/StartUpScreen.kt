@@ -34,22 +34,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.helper.widget.Carousel
 import androidx.navigation.NavController
 import com.example.csc490group3.data.ButtonComponent
+import com.example.csc490group3.data.ImageCarousel
 import com.example.csc490group3.data.ImageComponent
 import com.example.csc490group3.data.NormalTextComponent
-import com.example.csc490group3.ui.theme.Purple40
+import com.example.csc490group3.ui.theme.PurpleBKG
 import kotlinx.coroutines.delay
 
 @Composable
 fun StartUpScreen(navController: NavController) {
     Surface (modifier = Modifier.fillMaxSize()
-        .background(Purple40)
+        .background(PurpleBKG)
         .padding(28.dp)){
-        Column (modifier = Modifier.background(Purple40)){
+        Column (modifier = Modifier.background(PurpleBKG)){
             ImageComponent()
-            Spacer(modifier = Modifier.height(20.dp))
-            ButtonComponent("Login", { navController.navigate("login_screen") }, true);
+            ImageCarousel()
+            ButtonComponent("Login", { navController.navigate("User_login_Screen") }, true);
             Spacer(modifier = Modifier.height(12.dp))
             NormalTextComponent("Don't Have an Account?")
             Spacer(modifier = Modifier.height(8.dp))
