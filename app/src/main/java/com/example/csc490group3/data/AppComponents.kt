@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.csc490group3.R
+import com.example.csc490group3.ui.theme.PurpleContainer
 
 
 @Composable
@@ -65,7 +66,7 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
         Box(modifier = Modifier
             .fillMaxWidth()
             .heightIn(48.dp)
-            .background(color = Color.Gray,
+            .background(color = PurpleContainer,
                 shape = RoundedCornerShape(50.dp)
             ),
             contentAlignment = Alignment.Center

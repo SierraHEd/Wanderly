@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
+import com.example.csc490group3.ui.theme.PurpleContainer
 
 
 @Composable
@@ -149,7 +150,7 @@ fun DropdownMenuExample(options: List<String>, selectedItem: String, onItemSelec
 
         onClick = { expanded = true },
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFE3BEFC)
+            containerColor = PurpleContainer
 
         ),
         shape = RoundedCornerShape(20.dp),
@@ -194,9 +195,9 @@ fun EventTextField(label: String, value: String, keyboardType: KeyboardType = Ke
         shape = RoundedCornerShape(20.dp),
         colors = TextFieldDefaults.colors(
             focusedLabelColor = Black,
-            unfocusedContainerColor = Color(0xFFE3BEFC),
+            unfocusedContainerColor = PurpleContainer,
             cursorColor = Black,
-            focusedContainerColor = Color(0xFFE3BEFC),
+            focusedContainerColor = PurpleContainer,
             unfocusedIndicatorColor = White,
             focusedIndicatorColor = White
         ),

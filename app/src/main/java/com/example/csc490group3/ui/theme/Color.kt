@@ -13,3 +13,5 @@ val Pink40 = Color(0xFF7D5260)
 val PurpleDarkBKG = Color(0xFF18014D)
 val PurpleBKG = Color(0xFFEEE0FF)
 val PurpleStart = Color(0xFFB3A3D7)
+
+val PurpleContainer = Color(0xFFE3BEFC)
