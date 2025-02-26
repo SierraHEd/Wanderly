@@ -19,6 +19,10 @@ fun HomeScreen(navController: NavController) {
             Button(onClick = {  navController.navigate("start_up_screen") }) {
                 Text("Sign Out")
             }
+
+            Button(onClick = {  navController.navigate("Register_Event_Screen") }) {
+                Text("Register Event")
+            }
         }
     }
 }
