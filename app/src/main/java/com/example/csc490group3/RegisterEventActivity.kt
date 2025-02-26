@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -100,6 +101,7 @@ fun RegisterEventActivity(navController: NavController) {
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
+                        .clickable {  navController.navigate("Home_Screen") }
                         .border(0.dp, Color.Transparent, CircleShape),
                     contentScale = ContentScale.Crop
                 )
