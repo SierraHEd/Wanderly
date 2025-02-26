@@ -113,6 +113,9 @@ fun HomeScreen(navController: NavController) {
                         }
                     }
                 }
+
+            Button(onClick = {  navController.navigate("Register_Event_Screen") }) {
+                Text("Register Event")
             }
         }
     }
