@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -31,21 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.csc490group3.ui.theme.Purple40
 
-
-/*
-TODO: I don't really know if the logic works for this yet. I think it does though.
-Variables need to change when they are edited, both dropdowns and textfields and switches also.
-Take those vals upon "register event"
-Input needs to be sanitized hardcore.
-Also, location????  API usage?
-Don't really know what to do for that.
-Dropdowns need updating heavily. This is just for display.
-Need to discuss what options we would like for each drop.
-Should it be different for users vs venues? Venues could have a larger max guest cap
-as well as a larger price limit potentially.
-I also want to change the color of the switches on bottom. Maybe outline the text associated
-with them as well for cohesive style.
-*/
 
 
 @Composable
@@ -93,6 +79,7 @@ fun RegisterEventScreen(navController: NavController) {
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
+                        .clickable {  navController.navigate("Home_Screen") }
                         .border(0.dp, Color.Transparent, CircleShape),
                     contentScale = ContentScale.Crop
                 )
@@ -138,8 +125,7 @@ fun RegisterEventScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3BEFC)),
                 onClick = {
                     //EVENT HANDLING FOR REGISTRATION GOES HERE.
-                    //Prints are for testing purposes. Please delete in final.
-                    System.out.println(eventName); System.out.println(selectedCategory); System.out.println(description) },
+                    },
                 modifier = Modifier.fillMaxWidth().size(50.dp).clip(CircleShape).border(2.dp, White, CircleShape)
             ) {
                 Text(

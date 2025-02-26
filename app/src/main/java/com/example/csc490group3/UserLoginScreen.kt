@@ -16,12 +16,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.csc490group3.supabase.AuthManagement.accountValidation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserLoginScreen(navController: NavController) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -106,7 +110,19 @@ fun UserLoginScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
                     //sign up button once clicked should go to home page
                     Button(
-                        onClick = { navController.navigate("Home_Screen") },
+
+                        onClick = {
+                            coroutineScope.launch {
+                                val validAccount = accountValidation(email, password)
+                                if(validAccount) {
+                                    navController.navigate("Home_Screen")
+                                }
+                                else {
+                                    println("Authentication error")
+                                }
+                            }
+
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                     ) {
