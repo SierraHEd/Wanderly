@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 
@@ -87,9 +88,18 @@ fun HomeScreen(navController: NavController) {
 
             Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(20.dp))
+            Row(modifier = Modifier
+                .fillMaxWidth()
+            ) {
+                Button(modifier = Modifier.padding(horizontal = 20.dp),
+                    onClick = { navController.navigate("start_up_screen") }) {
+                    Text("Sign Out")
+                }
+                Button(modifier = Modifier.padding(horizontal = 50.dp),
+                    onClick = { navController.navigate("Register_Event_Screen") }) {
+                    Text("Create Event")
+                }
 
-            Button(onClick = { navController.navigate("start_up_screen") }) {
-                Text("Sign Out")
             }
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -106,6 +116,7 @@ fun HomeScreen(navController: NavController) {
                     )
                 }
 
+
                 else -> {
                     LazyColumn {
                         items(events) { event ->
@@ -113,10 +124,8 @@ fun HomeScreen(navController: NavController) {
                         }
                     }
                 }
-
-            Button(onClick = {  navController.navigate("Register_Event_Screen") }) {
-                Text("Register Event")
             }
+
         }
     }
 }

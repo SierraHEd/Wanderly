@@ -83,15 +83,6 @@ fun SignUpActivity(navController: NavController) {
     // For snackbar feedback
     val snackbarHostState = remember { SnackbarHostState() }
 
-    //Create Supabase Client
-    val supabase = createSupabaseClient(
-        supabaseUrl = BuildConfig.SUPABASE_URL,
-        supabaseKey = BuildConfig.SUPABASE_ANON_KEY
-    ) {
-        install(Auth)
-        install(Postgrest)
-    }
-
     //Function to Call to the Supabase Client and make a new account
     suspend fun signUpNewUser(
         email: String,
