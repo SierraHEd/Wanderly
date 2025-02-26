@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.csc490group3.ui.theme.Purple40
-
+import com.example.csc490group3.ui.theme.PurpleBKG
 
 
 @Composable
@@ -67,14 +67,14 @@ fun RegisterEventScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF793CCB))
+                .background(PurpleBKG)
                 .padding(16.dp)
         ) {
 
             // My header for the form w/ logo and all that.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Image(
-                    painter = painterResource(id = R.drawable.wanderlyicon),
+                    painter = painterResource(id = R.drawable.app_icon),
                     contentDescription = null,
                     modifier = Modifier
                         .size(50.dp)
@@ -122,7 +122,7 @@ fun RegisterEventScreen(navController: NavController) {
             }
 
             Button(
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3BEFC)),
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
                     //EVENT HANDLING FOR REGISTRATION GOES HERE.
                     },

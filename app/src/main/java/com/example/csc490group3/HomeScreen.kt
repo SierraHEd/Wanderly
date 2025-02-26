@@ -96,7 +96,7 @@ fun HomeScreen(navController: NavController) {
                     Text("Sign Out")
                 }
                 Button(modifier = Modifier.padding(horizontal = 50.dp),
-                    onClick = { navController.navigate("Register_Event_Screen") }) {
+                    onClick = { navController.navigate("register_event_screen") }) {
                     Text("Create Event")
                 }
 

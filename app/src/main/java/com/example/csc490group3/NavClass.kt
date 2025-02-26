@@ -26,9 +26,6 @@ fun Navigation(context: Context) {
         composable("Home_Screen") {
             HomeScreen(navController)
         }
-        composable("Register_Event_Screen"){
-            RegisterEventActivity(navController)
-        }
 
         composable("Home_Screen") {
             HomeScreen(navController)

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.csc490group3.supabase.AuthManagement.accountValidation
+import com.example.csc490group3.ui.theme.PurpleBKG
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -31,7 +32,7 @@ fun UserLoginScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             //ARGB color code
-            .background(Color(238, 224, 255))
+            .background(PurpleBKG)
     ) {
         Column(
             modifier = Modifier
