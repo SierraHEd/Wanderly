@@ -34,17 +34,12 @@ import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 
-
 @Composable
 fun RegisterEventScreen(navController: NavController) {
-
-
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
     val priceRanges = listOf("Free", "$1 - $20", "$21 - $50", "$51 - $100", "$100+")
     val countries = listOf("USA", "Canada", "UK", "Germany", "France")
-
     val states = listOf("New York", "California", "Texas", "Florida", "Illinois")
-
     var eventName by remember { mutableStateOf("") }
     var zipcode by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -54,7 +49,6 @@ fun RegisterEventScreen(navController: NavController) {
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var isFamilyFriendly by remember { mutableStateOf(false) }
-
     var selectedCategory by remember { mutableStateOf("Category") }
     var selectedPrice by remember { mutableStateOf("Price Range") }
     //TODO: make it so that the states will change depending on which country is selected.
@@ -88,7 +82,7 @@ fun RegisterEventScreen(navController: NavController) {
                     "Your Wanderly Event",
                     textDecoration = TextDecoration.Underline,
                     fontSize = 28.sp,
-                    color = White,
+                    color = Black,
                     fontFamily = FontFamily.Serif
                 )
             }
@@ -96,7 +90,7 @@ fun RegisterEventScreen(navController: NavController) {
             Text(
                 "Event Registration Form",
                 fontSize = 16.sp,
-                color = White,
+                color = Black,
                 fontFamily = FontFamily.Serif
             )
 
@@ -114,11 +108,11 @@ fun RegisterEventScreen(navController: NavController) {
             EventTextField("Zipcode", zipcode) { zipcode = it }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Text("Is A Public Event", color = White)
+                Text("Is A Public Event", color = Black)
                 Switch(checked = isPublic, onCheckedChange = { isPublic = it })
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Text("Is Family Friendly", color = White)
+                Text("Is Family Friendly", color = Black)
                 Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
             }
 
@@ -165,7 +159,7 @@ fun DropdownMenuExample(options: List<String>, selectedItem: String, onItemSelec
                 Icons.Filled.KeyboardArrowDown,
                 contentDescription = null,
                 tint = Purple40,
-                modifier = Modifier.size(40.dp) // Adjust the size as needed
+                modifier = Modifier.size(40.dp)
             )
         }
     }
