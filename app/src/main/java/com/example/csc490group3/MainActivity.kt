@@ -12,9 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.csc490group3.ui.theme.CSC490Group3Theme
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import com.example.csc490group3.BuildConfig as AppBuildConfig
+
 
 class MainActivity : ComponentActivity() {
     var context: Context = this

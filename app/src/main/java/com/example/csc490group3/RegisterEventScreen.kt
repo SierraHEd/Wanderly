@@ -33,31 +33,9 @@ import androidx.compose.ui.unit.sp
 import com.example.csc490group3.ui.theme.Purple40
 
 
-/*
-TODO: I don't really know if the logic works for this yet. I think it does though.
-Variables need to change when they are edited, both dropdowns and textfields and switches also.
-Take those vals upon "register event"
-Input needs to be sanitized hardcore.
-Also, location???? Semantics for that? API usage? huuhhhhhh.
-Don't really know what to do for that.
-Dropdowns need updating heavily. This is just for display.
-Need to discuss what options we would like for each drop.
-Should it be different for users vs venues? Venues could have a larger max guest cap
-as well as a larger price limit potentially. A regular user should not be able to charge
-1k to attend their birthday party. Unless they're like mad fine or something.
-
-I also want to change the color of the switches on bottom. Maybe outline the text associated
-with them as well for cohesive style.
-
-Top priority is logic working. If a different form is made for venues vs users, could easily
-be copied and pasted with slight differences and put into the same event database
-
-
-*/
-
 
 @Composable
-fun RegisterEventActivity(navController: NavController) {
+fun RegisterEventScreen(navController: NavController) {
 
 
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
@@ -147,8 +125,7 @@ fun RegisterEventActivity(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3BEFC)),
                 onClick = {
                     //EVENT HANDLING FOR REGISTRATION GOES HERE.
-                    //Prints are for testing purposes. Please delete in final.
-                    System.out.println(eventName); System.out.println(selectedCategory); System.out.println(description) },
+                    },
                 modifier = Modifier.fillMaxWidth().size(50.dp).clip(CircleShape).border(2.dp, White, CircleShape)
             ) {
                 Text(
@@ -210,7 +187,7 @@ fun DropdownMenuExample(options: List<String>, selectedItem: String, onItemSelec
 @Composable
 fun EventTextField(label: String, value: String, keyboardType: KeyboardType = KeyboardType.Text, onValueChange: (String) -> Unit) {
     OutlinedTextField(
-        value = value,
+        value = value, 
         onValueChange = onValueChange,
         label = { Text(text = label, fontSize = 22.sp, color = Black, fontFamily = FontFamily.Default) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
