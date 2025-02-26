@@ -112,7 +112,6 @@ fun UserLoginScreen(navController: NavController) {
                     Button(
 
                         onClick = {
-                            //ADD STUFF HERE PLEASE
                             coroutineScope.launch {
                                 val validAccount = accountValidation(email, password)
                                 if(validAccount) {
