@@ -37,14 +37,14 @@ fun EventCard(event: Event) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Venue: ${event.venueName}",
+                text = "Venue: ${event.venue}",
             )
             Text(
-                text = "Description: ${event.eventDescription}",
+                text = "Description: ${event.description}",
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Price: ${String.format("$%.2f", event.cost)}",
+                text = "Price: ${event.priceRange}",
             )
         }
     }

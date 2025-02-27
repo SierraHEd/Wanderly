@@ -30,12 +30,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.csc490group3.model.Event
+import com.example.csc490group3.supabase.AuthManagement.accountValidation
+import com.example.csc490group3.supabase.DatabaseManagement.addRecord
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterEventScreen(navController: NavController) {
+    var eventToAdd: Event
+
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
     val priceRanges = listOf("Free", "$1 - $20", "$21 - $50", "$51 - $100", "$100+")
     val countries = listOf("USA", "Canada", "UK", "Germany", "France")
@@ -54,6 +60,9 @@ fun RegisterEventScreen(navController: NavController) {
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
     var selectedState by remember { mutableStateOf("State") }
+
+    //the coroutine is to call the fun from database magmt
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         /** ^^ This guy holds everything. Assumably, if making bottom bar, this should
@@ -119,8 +128,28 @@ fun RegisterEventScreen(navController: NavController) {
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
-                    //EVENT HANDLING FOR REGISTRATION GOES HERE.
-                    },
+                    eventToAdd = Event (
+                    eventName = eventName,
+                    zipcode =  zipcode,
+                    city =  city,
+                    address = address,
+                    venue =  venue,
+                    maxAttendees =  maxAttendees,
+                    description =  description,
+                    isPublic =  isPublic,
+                    isFamilyFriendly =  isFamilyFriendly,
+                    priceRange =  selectedPrice,
+                    country =  selectedCountry,
+                    state =  selectedState,
+                    createdBy = 1
+                    )
+                    coroutineScope.launch {
+                        if(!addRecord("events", eventToAdd)) {
+                            println("Error adding event")
+                        }
+                    }
+
+                },
                 modifier = Modifier.fillMaxWidth().size(50.dp).clip(CircleShape).border(2.dp, White, CircleShape)
             ) {
                 Text(
