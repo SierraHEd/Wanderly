@@ -24,5 +24,6 @@ data class Event (
     val country: String,
     val state: String,
     @SerialName("created_by")
-    val createdBy: Int
+    val createdBy: Int,
+    val numAttendees: Int? = 0
 )

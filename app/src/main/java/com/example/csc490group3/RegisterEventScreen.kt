@@ -141,7 +141,8 @@ fun RegisterEventScreen(navController: NavController) {
                     priceRange =  selectedPrice,
                     country =  selectedCountry,
                     state =  selectedState,
-                    createdBy = 1
+                    createdBy = 1,
+                    numAttendees = 0
                     )
                     coroutineScope.launch {
                         if(!addRecord("events", eventToAdd)) {

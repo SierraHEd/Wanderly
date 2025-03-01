@@ -17,4 +17,7 @@ object AuthManagement {
             return false
         }
     }
+    suspend fun getActiveUser() {
+        val user = auth.retrieveUserForCurrentSession(updateSession = true)
+    }
 }
