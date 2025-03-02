@@ -103,4 +103,9 @@ object DatabaseManagement {
         }
     }
 
+    suspend fun registerEvent(event: Event) : Boolean{
+        println("${event.eventName} button was pressed")
+        return true
+    }
+
 }

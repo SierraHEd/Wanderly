@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,9 +19,12 @@ import androidx.navigation.NavController
 import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
+import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
-fun EventCard(event: Event) {
+fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -44,21 +48,20 @@ fun EventCard(event: Event) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Price: ${event.priceRange}",
+                text = "Price Range: ${event.priceRange}",
             )
-        }
-    }
-
-}
-
-@Composable
-fun EventsScreen(events: List<Event>) {
-    LazyColumn {
-        items(events) { event ->
-            EventCard(event = event)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Number of Attendees: ${event.numAttendees}",
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(onClick = {onRegisterClick(event)}) {
+                Text("Register")
+            }
 
         }
     }
+
 }
 
 @Composable
@@ -67,6 +70,7 @@ fun HomeScreen(navController: NavController) {
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         try {
@@ -107,7 +111,6 @@ fun HomeScreen(navController: NavController) {
                 isLoading -> {
                     Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
                 }
-
                 errorMessage != null -> {
                     Text(
                         errorMessage!!,
@@ -115,12 +118,14 @@ fun HomeScreen(navController: NavController) {
                         color = Color.Red
                     )
                 }
-
-
                 else -> {
                     LazyColumn {
                         items(events) { event ->
-                            EventCard(event = event)
+                            EventCard(event = event, onRegisterClick = {selectedEvent ->
+                                coroutineScope.launch {
+                                    registerEvent(selectedEvent)
+                                }
+                            })
                         }
                     }
                 }
