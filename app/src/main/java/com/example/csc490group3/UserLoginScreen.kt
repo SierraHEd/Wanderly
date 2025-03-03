@@ -16,7 +16,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.AuthManagement.accountValidation
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.theme.PurpleBKG
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -116,6 +118,7 @@ fun UserLoginScreen(navController: NavController) {
                             coroutineScope.launch {
                                 val validAccount = accountValidation(email, password)
                                 if(validAccount) {
+                                    UserSession.currentUser = getPrivateUser(email)
                                     navController.navigate("Home_Screen")
                                 }
                                 else {

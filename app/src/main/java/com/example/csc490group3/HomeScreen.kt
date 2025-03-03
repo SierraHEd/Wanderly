@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import kotlinx.coroutines.coroutineScope
@@ -123,7 +124,9 @@ fun HomeScreen(navController: NavController) {
                         items(events) { event ->
                             EventCard(event = event, onRegisterClick = {selectedEvent ->
                                 coroutineScope.launch {
-                                    registerEvent(selectedEvent)
+                                    if(UserSession.currentUser != null) {
+                                        registerEvent(selectedEvent, UserSession.currentUser)
+                                    }
                                 }
                             })
                         }

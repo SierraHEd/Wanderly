@@ -13,7 +13,6 @@ object AuthManagement {
             }
             return true
         }catch(e: Exception) {
-            println(userEmail + userPassword)
             return false
         }
     }

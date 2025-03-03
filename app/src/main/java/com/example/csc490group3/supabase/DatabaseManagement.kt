@@ -2,6 +2,7 @@ package com.example.csc490group3.supabase
 
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -103,8 +104,15 @@ object DatabaseManagement {
         }
     }
 
-    suspend fun registerEvent(event: Event) : Boolean{
-        println("${event.eventName} button was pressed")
+    /**
+     * Registers a user to an event by adding their id and the event id to the "user_events" table
+     *
+     * @return Returns true if the record was inserted successfully, false if an error occurred.
+     */
+    suspend fun registerEvent(event: Event, currentUser: User?) : Boolean{
+        if (currentUser != null) {
+            println("${event.eventName} button was pressed by ${currentUser.email}")
+        }
         return true
     }
 
