@@ -110,10 +110,17 @@ object DatabaseManagement {
      * @return Returns true if the record was inserted successfully, false if an error occurred.
      */
     suspend fun registerEvent(event: Event, currentUser: User?) : Boolean{
-        if (currentUser != null) {
-            println("${event.eventName} button was pressed by ${currentUser.email}")
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = postgrest.from("user_events").insert(mapOf("user_id" to currentUser?.id, "event_id" to event.id))
+                println("Record inserted successfully.")
+                true
+
+            } catch (e: Exception) {
+                println("Error inserting record: ${e.localizedMessage}")
+                false
+            }
         }
-        return true
     }
 
 }
