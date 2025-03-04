@@ -20,6 +20,7 @@ import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getCurrentUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -104,10 +105,14 @@ fun HomeScreen(navController: NavController) {
                     onClick = { navController.navigate("register_event_screen") }) {
                     Text("Create Event")
                 }
-
             }
             Spacer(modifier = Modifier.height(20.dp))
-
+            Button(onClick = {
+                coroutineScope.launch {
+                    UserSession.currentUser?.let { getCurrentUserEvents(it) }
+                } }) {
+                Text("TEST")
+            }
             when {
                 isLoading -> {
                     Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
