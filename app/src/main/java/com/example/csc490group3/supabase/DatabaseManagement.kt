@@ -2,9 +2,19 @@ package com.example.csc490group3.supabase
 
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.csc490group3.model.UserSession
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 object DatabaseManagement {
 
@@ -67,22 +77,7 @@ object DatabaseManagement {
      * @param id The unique identifier of the event to delete.
      * @return Returns an [Event] object representing the deleted event if successful, or null if an error occurs.
      */
-    suspend fun deleteEvent(id: Int): Event? {
-        return withContext(Dispatchers.IO) {
-            try {
-                postgrest.from("events").delete {
-                    select()
-                    filter {
-                        eq("id", id)
-                    }
-                }.decodeSingle<Event>()
 
-            }catch(e: Exception) {
-                println("Error deleting event: ${e.localizedMessage}")
-                null
-            }
-        }
-    }
 
     /**
      * Fetches all events from the "events" table.
@@ -102,5 +97,53 @@ object DatabaseManagement {
             }
         }
     }
+
+    /**
+     * Registers a user to an event by adding their id and the event id to the "user_events" table
+     *
+     * @return Returns true if the record was inserted successfully, false if an error occurred.
+     */
+    suspend fun registerEvent(event: Event, currentUser: User?) : Boolean{
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = postgrest.from("user_events").insert(mapOf("user_id" to currentUser?.id, "event_id" to event.id))
+                println("Record inserted successfully.")
+                true
+
+            } catch (e: Exception) {
+                println("Error inserting record: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
+    /**
+     * Fetches a list of all events a particular user is registered for
+     *
+     * @return A list of [Event] objects if successful, or null if an error occurred.
+     */
+    suspend fun getCurrentUserEvents(user: User): List<Event>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = user.id
+                if(userId == null) {
+                    println("User not logged in")
+                    return@withContext null
+                }
+                val params = JsonObject(mapOf("userid" to JsonPrimitive(userId)))
+
+                    val result = postgrest.rpc("getuserevents", params).decodeList<Event>()
+
+                    println("Query Result: $result")
+                    result
+
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+
 
 }

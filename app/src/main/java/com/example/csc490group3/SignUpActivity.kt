@@ -59,12 +59,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.csc490group3.model.Category
+import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.User
+import com.example.csc490group3.supabase.DatabaseManagement.addRecord
 import com.example.csc490group3.supabase.SupabaseManagement.AuthManagement.auth
+import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import com.example.csc490group3.ui.theme.PurpleBKG
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.SerialName
 
 
 @Composable
@@ -96,6 +103,16 @@ fun SignUpActivity(navController: NavController) {
                 this.email = email
                 this.password = password
             }
+            val newUser = PrivateUser (
+
+                email = email,
+                firstName = "Jon",
+                lastName = "Doe",
+                birthday = LocalDate(2000, 1, 1),
+                public = true
+            )
+            addRecord("private_users", newUser)
+
             snackbarHostState.showSnackbar("Sign up successful!")
             navController.navigate("User_Login_Screen")
 
@@ -327,7 +344,7 @@ fun SignUpActivity(navController: NavController) {
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
 //                 ready for nav bar or view change to go to Login activity
-                   .clickable(onClick = { navController.navigate("User_Login_Screen") })
+                   .clickable(onClick = {navController.navigate("User_Login_Screen")})
                    .padding(start = 4.dp),
             )
         }

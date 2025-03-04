@@ -13,8 +13,10 @@ object AuthManagement {
             }
             return true
         }catch(e: Exception) {
-            println(userEmail + userPassword)
             return false
         }
+    }
+    suspend fun getActiveUser() {
+        val user = auth.retrieveUserForCurrentSession(updateSession = true)
     }
 }

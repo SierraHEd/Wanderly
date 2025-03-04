@@ -4,15 +4,26 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Event (
-    val id: Int,
+    val id: Int? = null,
     @SerialName("event_name")
     val eventName: String,
+    val zipcode: String,
+    val city: String,
     val address: String,
-    val cost: Double,
-    val categories: Set<Category> = emptySet(),
-    @SerialName("venue_name")
-    val venueName: String,
-    @SerialName("event_description")
-    val eventDescription: String,
-    val maxAttendees: Int? = null
+    val venue: String,
+    @SerialName("max_attendees")
+    val maxAttendees: String,
+    val description: String,
+    @SerialName("is_public")
+    val isPublic: Boolean? = true,
+    @SerialName("is_family_friendly")
+    val isFamilyFriendly: Boolean,
+    val categories: Set<Category>? = null,
+    @SerialName("price_range")
+    val priceRange: String,
+    val country: String,
+    val state: String,
+    @SerialName("created_by")
+    val createdBy: Int,
+    val numAttendees: Int? = 0
 )

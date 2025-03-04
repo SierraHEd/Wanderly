@@ -15,7 +15,7 @@ data class PrivateUser (
     val lastName: String,
     val birthday: LocalDate,
     val public: Boolean,
-    val affiliation: String?,
+    val affiliation: String? = null,
     val likedCategories: Set<Category> = emptySet()
 ) : User()
 
