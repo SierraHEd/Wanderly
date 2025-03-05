@@ -43,9 +43,9 @@ fun RegisterEventScreen(navController: NavController) {
     var eventToAdd: Event
 
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
-    val priceRanges = listOf("Free", "$1 - $20", "$21 - $50", "$51 - $100", "$100+")
     val countries = listOf("USA", "Canada", "UK", "Germany", "France")
     val states = listOf("New York", "California", "Texas", "Florida", "Illinois")
+    var price by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
     var zipcode by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -107,7 +107,7 @@ fun RegisterEventScreen(navController: NavController) {
             EventTextField("Event Name", eventName) { eventName = it }
             DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
             EventTextField("Venue", venue) { venue = it }
-            DropdownMenuExample(priceRanges, selectedPrice) { selectedPrice = it }
+            EventTextField("Price", price) { price = it }
             EventTextField("Description", description) { description = it }
             EventTextField("Guest Limit", maxAttendees, KeyboardType.Number) { maxAttendees = it }
             EventTextField("Address", address) { address = it }
@@ -134,11 +134,11 @@ fun RegisterEventScreen(navController: NavController) {
                     city =  city,
                     address = address,
                     venue =  venue,
-                    maxAttendees =  maxAttendees,
+                    maxAttendees =  maxAttendees.toIntOrNull()?: 0,
                     description =  description,
                     isPublic =  isPublic,
                     isFamilyFriendly =  isFamilyFriendly,
-                    priceRange =  selectedPrice,
+                    price = price.toDoubleOrNull()?: 0.0,
                     country =  selectedCountry,
                     state =  selectedState,
                     createdBy = 3,

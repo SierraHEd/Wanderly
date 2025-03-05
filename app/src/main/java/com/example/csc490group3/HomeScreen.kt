@@ -50,7 +50,7 @@ fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Price Range: ${event.priceRange}",
+                text = "Price Range: \$${String.format("%.2f", event.price)}",
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
