@@ -93,11 +93,13 @@ fun HomeScreen(navController: NavController) {
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { paddingValues ->
-        Surface(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
-              
+
                 Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(modifier = Modifier
@@ -111,40 +113,12 @@ fun HomeScreen(navController: NavController) {
                         onClick = { navController.navigate("register_event_screen") }) {
                         Text("Create Event")
                     }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(modifier = Modifier
-                .fillMaxWidth()
-            ) {
-                Button(modifier = Modifier.padding(horizontal = 20.dp),
-                    onClick = { navController.navigate("start_up_screen") }) {
-                    Text("Sign Out")
-                }
-                Button(modifier = Modifier.padding(horizontal = 50.dp),
-                    onClick = { navController.navigate("register_event_screen") }) {
-                    Text("Create Event")
-                }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(onClick = {
-                coroutineScope.launch {
-                    //UserSession.currentUser?.id?.let { getUserEvents(it) }
-                    UserSession.currentUser?.id?.let { getUserCreatedEvents(it) }
-                } }) {
-                Text("TEST")
-            }
-            when {
-                isLoading -> {
-                    Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(onClick = {
                     coroutineScope.launch {
-                        UserSession.currentUser?.let { getCurrentUserEvents(it) }
+                        //UserSession.currentUser?.id?.let { getUserEvents(it) }
+                        UserSession.currentUser?.id?.let { getUserCreatedEvents(it) }
                     } }) {
                     Text("TEST")
                 }
@@ -173,7 +147,8 @@ fun HomeScreen(navController: NavController) {
                         }
                     }
                 }
+
             }
         }
-        }
+    }
 }
