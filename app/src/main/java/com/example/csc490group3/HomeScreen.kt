@@ -21,7 +21,8 @@ import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
-import com.example.csc490group3.supabase.DatabaseManagement.getCurrentUserEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -51,7 +52,7 @@ fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Price Range: ${event.priceRange}",
+                text = "Price Range: \$${String.format("%.2f", event.price)}",
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -96,7 +97,7 @@ fun HomeScreen(navController: NavController) {
             .fillMaxSize()
             .padding(paddingValues)) {
             Column(modifier = Modifier.padding(16.dp)) {
-
+              
                 Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(modifier = Modifier
@@ -110,6 +111,35 @@ fun HomeScreen(navController: NavController) {
                         onClick = { navController.navigate("register_event_screen") }) {
                         Text("Create Event")
                     }
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(20.dp))
+            Row(modifier = Modifier
+                .fillMaxWidth()
+            ) {
+                Button(modifier = Modifier.padding(horizontal = 20.dp),
+                    onClick = { navController.navigate("start_up_screen") }) {
+                    Text("Sign Out")
+                }
+                Button(modifier = Modifier.padding(horizontal = 50.dp),
+                    onClick = { navController.navigate("register_event_screen") }) {
+                    Text("Create Event")
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(onClick = {
+                coroutineScope.launch {
+                    //UserSession.currentUser?.id?.let { getUserEvents(it) }
+                    UserSession.currentUser?.id?.let { getUserCreatedEvents(it) }
+                } }) {
+                Text("TEST")
+            }
+            when {
+                isLoading -> {
+                    Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(onClick = {

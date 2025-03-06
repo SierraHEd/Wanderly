@@ -93,7 +93,6 @@ object DatabaseManagement {
             }
         }
     }
-
     /**
      * Fetches all events from the "events" table.
      *
@@ -137,21 +136,37 @@ object DatabaseManagement {
      *
      * @return A list of [Event] objects if successful, or null if an error occurred.
      */
-    suspend fun getCurrentUserEvents(user: User): List<Event>? {
+    suspend fun getUserEvents(userID: Int): List<Event>? {
         return withContext(Dispatchers.IO) {
             try {
-                val userId = user.id
-                if(userId == null) {
+                if(userID == null) {
                     println("User not logged in")
                     return@withContext null
                 }
-                val params = JsonObject(mapOf("userid" to JsonPrimitive(userId)))
+                val params = JsonObject(mapOf("userid" to JsonPrimitive(userID)))
 
                     val result = postgrest.rpc("getuserevents", params).decodeList<Event>()
-
-                    println("Query Result: $result")
                     result
 
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+    suspend fun getUserCreatedEvents(userID: Int): List<Event>? {
+        return withContext(Dispatchers.IO) {
+            try{
+                val result = postgrest.from("events")
+                    .select {
+                        filter {
+                            eq("created_by", userID)
+                        }
+                    }.decodeList<Event>()
+                result.forEach { event ->
+                    println("Event ID: ${event.id}")}
+
+                result
             }catch(e: Exception) {
                 println("Error fetching events: ${e.localizedMessage}")
                 null
