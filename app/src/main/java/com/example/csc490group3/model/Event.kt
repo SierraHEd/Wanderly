@@ -12,15 +12,14 @@ data class Event (
     val address: String,
     val venue: String,
     @SerialName("max_attendees")
-    val maxAttendees: String,
+    val maxAttendees: Int,
     val description: String,
     @SerialName("is_public")
     val isPublic: Boolean? = true,
     @SerialName("is_family_friendly")
     val isFamilyFriendly: Boolean,
     val categories: Set<Category>? = null,
-    @SerialName("price_range")
-    val priceRange: String,
+    val price: Double? = 0.0,
     val country: String,
     val state: String,
     @SerialName("created_by")

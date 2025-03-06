@@ -20,7 +20,8 @@ import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
-import com.example.csc490group3.supabase.DatabaseManagement.getCurrentUserEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -50,7 +51,7 @@ fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Price Range: ${event.priceRange}",
+                text = "Price Range: \$${String.format("%.2f", event.price)}",
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -109,7 +110,8 @@ fun HomeScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(20.dp))
             Button(onClick = {
                 coroutineScope.launch {
-                    UserSession.currentUser?.let { getCurrentUserEvents(it) }
+                    //UserSession.currentUser?.id?.let { getUserEvents(it) }
+                    UserSession.currentUser?.id?.let { getUserCreatedEvents(it) }
                 } }) {
                 Text("TEST")
             }
