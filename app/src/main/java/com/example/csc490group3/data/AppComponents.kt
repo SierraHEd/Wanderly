@@ -11,8 +11,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.csc490group3.R
 import com.example.csc490group3.ui.theme.PurpleContainer
 
@@ -83,3 +92,51 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
     }
 }
 
+@Composable
+fun BottomNavBar(navController: NavController) {
+    val homeIcon = Icons.Filled
+    val searchIcon = Icons.Filled
+    val calendarIcon = Icons.Filled
+    val profileIcon = Icons.Filled
+    val settingsIcon = Icons.Filled
+    NavigationBar(
+        containerColor = PurpleContainer, // Background color
+        contentColor = Color.White // Text and icon color
+    ) {
+        NavigationBarItem(
+            selected = false,
+            onClick = {navController.navigate("home_screen")},
+            icon = { homeIcon.Home }, // Icon as a composable
+            label = { Text("Home") }, // Label as a composable
+            alwaysShowLabel = true // Ensure label is always shown
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("search_screen") },
+            icon = { searchIcon.Search },
+            label = { Text("Search") },
+            alwaysShowLabel = true
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("calendar_screen") },
+            icon = { calendarIcon.CalendarMonth },
+            label = { Text("Calendar") },
+            alwaysShowLabel = true
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("profile_screen") },
+            icon = { profileIcon.AccountCircle },
+            label = { Text("Profile") },
+            alwaysShowLabel = true
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings_screen") },
+            icon = { settingsIcon.Settings },
+            label = { Text("Settings") },
+            alwaysShowLabel = true
+        )
+    }
+}

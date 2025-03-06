@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
@@ -88,57 +89,61 @@ fun HomeScreen(navController: NavController) {
             isLoading = false
         }
     }
+    Scaffold(
+        bottomBar = { BottomNavBar(navController) }
+    ) { paddingValues ->
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            Column(modifier = Modifier.padding(16.dp)) {
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(modifier = Modifier
-                .fillMaxWidth()
-            ) {
-                Button(modifier = Modifier.padding(horizontal = 20.dp),
-                    onClick = { navController.navigate("start_up_screen") }) {
-                    Text("Sign Out")
+                Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                ) {
+                    Button(modifier = Modifier.padding(horizontal = 20.dp),
+                        onClick = { navController.navigate("start_up_screen") }) {
+                        Text("Sign Out")
+                    }
+                    Button(modifier = Modifier.padding(horizontal = 50.dp),
+                        onClick = { navController.navigate("register_event_screen") }) {
+                        Text("Create Event")
+                    }
                 }
-                Button(modifier = Modifier.padding(horizontal = 50.dp),
-                    onClick = { navController.navigate("register_event_screen") }) {
-                    Text("Create Event")
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(onClick = {
+                    coroutineScope.launch {
+                        UserSession.currentUser?.let { getCurrentUserEvents(it) }
+                    } }) {
+                    Text("TEST")
                 }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(onClick = {
-                coroutineScope.launch {
-                    UserSession.currentUser?.let { getCurrentUserEvents(it) }
-                } }) {
-                Text("TEST")
-            }
-            when {
-                isLoading -> {
-                    Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
-                }
-                errorMessage != null -> {
-                    Text(
-                        errorMessage!!,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Red
-                    )
-                }
-                else -> {
-                    LazyColumn {
-                        items(events) { event ->
-                            EventCard(event = event, onRegisterClick = {selectedEvent ->
-                                coroutineScope.launch {
-                                    if(UserSession.currentUser != null) {
-                                        registerEvent(selectedEvent, UserSession.currentUser)
+                when {
+                    isLoading -> {
+                        Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    errorMessage != null -> {
+                        Text(
+                            errorMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Red
+                        )
+                    }
+                    else -> {
+                        LazyColumn {
+                            items(events) { event ->
+                                EventCard(event = event, onRegisterClick = {selectedEvent ->
+                                    coroutineScope.launch {
+                                        if(UserSession.currentUser != null) {
+                                            registerEvent(selectedEvent, UserSession.currentUser)
+                                        }
                                     }
-                                }
-                            })
+                                })
+                            }
                         }
                     }
                 }
             }
-
         }
-    }
+        }
 }
