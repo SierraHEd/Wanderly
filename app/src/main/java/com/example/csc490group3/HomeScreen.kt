@@ -76,7 +76,9 @@ fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = event.venue, style = MaterialTheme.typography.bodyMedium)
+                Text(text = "${event.venue}, ${event.address} ${event.city} ${event.state} ${event.zipcode}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
