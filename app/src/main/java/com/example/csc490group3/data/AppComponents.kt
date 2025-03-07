@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -94,11 +95,6 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
 
 @Composable
 fun BottomNavBar(navController: NavController) {
-    val homeIcon = Icons.Filled
-    val searchIcon = Icons.Filled
-    val calendarIcon = Icons.Filled
-    val profileIcon = Icons.Filled
-    val settingsIcon = Icons.Filled
     NavigationBar(
         containerColor = PurpleContainer, // Background color
         contentColor = Color.White // Text and icon color
@@ -106,35 +102,35 @@ fun BottomNavBar(navController: NavController) {
         NavigationBarItem(
             selected = false,
             onClick = {navController.navigate("home_screen")},
-            icon = { homeIcon.Home }, // Icon as a composable
+            icon = { Icon(imageVector = Icons.Filled.Home, contentDescription = "Home") }, // Icon as a composable
             label = { Text("Home") }, // Label as a composable
             alwaysShowLabel = true // Ensure label is always shown
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("search_screen") },
-            icon = { searchIcon.Search },
+            icon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search") },
             label = { Text("Search") },
             alwaysShowLabel = true
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("calendar_screen") },
-            icon = { calendarIcon.CalendarMonth },
+            icon = { Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = "Calendar") },
             label = { Text("Calendar") },
             alwaysShowLabel = true
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("profile_screen") },
-            icon = { profileIcon.AccountCircle },
+            icon = { Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = "Profile") },
             label = { Text("Profile") },
             alwaysShowLabel = true
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("settings_screen") },
-            icon = { settingsIcon.Settings },
+            icon = { Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings") },
             label = { Text("Settings") },
             alwaysShowLabel = true
         )
