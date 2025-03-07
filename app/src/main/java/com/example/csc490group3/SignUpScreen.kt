@@ -181,7 +181,7 @@ fun SignUpActivity(navController: NavController) {
     }
 
     // Convert milliseconds to LocalDate so DatePicker can display date back to user
-    fun convertMillisToLocalDate(millis: Long): kotlinx.datetime.LocalDate {
+    fun convertMillisToLocalDate(millis: Long): LocalDate {
         return Instant.fromEpochMilliseconds(millis)
             .toLocalDateTime(TimeZone.UTC) // Convert to LocalDateTime using UTC
             .date // Extract the LocalDate part
