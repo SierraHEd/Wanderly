@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -100,6 +101,7 @@ fun SignUpActivity(navController: NavController) {
     val scrollState = rememberScrollState() // Create a scroll state
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val isLoading = remember { mutableStateOf(false) }  // Track the loading state
     // For snackbar feedback
     val snackbarHostState = remember { SnackbarHostState() }
     //Error messages
@@ -169,7 +171,7 @@ fun SignUpActivity(navController: NavController) {
             )
             addRecord("private_users", newUser)
 
-            snackbarHostState.showSnackbar("Sign up successful!")
+            snackbarHostState.showSnackbar("Sign up successful! Loading Log in Page...")
             navController.navigate("User_Login_Screen")
 
         } catch (e: Exception) {
@@ -293,271 +295,287 @@ fun SignUpActivity(navController: NavController) {
 // --------------------------
 // 6. Main UI/Form
 // --------------------------
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .verticalScroll(scrollState), // Make the Column scrollable
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    )
-    {
-        //Logo
-        Image(
-            painter = painterResource(id = R.drawable.app_logo),
-            contentDescription = ""
-        )
-        //Activity/Page Identifier
-        Text(
-            text = "Sign Up",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(2.dp)
-        )
-
-        //Email section
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Enter your email...") },
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp,
-                    //Change color of outline if empty, correct, or incorrect
-                    color = when {
-                        email.isEmpty() -> Color.Black
-                        isEmailValid(email) -> Color.Green
-                        else -> Color.Red
-                    }
-                )
+                .fillMaxSize()
+                .background(PurpleBKG)
+                .verticalScroll(scrollState), // Make the Column scrollable
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         )
-        // Displaying error message only when email is invalid and when the user starts typing
-        if (email.isNotEmpty() && !isEmailValid(email)) {
-            Text(
-                text = "Email must have a proper format EX: johndoe@email.com",
-                color = Color.Red,
-                modifier = Modifier.padding(horizontal = 20.dp)
+        {
+            //Logo
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = ""
             )
-        }
-
-        //Password section
-        TextField(
-            value = password,
-            onValueChange = {
-                password = it
-                coroutineScope.launch {
-                    //Provide delay before evaluating user input
-                    delay(500)
-                    passwordErrorMessage =
-                        if (validatePasswordComplexityAndLength(password)) "" else "Password must be at least 5 characters long, contain one capital letter, and one number."
-                }
-            },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
-
-                // localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
-                //Create visibility icon so users can choose to see or not see password
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, description)
-                }
-            },
-            label = { Text("Enter your password...") },
-            modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp,
-                    color = when { //Change border colors if error
-                        password.isEmpty() -> Color.Black
-                        validatePasswordComplexityAndLength(password) -> Color.Green
-                        else -> Color.Red
-                    }
-                ),
-        )
-
-        //Confirm password section
-        TextField(
-            value = retypePassword,
-            onValueChange = {
-                retypePassword = it
-                coroutineScope.launch {
-                    //Provide delay before evaluating user input
-                    delay(500)
-                    // Check if passwords match
-                    val passwordsAreMatching = checkPasswordsMatch(password, retypePassword)
-                    passwordErrorMessage = when {
-                        !passwordsAreMatching -> "Passwords do not match"
-                        !validatePasswordComplexityAndLength(retypePassword) -> "Password must be at least 5 characters long, contain one capital letter, and one number."
-                        else -> ""
-                    }
-                }
-            },
-            visualTransformation = if (retypePasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (retypePasswordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
-
-                // localized description for accessibility services
-                val description =
-                    if (retypePasswordVisible) "Hide password" else "Show password"
-
-                IconButton(onClick = { retypePasswordVisible = !retypePasswordVisible }) {
-                    Icon(imageVector = image, description)
-                }
-            },
-            label = { Text("Confirm your password...") },
-            modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp,
-                    color = when {
-                        retypePassword.isEmpty() -> Color.Black
-                        password != retypePassword -> Color.Red
-                        validatePasswordComplexityAndLength(retypePassword) -> Color.Green
-                        else -> Color.Red
-                    }
-                ),
-        )
-
-        // First Name Section
-        TextField(
-            value = firstName,
-            onValueChange = { firstName = it },
-            label = { Text("Enter your first name...") },
-            modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp, color = Color.Black
-                )
-        )
-
-        if (firstNameErrorMessage.isNotEmpty()) {
+            //Activity/Page Identifier
             Text(
-                text = firstNameErrorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                text = "Sign Up",
+                fontSize = 24.sp,
+                modifier = Modifier.padding(2.dp)
             )
-        }
 
-        // Last Name Section
-        TextField(
-            value = lastName,
-            onValueChange = { lastName = it },
-            label = { Text("Enter your last name...") },
-            modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp, color = Color.Black
-                )
-        )
-        if (lastNameErrorMessage.isNotEmpty()) {
-            Text(
-                text = lastNameErrorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(horizontal = 20.dp)
+            //Email section
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Enter your email...") },
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp,
+                        //Change color of outline if empty, correct, or incorrect
+                        color = when {
+                            email.isEmpty() -> Color.Black
+                            isEmailValid(email) -> Color.Green
+                            else -> Color.Red
+                        }
+                    )
             )
-        }
-
-        TextField(
-            value = birthdate?.toString() ?: "",
-            onValueChange = {},
-            label = { Text("Click here to select your birthdate") },
-            readOnly = true,
-            modifier = Modifier
-                .width(400.dp)
-                .padding(20.dp)
-                .border(
-                    width = 3.dp, color = Color.Black
+            // Displaying error message only when email is invalid and when the user starts typing
+            if (email.isNotEmpty() && !isEmailValid(email)) {
+                Text(
+                    text = "Email must have a proper format EX: johndoe@email.com",
+                    color = Color.Red,
+                    modifier = Modifier.padding(horizontal = 20.dp)
                 )
-                .clickable {
-                    showDatePicker()
+            }
+
+            //Password section
+            TextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    coroutineScope.launch {
+                        //Provide delay before evaluating user input
+                        delay(500)
+                        passwordErrorMessage =
+                            if (validatePasswordComplexityAndLength(password)) "" else "Password must be at least 5 characters long, contain one capital letter, and one number."
+                    }
                 },
-            enabled = false
-        )
-        if (birthdateErrorMessage.isNotEmpty()) {
-            Text(
-                text = birthdateErrorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (passwordVisible)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
+
+                    // localized description for accessibility services
+                    val description = if (passwordVisible) "Hide password" else "Show password"
+                    //Create visibility icon so users can choose to see or not see password
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(imageVector = image, description)
+                    }
+                },
+                label = { Text("Enter your password...") },
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp,
+                        color = when { //Change border colors if error
+                            password.isEmpty() -> Color.Black
+                            validatePasswordComplexityAndLength(password) -> Color.Green
+                            else -> Color.Red
+                        }
+                    ),
             )
-        }
 
-        //Create Account button - Checks textfields for validation then submits to supabase
-        Button(
-            onClick = {
-                // Validate fields when the user tries to submit
-                val isFirstNameValid = firstName.isNotEmpty()
-                val isLastNameValid = lastName.isNotEmpty()
-                val isBirthdateValid = birthdate != null
+            //Confirm password section
+            TextField(
+                value = retypePassword,
+                onValueChange = {
+                    retypePassword = it
+                    coroutineScope.launch {
+                        //Provide delay before evaluating user input
+                        delay(500)
+                        // Check if passwords match
+                        val passwordsAreMatching = checkPasswordsMatch(password, retypePassword)
+                        passwordErrorMessage = when {
+                            !passwordsAreMatching -> "Passwords do not match"
+                            !validatePasswordComplexityAndLength(retypePassword) -> "Password must be at least 5 characters long, contain one capital letter, and one number."
+                            else -> ""
+                        }
+                    }
+                },
+                visualTransformation = if (retypePasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (retypePasswordVisible)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
 
-                // Check if all fields are valid
-                if (isFirstNameValid && isLastNameValid && isBirthdateValid && email.isNotEmpty() && password.isNotEmpty() && retypePassword.isNotEmpty()) {
-                    // Proceed with sign-up if Passwords meet requirements
-                    val isPasswordValid = validatePasswordComplexityAndLength(password)
-                    val passwordsAreValid = checkPasswordsMatch(password, retypePassword)
+                    // localized description for accessibility services
+                    val description =
+                        if (retypePasswordVisible) "Hide password" else "Show password"
 
-                    // If password validation passes and passwords match
-                    if (isPasswordValid && passwordsAreValid) {
-                        // Proceed to sign up the user
-                        coroutineScope.launch {
-                            signUpNewUser(email, password, auth, context, navController)
+                    IconButton(onClick = { retypePasswordVisible = !retypePasswordVisible }) {
+                        Icon(imageVector = image, description)
+                    }
+                },
+                label = { Text("Confirm your password...") },
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp,
+                        color = when {
+                            retypePassword.isEmpty() -> Color.Black
+                            password != retypePassword -> Color.Red
+                            validatePasswordComplexityAndLength(retypePassword) -> Color.Green
+                            else -> Color.Red
+                        }
+                    ),
+            )
+
+            // First Name Section
+            TextField(
+                value = firstName,
+                onValueChange = { firstName = it },
+                label = { Text("Enter your first name...") },
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp, color = Color.Black
+                    )
+            )
+
+            if (firstNameErrorMessage.isNotEmpty()) {
+                Text(
+                    text = firstNameErrorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+
+            // Last Name Section
+            TextField(
+                value = lastName,
+                onValueChange = { lastName = it },
+                label = { Text("Enter your last name...") },
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp, color = Color.Black
+                    )
+            )
+            if (lastNameErrorMessage.isNotEmpty()) {
+                Text(
+                    text = lastNameErrorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+
+            //Birthdate Section
+            TextField(
+                value = birthdate?.toString() ?: "",
+                onValueChange = {},
+                label = { Text("Click here to select your birthdate") },
+                readOnly = true,
+                modifier = Modifier
+                    .width(400.dp)
+                    .padding(15.dp)
+                    .border(
+                        width = 3.dp, color = Color.Black
+                    )
+                    .clickable {
+                        showDatePicker()
+                    },
+                enabled = false
+            )
+            if (birthdateErrorMessage.isNotEmpty()) {
+                Text(
+                    text = birthdateErrorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+
+            //Create Account button - Checks textfields for validation then submits to supabase
+            Button(
+                onClick = {
+                    // Validate fields when the user tries to submit
+                    val isFirstNameValid = isNameValid(firstName)
+                    val isLastNameValid = isNameValid(lastName)
+                    val isBirthdateValid = isBirthdateValid(birthdate)
+
+                    if (!(isFirstNameValid)) {
+                        firstNameErrorMessage = "Please fill in first name"
+                    } else if (!(isLastNameValid)) {
+                        lastNameErrorMessage = "Please fill in last name"
+                    } else if (!(isBirthdateValid)) {
+                        birthdateErrorMessage = "Please fill in birthdate"
+                    }
+
+                    // Check if all fields are valid
+                    if (isFirstNameValid && isLastNameValid && isBirthdateValid && email.isNotEmpty() && password.isNotEmpty() && retypePassword.isNotEmpty()) {
+                        // Proceed with sign-up if Passwords meet requirements
+                        val isPasswordValid = validatePasswordComplexityAndLength(password)
+                        val passwordsAreValid = checkPasswordsMatch(password, retypePassword)
+
+                        // If password validation passes and passwords match
+                        if (isPasswordValid && passwordsAreValid) {
+                            // Proceed to sign up the user
+                            isLoading.value = true
+                            coroutineScope.launch {
+                                signUpNewUser(email, password, auth, context, navController)
+                            }
+                        } else {
+                            // Show failure toast if validation fails
+                            Toast.makeText(
+                                context,
+                                "Sign up failed: Invalid form data",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     } else {
-                        // Show failure toast if validation fails
-                        Toast.makeText(
-                            context,
-                            "Sign up failed: Invalid form data",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        // Show failure toast if required fields are empty
+                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG)
+                            .show()
                     }
-                } else {
-                    // Show failure toast if required fields are empty
-                    Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG)
-                        .show()
-                }
-            },
-            modifier = Modifier
-                .width(150.dp),
-            enabled = isFormValid, // Button will be enabled only if the form is valid
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-        ) {
-            Text("Create Account", color = Color.White)
-        }
-
-        //Link to return to Login Page if already registered
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            Text(text = "Already have an account?", modifier = Modifier.padding(end = 4.dp))
-            // Clickable Text for Login
-            Text(
-                text = "Login",
-                color = Color.Blue,
-                textDecoration = TextDecoration.Underline,
+                },
                 modifier = Modifier
-                    //nav bar or view change to go to Login activity
-                    .clickable(onClick = {
-                        println("Link clicked, going to login")
-                        navController.navigate("User_Login_Screen")
-                    })
-                    .padding(start = 4.dp),
+                    .width(150.dp),
+                enabled = isFormValid, // Button will be enabled only if the form is valid
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+            ) {
+                Text("Create Account", color = Color.White)
+            }
+
+            //Link to return to Login Page if already registered
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text(text = "Already have an account?", modifier = Modifier.padding(end = 4.dp))
+                // Clickable Text for Login
+                Text(
+                    text = "Login",
+                    color = Color.Blue,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        //nav bar or view change to go to Login activity
+                        .clickable(onClick = {
+                            println("Link clicked, going to login")
+                            navController.navigate("User_Login_Screen")
+                        })
+                        .padding(start = 4.dp),
+                )
+            }
+        }
+        // Snackbar (Pop-up message) for feedback
+        if (snackbarHostState.currentSnackbarData != null) {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter) // Align Snackbar to the bottom center of the screen
             )
         }
-        // Snackbar (Pop up message) for error feedback
-        SnackbarHost(hostState = snackbarHostState)
     }
 }
