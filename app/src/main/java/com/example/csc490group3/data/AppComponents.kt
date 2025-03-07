@@ -101,7 +101,7 @@ fun BottomNavBar(navController: NavController) {
     ) {
         NavigationBarItem(
             selected = false,
-            onClick = {navController.navigate("home_screen")},
+            onClick = {navController.navigate("Home_Screen")},
             icon = { Icon(imageVector = Icons.Filled.Home, contentDescription = "Home") }, // Icon as a composable
             label = { Text("Home") }, // Label as a composable
             alwaysShowLabel = true // Ensure label is always shown
