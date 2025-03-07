@@ -1,9 +1,14 @@
 package com.example.csc490group3
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,8 +17,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -34,40 +43,72 @@ fun EventCard(event: Event, onRegisterClick: (Event) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp)), // Rounded corners
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = event.eventName,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Address: ${event.address}",
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Venue: ${event.venue}",
-            )
-            Text(
-                text = "Description: ${event.description}",
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Price Range: \$${String.format("%.2f", event.price)}",
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Number of Attendees: ${event.numAttendees}",
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = {onRegisterClick(event)}) {
-                Text("Register")
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(Color.Gray, shape = RoundedCornerShape(12.dp))
+            ) {
+                Text(
+                    text = "Event Image",
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = event.eventName,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // change this to be the address plus venue name
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = event.venue, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Attendees & Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.People, contentDescription = "Attendees", tint = Color.Gray)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = "${event.numAttendees} Attending")
+                }
+                Text(
+                    text = "\$${String.format("%.2f", event.price)}",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF388E3C) // Green for pricing
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = { onRegisterClick(event) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) // Blue color
+            ) {
+                Text("Register", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         }
     }
-
 }
 
 @Composable
