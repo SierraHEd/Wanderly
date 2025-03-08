@@ -34,6 +34,9 @@ fun Navigation(context: Context) {
         composable("register_event_screen") {
             RegisterEventScreen(navController)
         }
+        composable("search_screen") {
+            SearchScreen(navController)
+        }
 
 
 
