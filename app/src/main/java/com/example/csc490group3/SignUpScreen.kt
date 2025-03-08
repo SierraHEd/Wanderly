@@ -75,6 +75,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -164,13 +165,13 @@ fun SignUpActivity(navController: NavController) {
             val newUser = PrivateUser(
 
                 email = email,
-                firstName = "Jon",
-                lastName = "Doe",
-                birthday = LocalDate(2000, 1, 1),
+                firstName = firstName,
+                lastName = lastName,
+                //If date is null use today's date.
+                birthday = birthdate ?: Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
                 public = true
             )
             addRecord("private_users", newUser)
-
             snackbarHostState.showSnackbar("Sign up successful! Loading Log in Page...")
             navController.navigate("User_Login_Screen")
 
