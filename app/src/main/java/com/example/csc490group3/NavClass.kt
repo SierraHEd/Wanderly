@@ -10,7 +10,7 @@ import androidx.navigation.compose.rememberNavController
 fun Navigation(context: Context) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "splash_screen") {
+    NavHost(navController = navController, startDestination = "home_screen") {
         composable("splash_screen") {
             SplashScreen(navController)
         }
@@ -26,19 +26,17 @@ fun Navigation(context: Context) {
         composable("Home_Screen") {
             HomeScreen(navController)
         }
-
-        composable("Home_Screen") {
-            HomeScreen(navController)
-        }
-
-        composable("register_event_screen") {
-            RegisterEventScreen(navController)
-        }
         composable("search_screen") {
             SearchScreen(navController)
         }
-
-
-
+        composable("register_event_screen") {
+            RegisterEventScreen(navController)
+        }
+        composable("calendar_screen") {
+            CalendarScreen(navController)
+        }
+        composable("settings_screen") {
+            SettingsScreen(navController)
+        }
     }
 }

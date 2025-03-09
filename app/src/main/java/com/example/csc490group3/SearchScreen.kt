@@ -39,47 +39,52 @@ import androidx.navigation.NavHostController
 @Composable
 fun SearchScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()
-    var searchTerm by rememberSaveable { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .verticalScroll(scrollState), // Make the Column scrollable
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    )
-    {
-        Row (
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+    var searchTerm by rememberSaveable { mutableStateOf("") }  
+    Scaffold(
+    bottomBar = { BottomNavBar(navController) }
+    ) { paddingValues ->
+        Surface(
+            modifier = Modifier.fillMaxSize()
+                .background(PurpleStart)
+                .padding(paddingValues)
         ) {
-            IconButton(onClick = {navController.popBackStack()}) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
-            }
+          Column(
+                  modifier = Modifier
+                    .fillMaxSize()
+                    .background(PurpleBKG)
+                    .verticalScroll(scrollState),
+
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            )
+            {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {navController.popBackStack()}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                TextField(
+                    value = searchTerm,
+                    onValueChange = { searchTerm = it },
+                    label = { Text("Search") },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+            }           
         }
-        Spacer(modifier = Modifier.height(4.dp))
-
-        TextField(
-            value = searchTerm,
-            onValueChange = { searchTerm = it },
-            label = { Text("Search") },
-            shape = RoundedCornerShape(16.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        )
-
-
     }
-
-
 }
