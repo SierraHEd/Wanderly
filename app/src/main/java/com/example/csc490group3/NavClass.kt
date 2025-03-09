@@ -1,5 +1,6 @@
 package com.example.csc490group3
 
+import UserProfileScreen
 import android.content.Context
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun Navigation(context: Context) {
     val navController = rememberNavController()
+
 
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
@@ -37,6 +39,9 @@ fun Navigation(context: Context) {
         }
         composable("settings_screen") {
             SettingsScreen(navController)
+        }
+        composable("profile_screen") {
+            UserProfileScreen(navController)
         }
     }
 }
