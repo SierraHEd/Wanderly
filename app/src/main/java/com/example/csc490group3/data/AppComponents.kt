@@ -127,12 +127,5 @@ fun BottomNavBar(navController: NavController) {
             label = { Text("Profile") },
             alwaysShowLabel = true
         )
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("settings_screen") },
-            icon = { Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") },
-            alwaysShowLabel = true
-        )
     }
 }

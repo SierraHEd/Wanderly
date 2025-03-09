@@ -101,7 +101,7 @@ dependencies {
     //Navigation
     implementation ("androidx.navigation:navigation-compose:2.8.7")
 
-    // Also add the dependency for the Google Play services library and specify its version
+    //Add the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:21.3.0")
 
     //Supabase
@@ -109,4 +109,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.ktor:ktor-client-android:3.1.0")
 
+    //Date and time
+    implementation("androidx.compose.material3:material3:1.4.0-alpha07")
+    implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 }

@@ -22,6 +22,7 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.PurpleBKG
+import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 
 
