@@ -122,8 +122,9 @@ object DatabaseManagement {
             try {
                 val response = postgrest.from("user_events").insert(mapOf("user_id" to currentUser?.id, "event_id" to event.id))
                 println("Record inserted successfully.")
-                true
 
+                postgrest.from("events").update {  }
+                true
             } catch (e: Exception) {
                 println("Error inserting record: ${e.localizedMessage}")
                 false

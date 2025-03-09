@@ -24,5 +24,6 @@ data class Event (
     val state: String,
     @SerialName("created_by")
     val createdBy: Int,
+    @SerialName("num_attendees")
     val numAttendees: Int? = 0
 )

@@ -38,7 +38,5 @@ fun Navigation(context: Context) {
         composable("settings_screen") {
             SettingsScreen(navController)
         }
-
-
     }
 }
