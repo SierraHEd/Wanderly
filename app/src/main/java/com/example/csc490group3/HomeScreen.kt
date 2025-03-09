@@ -2,6 +2,7 @@ package com.example.csc490group3
 
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +21,7 @@ import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 
 
@@ -35,15 +37,19 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     ) { paddingValues ->
         Surface(
             modifier = Modifier
+                .background(PurpleBKG)
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier
+                .background(PurpleBKG)
+                .padding(16.dp)) {
 
                 Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(modifier = Modifier
                     .fillMaxWidth()
+                    .background(PurpleBKG)
                 ) {
                     Button(modifier = Modifier.padding(horizontal = 20.dp),
                         onClick = { navController.navigate("start_up_screen") }) {
@@ -68,11 +74,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Red
                         )
-                        }
+                    }
                     else -> {
                         LazyColumn {
                             items(events) { event ->
-                                EventCard(event = event, onRegisterClick = {selectedEvent ->
+                                EventCard(event = event, onBottomButtonClick = { selectedEvent ->
                                     viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
                                 })
                             }

@@ -42,15 +42,22 @@ import com.example.csc490group3.viewModels.UserProfileViewModel
 @Composable
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
-    val isCurrentUser = true // Make it so that we can tell if viewed user is the logged-in user
+    val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
+    //val CurrentUser = UserSession.currentUser.email
+
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(PurpleBKG)
             .padding(16.dp)
+
     ) {
-        Row(Modifier.background(PurpleBKG)) {
+
+        Row(Modifier.background(PurpleBKG))
+
+        {
             // Profile Picture
             Image(
                 painter = painterResource(id = R.drawable.app_icon),
@@ -64,24 +71,26 @@ fun UserProfileScreen(navController: NavController) {
                 contentScale = ContentScale.Crop
             )
 
+
+
             Text(
                 text = "Welcome back, " + (currentUserEmail.toString().substringBefore("@")),
                 modifier = Modifier.padding(10.dp),
                 fontSize = 18.sp,
-                color = Color.Black
-            )
+                color = Color.Black,
+
+                )
 
             // Settings Button (Only for current user)
             if (isCurrentUser) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.Right
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Absolute.Right) {
                     Button(
                         modifier = Modifier,
                         onClick = { showSettings = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer)
+                        colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
                     ) {
+
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
@@ -92,11 +101,13 @@ fun UserProfileScreen(navController: NavController) {
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+
+
         }
 
         // Saved Events (Only for current user)
         if (isCurrentUser) {
-            Section1(title = "My Saved Events")
+            Section1(title = "My Saved Events",)
         }
 
         // Hosted Events (Visible to everyone)
@@ -112,40 +123,54 @@ fun UserProfileScreen(navController: NavController) {
 }
 
 @Composable
-fun Section1(title: String, viewModel: UserProfileViewModel = viewModel()) {
+
+fun Section1(title: String,viewModel: UserProfileViewModel = viewModel()) {
+
     val events by viewModel.registeredEvents
-
-    Row {
-        Text(text = title)
+    Row() {
+        Text(
+            text = title,
+        )
     }
-
     LazyRow {
+
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(
-                event = event,
-                onRegisterClick = {  }
+            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { selectedEvent ->
+                viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
+            },
+                isHorizontal = true,
+                showRegisterButton = false,
+                showUnregisterButton = true
             )
         }
     }
+
 }
 
 @Composable
 fun Section2(title: String, viewModel: UserProfileViewModel = viewModel()) {
+
     val events by viewModel.createdEvents
-
-    Row {
-        Text(text = title)
+    Row() {
+        Text(
+            text = title,
+        )
     }
-
     LazyRow {
+
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(
-                event = event,
-                onRegisterClick = {  }
+            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { },
+                isHorizontal = true,
+                showRegisterButton = false
             )
         }
     }
+
 }
+
+
+
+
 
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
@@ -154,65 +179,63 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
     var showEventPrefs by remember { mutableStateOf(false) }
 
     AlertDialog(
+
         onDismissRequest = onDismiss,
         title = { Text("Account Settings") },
         containerColor = PurpleStart,
-        icon = {
-            Icon(
-                Icons.Filled.Settings, "",
-                tint = Purple40,
-                modifier = Modifier.padding(horizontal = 30.dp)
-            )
-        },
+        icon = { Icon(Icons.Filled.Settings, "", tint = Purple40, modifier = Modifier.padding(horizontal = (30.dp))) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Private Account")
                     Spacer(Modifier.weight(1f))
-                    Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                    Switch(checked = isPublic, onCheckedChange = {isPublic = it }
+                        //Make it so that account will remember change
+                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Dark Mode")
                     Spacer(Modifier.weight(1f))
-                    Switch(checked = isDarkMode, onCheckedChange = { isDarkMode = it })
+                    Switch(checked = isDarkMode, onCheckedChange = {isDarkMode = it }
+                        //Make it so that account will remember change
+                    )
                 }
+
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* Handle location preferences */ }
-                ) {
+                    onClick = { /* Handle location preferences */ }) {
                     Text("Location Preferences")
                 }
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { showEventPrefs = true }
-                ) {
+                    onClick = {  showEventPrefs = true  }) {
                     Text("Event Preferences")
                 }
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* Handle profile picture change */ }
-                ) {
+                    onClick = { /* Handle profile picture change */ }) {
                     Text("Change Profile Picture")
                 }
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { navController.navigate("start_up_screen") }
-                ) {
+                    onClick = { navController.navigate("start_up_screen") }) {
                     Text("Log Out")
                 }
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* Handle profile picture change */ }
+                    onClick = { /* Handle profile picture change */ },
                 ) {
                     Text("Contact Us")
                 }
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* TOS stuff */ }
-                ) {
+                    onClick = { /* TOS stuff */ })
+                {
                     Text("Terms of Service")
                 }
             }
@@ -223,7 +246,6 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
             }
         }
     )
-
     if (showEventPrefs) {
         EventPreferencesDialog(onDismiss = { showEventPrefs = false })
     }
@@ -239,20 +261,12 @@ fun EventPreferencesDialog(onDismiss: () -> Unit) {
 
     AlertDialog(
         containerColor = PurpleStart,
-        icon = {
-            Icon(
-                Icons.Filled.Celebration, "",
-                tint = Purple40,
-                modifier = Modifier.padding(horizontal = 30.dp)
-            )
-        },
+        icon = { Icon(Icons.Filled.Celebration, "", tint = Purple40, modifier = Modifier.padding(horizontal = (30.dp))) },
         onDismissRequest = onDismiss,
         title = { Text("Select Event Preferences") },
         text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 preferences.forEach { preference ->
                     val isSelected = preference in selectedPreferences.value
                     Button(
@@ -265,7 +279,8 @@ fun EventPreferencesDialog(onDismiss: () -> Unit) {
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isSelected) Color.Gray else PurpleDarkBKG
-                        )
+                        ),
+                        modifier = Modifier
                     ) {
                         Icon(
                             imageVector = if (isSelected) Icons.Filled.Remove else Icons.Default.Add,

@@ -10,6 +10,7 @@ import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
+import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import kotlinx.coroutines.launch
 
@@ -47,15 +48,15 @@ class UserProfileViewModel: ViewModel() {
                 isLoading.value = false
             }
         }
-        fun unregisterForEvent(event: Event, user: User?) {
-            if (user == null) return
+    }
+    fun unregisterForEvent(event: Event, user: User?) {
+        if (user == null) return
 
-            viewModelScope.launch {
-                try {
-                    //unregisterEvent(event, user)
-                } catch (e: Exception) {
-                    errorMessage.value = "Failed to Unregister: ${e.localizedMessage}"
-                }
+        viewModelScope.launch {
+            try {
+                unregisterEvent(event, user)
+            } catch (e: Exception) {
+                errorMessage.value = "Failed to Unregister: ${e.localizedMessage}"
             }
         }
     }

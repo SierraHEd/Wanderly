@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -32,13 +33,20 @@ import com.example.csc490group3.model.Event
 
 @Composable
 fun EventCard(event: Event,
-              onRegisterClick: (Event) -> Unit,
-              showRegisterButton: Boolean = true
+              onBottomButtonClick: (Event) -> Unit,
+              showRegisterButton: Boolean = true,
+              showUnregisterButton: Boolean = false,
+              isHorizontal: Boolean = false,
+              modifier: Modifier = Modifier
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .then(
+                if(isHorizontal) Modifier.width(250.dp)
+                else Modifier.fillMaxWidth()
+            )
+            .wrapContentHeight()
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(12.dp)),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
@@ -99,13 +107,24 @@ fun EventCard(event: Event,
             //Hides register button if needed
             if(showRegisterButton) {
                 Button(
-                    onClick = { onRegisterClick(event) },
+                    onClick = { onBottomButtonClick(event) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) // Blue color
                 ) {
                     Text("Register", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
+            else if(showUnregisterButton) {
+                Button(
+                    onClick = { onBottomButtonClick(event) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)) // Blue color
+                ) {
+                    Text("Unregister", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+            }
+
 
         }
     }
