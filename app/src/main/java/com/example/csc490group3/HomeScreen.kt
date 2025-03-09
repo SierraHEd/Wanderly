@@ -75,11 +75,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Red
                         )
-                        }
+                    }
                     else -> {
                         LazyColumn {
                             items(events) { event ->
-                                EventCard(event = event, onRegisterClick = {selectedEvent ->
+                                EventCard(event = event, onBottomButtonClick = { selectedEvent ->
                                     viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
                                 })
                             }
