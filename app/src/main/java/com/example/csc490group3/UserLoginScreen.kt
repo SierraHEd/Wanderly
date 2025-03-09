@@ -1,5 +1,6 @@
 package com.example.csc490group3
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.AuthManagement.accountValidation
+import com.example.csc490group3.supabase.AuthManagement.getActiveUser
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.theme.PurpleBKG
 import kotlinx.coroutines.coroutineScope

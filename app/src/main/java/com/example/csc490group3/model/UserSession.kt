@@ -6,4 +6,5 @@ import androidx.compose.runtime.setValue
 
 object UserSession {
     var currentUser: User? by mutableStateOf(null)
+    var currentUserEmail: String? by mutableStateOf(null)
 }
