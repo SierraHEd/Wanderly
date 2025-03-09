@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -142,6 +143,12 @@ fun SignUpActivity(navController: NavController) {
     // Check birthdate field to make sure it is not empty
     fun isBirthdateValid(birthdate: LocalDate?): Boolean {
         return birthdate != null
+    }
+
+    fun clearErrorMessages() {
+        firstNameErrorMessage = ""
+        lastNameErrorMessage = ""
+        birthdateErrorMessage = ""
     }
 
 
@@ -317,6 +324,12 @@ fun SignUpActivity(navController: NavController) {
                 fontSize = 24.sp,
                 modifier = Modifier.padding(2.dp)
             )
+            //password Rules
+            Text(
+                text = "Passwords must have a minimum 5 characters, at least one number, at least one capital letter",
+                fontSize = 10.sp,
+                modifier = Modifier.padding(2.dp)
+            )
 
             //Email section
             TextField(
@@ -341,6 +354,7 @@ fun SignUpActivity(navController: NavController) {
                 Text(
                     text = "Email must have a proper format EX: johndoe@email.com",
                     color = Color.Red,
+                    style = TextStyle(fontSize = 12.sp),
                     modifier = Modifier.padding(horizontal = 20.dp)
                 )
             }
@@ -501,16 +515,22 @@ fun SignUpActivity(navController: NavController) {
             //Create Account button - Checks textfields for validation then submits to supabase
             Button(
                 onClick = {
+                    //Clear errors if another attempt is made to submit
+                    clearErrorMessages()
+
                     // Validate fields when the user tries to submit
                     val isFirstNameValid = isNameValid(firstName)
                     val isLastNameValid = isNameValid(lastName)
                     val isBirthdateValid = isBirthdateValid(birthdate)
 
+                    //Display errors if fields are left empty
                     if (!(isFirstNameValid)) {
                         firstNameErrorMessage = "Please fill in first name"
-                    } else if (!(isLastNameValid)) {
+                    }
+                    if (!(isLastNameValid)) {
                         lastNameErrorMessage = "Please fill in last name"
-                    } else if (!(isBirthdateValid)) {
+                    }
+                    if (!(isBirthdateValid)) {
                         birthdateErrorMessage = "Please fill in birthdate"
                     }
 
@@ -580,3 +600,5 @@ fun SignUpActivity(navController: NavController) {
         }
     }
 }
+
+
