@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 
@@ -42,10 +43,10 @@ import com.example.csc490group3.viewModels.UserProfileViewModel
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
-   // val CurrentUser = UserSession.currentUser?.email.?
+    // val CurrentUser = UserSession.currentUser?.email.?
 
 
-/*
+    /*
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -108,71 +109,85 @@ fun UserProfileScreen(navController: NavController) {
             }
 
              */
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .padding(16.dp)
-    ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+    Scaffold(
+        bottomBar = { BottomNavBar(navController) }
+    ) { paddingValues ->
+        Surface(
+            modifier = Modifier
+                .background(PurpleBKG)
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            IconButton(onClick = { navController.navigate("home_screen") }) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-            if (isCurrentUser) {
-                IconButton(onClick = { showSettings = true }) {
-                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            //pfp
-            Image(
-                painter = painterResource(id = R.drawable.app_icon),
-                contentDescription = null,
+            Column(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Black, CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Welcome back, " + (UserSession.currentUserEmail.toString().substringBefore("@")),
-                fontSize = 24.sp,
-                color = Color.Black
-            )
+                    .fillMaxSize()
+                    .background(PurpleBKG)
+                    .padding(16.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = { navController.navigate("home_screen") }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                    if (isCurrentUser) {
+                        IconButton(onClick = { showSettings = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings"
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    //pfp
+                    Image(
+                        painter = painterResource(id = R.drawable.app_icon),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, Color.Black, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Welcome back, " + (UserSession.currentUserEmail.toString()
+                            .substringBefore("@")),
+                        fontSize = 24.sp,
+                        color = Color.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Saved Events (seen by current user only)
+                if (isCurrentUser) {
+                    Section1(title = "My Saved Events", fontSize = 20.sp)
+                }
+
+                // Hosted Events (seen by non current users)
+                Section2(title = "My Hosted Events", fontSize = 20.sp)
+            }
+
+            if (showSettings) {
+                SettingsDialog(
+                    onDismiss = { showSettings = false },
+                    navController
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Saved Events (seen by current user only)
-        if (isCurrentUser) {
-            Section1(title = "My Saved Events", fontSize = 20.sp)
-        }
-
-        // Hosted Events (seen by non current users)
-        Section2(title = "My Hosted Events", fontSize = 20.sp)
-    }
-
-    if (showSettings) {
-        SettingsDialog(
-            onDismiss = { showSettings = false },
-            navController
-        )
     }
 }
-
 
 @Composable
 
