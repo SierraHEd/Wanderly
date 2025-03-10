@@ -64,25 +64,42 @@ fun CalendarScreen(
     val selectedMonth = remember { mutableStateOf(currentDate.monthNumber) }
     val selectedYear = remember { mutableStateOf(currentDate.year) }
 
-    // Observe the events from ViewModel
-    val events by viewModel.events // State delegation using 'by' works as expected
+    // Get data from ViewModel
+    val events by viewModel.events
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
 
-    LaunchedEffect(selectedDay.value, selectedMonth.value, selectedYear.value) {
-        // Call the fetchUserEvents function in the ViewModel
-        viewModel.fetchUserEvents()
+    // Track selected event for dialog and events for the selected day
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    val eventsForSelectedDay = remember { mutableStateOf<List<Event>>(emptyList()) }
+    val showEventsPopup = remember { mutableStateOf(false) }
+
+    // Sort events by date and filter out past events
+    val upcomingEvents = events
+        .filter { it.eventDate >= currentDate }  // Filter out events that have passed
+        .sortedBy { it.eventDate }  // Sort events by their eventDate
+
+////////////////
+// Launched Effects
+///////////////
+
+    // LaunchedEffect only when the month or year changes update events
+    LaunchedEffect(selectedMonth.value, selectedYear.value) {
+        viewModel.fetchUserEvents() // Fetch events only when month or year changes
     }
 
-    // Scaffold for layout
+////////////////
+// Main UI
+///////////////
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) } // Adding BottomNavBar
-    ) { paddingValues -> // Padding values for the screen content
+    ) { paddingValues ->
         Surface(
             modifier = Modifier
                 .background(PurpleBKG)
                 .fillMaxSize()
-                .padding(paddingValues)  // Apply paddingValues to the surface modifier
+                .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier
@@ -91,6 +108,8 @@ fun CalendarScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                //Spacer for clearance from front facing camera
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Month navigation buttons
@@ -99,6 +118,8 @@ fun CalendarScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    //Button to move month backward by 1
                     Button(
                         onClick = {
                             if (selectedMonth.value == 1) {
@@ -117,7 +138,7 @@ fun CalendarScreen(
                         Text("<")
                     }
 
-                    // Month and Year display should be centered in a column
+                    // Month and Year display
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "${
@@ -127,7 +148,7 @@ fun CalendarScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
                         )
-
+                        //Button to redirect calendar to today's date
                         Button(
                             onClick = {
                                 val today =
@@ -145,7 +166,7 @@ fun CalendarScreen(
                             Text("Today")
                         }
                     }
-
+                    //Button to move month forward by 1
                     Button(
                         onClick = {
                             if (selectedMonth.value == 12) {
@@ -182,22 +203,57 @@ fun CalendarScreen(
                     )
                     return@Surface
                 }
+
                 // Calendar view
                 CalendarView(
                     year = selectedYear.value,
                     month = selectedMonth.value,
-                    eventDates = events.map { it.eventDate }, // Use event date from ViewModel
+                    eventDates = events.map { it.eventDate },
                     selectedDay = selectedDay.value,
                     currentDay = if (selectedYear.value == currentDate.year &&
                         selectedMonth.value == currentDate.monthNumber
                     )
                         currentDate.dayOfMonth else -1,
-                    onDateClick = { day -> selectedDay.value = day }
+                    onDateClick = { day ->
+                        selectedDay.value = day
+                        eventsForSelectedDay.value = events.filter { it.eventDate.dayOfMonth == day }
+                        if (eventsForSelectedDay.value.size > 1) {
+                            showEventsPopup.value = true
+                        } else if (eventsForSelectedDay.value.isNotEmpty()) {
+                            selectedEvent.value = eventsForSelectedDay.value.first()
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (events.isEmpty() && selectedDay.value > 0) {
+                // Selected Date Details Title
+                if (eventsForSelectedDay.value.isNotEmpty()) {
+                    Text(
+                        text = "Selected Date Details",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                    )
+
+                    // Show the list of events for the selected day
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        items(eventsForSelectedDay.value) { event -> // Using eventsForSelectedDay.value
+                            // Display each event as a clickable item
+                            CalendarEventCard(
+                                event = event,
+                                onClick = {
+                                    selectedEvent.value = event // Show event details dialog
+                                }
+                            )
+                        }
+                    }
+                } else if (selectedDay.value > 0) {
                     Text(
                         text = "No events recorded for this date",
                         modifier = Modifier.padding(16.dp),
@@ -205,27 +261,87 @@ fun CalendarScreen(
                     )
                 }
 
-                // Event cards
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Upcoming Events Title
+                Text(
+                    text = "Upcoming Events",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                )
+
+                // Display Event cards for all upcoming events
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    items(events) { event ->
-                        CalendarEventCard(event = event)
+                    items(upcomingEvents) { event ->
+                        // Display event card
+                        CalendarEventCard(
+                            event = event,
+                            onClick = {
+                                selectedEvent.value = event // Show event details dialog
+                            }
+                        )
                     }
                 }
+            }
+
+            // Show event detail popup when an event is selected
+            selectedEvent.value?.let { event ->
+                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+            }
+            // Show the popup dialog with the list of events for the selected day
+            if (showEventsPopup.value) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showEventsPopup.value = false },
+                    title = { Text(text = "Events on ${selectedDay.value}") },
+                    text = {
+                        LazyColumn {
+                            items(eventsForSelectedDay.value) { event ->
+                                Text(
+                                    text = event.eventName,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .clickable {
+                                            // Show the details of the selected event
+                                            selectedEvent.value = event
+                                            showEventsPopup.value = false // Close popup
+                                        }
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { showEventsPopup.value = false }  // Close popup
+                        ) {
+                            Text("Close")
+                        }
+                    }
+                )
             }
         }
     }
 }
 
+////////////////
+// Composable Functions
+///////////////
+
 @Composable
-fun CalendarEventCard(event: Event) {
+fun CalendarEventCard(
+    event: Event,
+    onClick: () -> Unit // This is the onClick parameter
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onClick() }, // Handle click here
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -246,6 +362,7 @@ fun CalendarEventCard(event: Event) {
             ) {
                 Column {
                     Text(text = "Time: ${event.eventDate}")
+                    // Safely handle nullable categories
                     Text(text = "Type: ${event.categories?.joinToString(", ")}")
                 }
                 Column {
@@ -255,7 +372,7 @@ fun CalendarEventCard(event: Event) {
         }
     }
 }
-
+//Custom view for the calendar
 @Composable
 fun CalendarView(
     year: Int,
@@ -271,7 +388,6 @@ fun CalendarView(
 
     Column {
         WeekHeader()
-
         // Create the calendar grid
         LazyVerticalGrid(columns = GridCells.Fixed(7)) {
             // Add empty cells for the first day of the week
@@ -300,7 +416,7 @@ fun CalendarView(
         }
     }
 }
-
+//Custom cells for the days -> holds data for if it has event -> handles colors, font, and onClick.
 @Composable
 fun DayCell(
     day: Int,
@@ -345,3 +461,33 @@ fun WeekHeader() {
     }
 }
 
+@Composable
+fun EventDetailDialog(
+    event: Event,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = event.eventName) },
+        text = {
+            Column {
+                Text(text = "Date: ${event.eventDate}")
+                Text(text = "Venue: ${event.venue}")
+                Text(text = "Location: ${event.address}, ${event.city}, ${event.state}, ${event.zipcode}")
+                Text(text = "Country: ${event.country}")
+                Text(text = "Description: ${event.description}")
+                Text(text = "Categories: ${event.categories?.joinToString(", ") ?: "No categories"}")
+                Text(text = "Max Attendees: ${event.maxAttendees}")
+                Text(text = "Number of Attendees: ${event.numAttendees ?: 0}")
+                Text(text = "Public: ${event.isPublic?.let { if (it) "Yes" else "No" } ?: "Unknown"}")
+                Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
+                Text(text = "Price: $${event.price ?: 0.0}")
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onDismiss() }) {
+                Text("Close")
+            }
+        }
+    )
+}
