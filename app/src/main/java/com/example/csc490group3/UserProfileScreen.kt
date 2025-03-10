@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.viewModels.HomeScreenViewModel
+import com.example.csc490group3.viewModels.UserProfileViewModel
 
 
 @Composable
@@ -175,30 +176,31 @@ fun UserProfileScreen(navController: NavController) {
 
 @Composable
 
-fun Section1(title: String, viewModel: HomeScreenViewModel = viewModel(), fontSize: TextUnit) {
-
-    val events by viewModel.events
+fun Section1(title: String, viewModel: ProfileScreenViewModel = viewModel(), fontSize: TextUnit) {
+    val events by viewModel.registeredEvents
     Row() {
         Text(
             text = title,
         )
-
     }
     LazyRow {
 
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(event = event, onRegisterClick = { selectedEvent ->
-                viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
-            })
+            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { selectedEvent ->
+                viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
+            },
+                isHorizontal = true,
+                showRegisterButton = false,
+                showUnregisterButton = true
+            )
         }
     }
 
 }
 
 @Composable
-fun Section2(title: String, viewModel: HomeScreenViewModel = viewModel(),fontSize: TextUnit) {
-
-    val events by viewModel.events
+fun Section2(title: String, viewModel: ProfileScreenViewModel = viewModel(),fontSize: TextUnit) {
+    val events by viewModel.createdEvents
     Row() {
         Text(
             text = title,
@@ -207,9 +209,10 @@ fun Section2(title: String, viewModel: HomeScreenViewModel = viewModel(),fontSiz
     LazyRow {
 
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(event = event, onRegisterClick = { selectedEvent ->
-                viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
-            })
+            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { },
+                isHorizontal = true,
+                showRegisterButton = false
+            )
         }
     }
 

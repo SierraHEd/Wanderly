@@ -174,6 +174,27 @@ object DatabaseManagement {
             }
         }
     }
+    suspend fun unregisterEvent(event: Event, user: User): Boolean{
+        return withContext(Dispatchers.IO) {
+            val userID = user.id
+            val eventID = event.id
+            try {
+                postgrest.from("user_events").delete {
+                    select()
+                    filter {
+                        userID?.let { eq("user_id", it) }
+                        eventID?.let { eq("event_id", it) }
+                    }
+                }
+                println("Successfully unregistered from event: ${event.eventName}")
+                true
+
+            }catch(e: Exception) {
+                println("Error unregistering: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
 
 
 
