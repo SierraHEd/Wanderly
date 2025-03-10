@@ -214,12 +214,15 @@ fun CalendarScreen(
                         selectedMonth.value == currentDate.monthNumber
                     )
                         currentDate.dayOfMonth else -1,
-                    onDateClick = { day ->
+                    onDateClick = { day -> //saves day user clicks and compares to current events
                         selectedDay.value = day
                         eventsForSelectedDay.value = events.filter { it.eventDate.dayOfMonth == day }
+                        //If more than one event on a given day show popup list of events
                         if (eventsForSelectedDay.value.size > 1) {
                             showEventsPopup.value = true
-                        } else if (eventsForSelectedDay.value.isNotEmpty()) {
+                        }
+                        //If event then show all details
+                        else if (eventsForSelectedDay.value.isNotEmpty()) {
                             selectedEvent.value = eventsForSelectedDay.value.first()
                         }
                     }
@@ -294,6 +297,7 @@ fun CalendarScreen(
             selectedEvent.value?.let { event ->
                 EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
             }
+
             // Show the popup dialog with the list of events for the selected day
             if (showEventsPopup.value) {
                 androidx.compose.material3.AlertDialog(
@@ -332,16 +336,17 @@ fun CalendarScreen(
 // Composable Functions
 ///////////////
 
+//Event cards for brief details under the calendar
 @Composable
 fun CalendarEventCard(
     event: Event,
-    onClick: () -> Unit // This is the onClick parameter
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { onClick() }, // Handle click here
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -362,7 +367,6 @@ fun CalendarEventCard(
             ) {
                 Column {
                     Text(text = "Time: ${event.eventDate}")
-                    // Safely handle nullable categories
                     Text(text = "Type: ${event.categories?.joinToString(", ")}")
                 }
                 Column {
@@ -432,7 +436,7 @@ fun DayCell(
             .clip(CircleShape)
             .background(
                 when {
-                    isSelected -> Color(0xFF6650a4) // Blue for selected day
+                    isSelected -> Color(0xFF6650a4) // Purple for selected day
                     isEventDay -> Color(0x8A7CA8FF) // Light Blue for event day
                     currentDay -> Color(0xFF969696) // Grey for current day
                     else -> Color.Transparent
@@ -452,6 +456,7 @@ fun DayCell(
     }
 }
 
+//Weekday view
 @Composable
 fun WeekHeader() {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -461,6 +466,7 @@ fun WeekHeader() {
     }
 }
 
+//Shows all event details in a popup
 @Composable
 fun EventDetailDialog(
     event: Event,
