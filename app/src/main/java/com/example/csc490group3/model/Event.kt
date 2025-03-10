@@ -1,4 +1,5 @@
 package com.example.csc490group3.model
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,5 +26,7 @@ data class Event (
     @SerialName("created_by")
     val createdBy: Int,
     @SerialName("num_attendees")
-    val numAttendees: Int? = 0
+    val numAttendees: Int? = 0,
+    @SerialName("date")
+    val eventDate: LocalDate
 )
