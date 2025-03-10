@@ -176,7 +176,7 @@ fun UserProfileScreen(navController: NavController) {
 
 @Composable
 
-fun Section1(title: String, viewModel: ProfileScreenViewModel = viewModel(), fontSize: TextUnit) {
+fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
     Row() {
         Text(
@@ -199,7 +199,7 @@ fun Section1(title: String, viewModel: ProfileScreenViewModel = viewModel(), fon
 }
 
 @Composable
-fun Section2(title: String, viewModel: ProfileScreenViewModel = viewModel(),fontSize: TextUnit) {
+fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
     val events by viewModel.createdEvents
     Row() {
         Text(
