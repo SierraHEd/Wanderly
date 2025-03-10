@@ -1,7 +1,6 @@
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -9,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Remove
@@ -28,13 +28,12 @@ import com.example.csc490group3.R
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
-import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.csc490group3.model.UserSession.currentUserEmail
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 
@@ -43,10 +42,10 @@ import com.example.csc490group3.viewModels.UserProfileViewModel
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
-    //val CurrentUser = UserSession.currentUser.email
+   // val CurrentUser = UserSession.currentUser?.email.?
 
 
-
+/*
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,12 +75,19 @@ fun UserProfileScreen(navController: NavController) {
             Text(
                 text = "Welcome back, " + (currentUserEmail.toString().substringBefore("@")),
                 modifier = Modifier.padding(10.dp),
-                fontSize = 18.sp,
+                fontSize = 24.sp,
                 color = Color.Black,
 
                 )
-
+            if (isCurrentUser) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
+            }
             // Settings Button (Only for current user)
+
             if (isCurrentUser) {
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Absolute.Right) {
@@ -100,18 +106,63 @@ fun UserProfileScreen(navController: NavController) {
                     }
                 }
             }
+
+             */
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PurpleBKG)
+            .padding(16.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = { navController.navigate("home_screen") }) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+            if (isCurrentUser) {
+                IconButton(onClick = { showSettings = true }) {
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            //pfp
+            Image(
+                painter = painterResource(id = R.drawable.app_icon),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.Black, CircleShape),
+                contentScale = ContentScale.Crop
+            )
             Spacer(modifier = Modifier.height(8.dp))
-
-
+            Text(
+                text = "Welcome back, " + (UserSession.currentUserEmail.toString().substringBefore("@")),
+                fontSize = 24.sp,
+                color = Color.Black
+            )
         }
 
-        // Saved Events (Only for current user)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Saved Events (seen by current user only)
         if (isCurrentUser) {
-            Section1(title = "My Saved Events",)
+            Section1(title = "My Saved Events", fontSize = 20.sp)
         }
 
-        // Hosted Events (Visible to everyone)
-        Section2(title = "My Hosted Events")
+        // Hosted Events (seen by non current users)
+        Section2(title = "My Hosted Events", fontSize = 20.sp)
     }
 
     if (showSettings) {
@@ -122,10 +173,10 @@ fun UserProfileScreen(navController: NavController) {
     }
 }
 
+
 @Composable
 
-fun Section1(title: String,viewModel: UserProfileViewModel = viewModel()) {
-
+fun Section1(title: String, viewModel: ProfileScreenViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
     Row() {
         Text(
@@ -148,8 +199,7 @@ fun Section1(title: String,viewModel: UserProfileViewModel = viewModel()) {
 }
 
 @Composable
-fun Section2(title: String, viewModel: UserProfileViewModel = viewModel()) {
-
+fun Section2(title: String, viewModel: ProfileScreenViewModel = viewModel(),fontSize: TextUnit) {
     val events by viewModel.createdEvents
     Row() {
         Text(
