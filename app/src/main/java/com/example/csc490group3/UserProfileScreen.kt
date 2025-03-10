@@ -121,6 +121,7 @@ fun UserProfileScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .background(PurpleBKG)
                     .padding(16.dp)
             ) {
