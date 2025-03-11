@@ -77,7 +77,7 @@ object DatabaseManagement {
      * @param id The unique identifier of the event to delete.
      * @return Returns an [Event] object representing the deleted event if successful, or null if an error occurs.
      */
-    suspend fun deleteEvent(id: Int): Event? {
+    suspend fun removeEvent(id: Int): Event? {
         return withContext(Dispatchers.IO) {
             try {
                 postgrest.from("events").delete {

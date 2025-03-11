@@ -35,6 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Event
+import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 
@@ -202,9 +204,10 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     LazyRow {
 
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { selectedEvent ->
+            EventCard(event = event, onBottomButtonClick = { selectedEvent ->
                 viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
             },
+            onEditEvent = {},
                 isHorizontal = true,
                 showRegisterButton = false,
                 showUnregisterButton = true
@@ -214,9 +217,13 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
     val events by viewModel.createdEvents
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var eventToDelete by remember { mutableStateOf<Event?>(null) }
+
     Row() {
         Text(
             text = title,
@@ -225,11 +232,43 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     LazyRow {
 
         items(events) { event ->
-            com.example.csc490group3.ui.components.EventCard(event = event, onBottomButtonClick = { },
+            EventCard(
+                event = event,
+                onBottomButtonClick = {selectedEvent ->
+                    eventToDelete = event
+                    showDeleteDialog = true
+                },
+                onEditEvent = {selectedEvent ->
+                    viewModel.editEvent(selectedEvent)
+                },
                 isHorizontal = true,
-                showRegisterButton = false
+                showRegisterButton = false,
+                showOptionsButton = true,
             )
         }
+    }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm Deletion") },
+            text = { Text("Are you sure you want to delete this event? This action cannot be undone.") },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        eventToDelete?.let { viewModel.deleteEvent(it) } // Actually delete the event
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Delete", color = Color.White)
+                }
+            }
+        )
     }
 
 }

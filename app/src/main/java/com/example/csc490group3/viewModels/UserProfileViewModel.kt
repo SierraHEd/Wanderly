@@ -3,15 +3,13 @@ package com.example.csc490group3.viewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
-import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
+import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
 import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
-import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import kotlinx.coroutines.launch
 
 class UserProfileViewModel: ViewModel() {
@@ -59,6 +57,19 @@ class UserProfileViewModel: ViewModel() {
                 errorMessage.value = "Failed to Unregister: ${e.localizedMessage}"
             }
         }
+    }
+    fun deleteEvent(event: Event) {
+        viewModelScope.launch {
+            try {
+                event.id?.let { removeEvent(it) }
+                println("Event ${event.eventName} deleted")
+            } catch (e: Exception) {
+                errorMessage.value = "Failed to delete event: ${e.localizedMessage}"
+            }
+        }
+    }
+    fun editEvent(event: Event) {
+        println("You are editing an event")
     }
 
 
