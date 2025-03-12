@@ -93,6 +93,7 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
                     value = searchTerm,
                     onValueChange = { searchTerm = it },
                     label = { Text("Search") },
+                    singleLine = true,
                     trailingIcon = {
                         IconButton(onClick = { viewModel.search(searchTerm) }) {
                             Icon(
@@ -133,9 +134,15 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
                     else -> {
                         LazyColumn {
                             items(events) { event ->
-                                EventCard(event = event, onBottomButtonClick = { selectedEvent ->
-                                    viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
-                                })
+                                EventCard(
+                                    event = event, onBottomButtonClick = { selectedEvent ->
+                                        viewModel.registerForEvent(
+                                            selectedEvent,
+                                            UserSession.currentUser
+                                        )
+                                    },
+                                    onEditEvent = {},
+                                )
                             }
                         }
                     }
