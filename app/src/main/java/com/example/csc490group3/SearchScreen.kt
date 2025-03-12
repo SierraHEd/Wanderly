@@ -73,9 +73,7 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
           Column(
                   modifier = Modifier
                     .fillMaxSize()
-                    .background(PurpleBKG)
-                    .verticalScroll(scrollState),
-
+                    .background(PurpleBKG),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             )

@@ -196,6 +196,24 @@ object DatabaseManagement {
         }
     }
 
+    suspend fun simpleSearch(query: String): List<Event>? {
+        return withContext(Dispatchers.IO) {
+            println("THIS WAS CALLED HERE")
+            try {
+                val params = JsonObject(mapOf("term" to JsonPrimitive(query)))
+
+                val result = postgrest.rpc("search_events", params).decodeList<Event>()
+                println(result)
+                result
+
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+
+    }
+
 
 
 }
