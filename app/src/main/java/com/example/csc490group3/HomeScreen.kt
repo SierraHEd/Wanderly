@@ -62,9 +62,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
+                /* Add back if a test button is needed
                 Button(onClick = { }) {
                     Text("TEST")
                 }
+                 */
                 when {
                     isLoading -> {
                         Text("Loading events...", style = MaterialTheme.typography.bodyMedium)
@@ -79,9 +81,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     else -> {
                         LazyColumn {
                             items(events) { event ->
-                                EventCard(event = event, onBottomButtonClick = { selectedEvent ->
-                                    viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
-                                })
+                                EventCard(
+                                    event = event, onBottomButtonClick = { selectedEvent ->
+                                        viewModel.registerForEvent(
+                                            selectedEvent,
+                                            UserSession.currentUser
+                                        )
+                                    },
+                                    onEditEvent = {}
+                                )
                             }
                         }
                     }

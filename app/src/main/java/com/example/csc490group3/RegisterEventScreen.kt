@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -300,23 +301,25 @@ fun RegisterEventScreen(navController: NavController) {
                         // Trigger the toast by setting the state
                         showDateErrorToast = true
                     } else {
-                        eventToAdd = Event(
-                            eventName = eventName,
-                            zipcode = zipcode,
-                            city = city,
-                            address = address,
-                            venue = venue,
-                            maxAttendees = maxAttendees.toIntOrNull() ?: 0,
-                            description = description,
-                            isPublic = isPublic,
-                            isFamilyFriendly = isFamilyFriendly,
-                            price = price.toDoubleOrNull() ?: 0.0,
-                            country = selectedCountry,
-                            state = selectedState,
-                            createdBy = 3,
-                            numAttendees = 0,
-                            eventDate = eventDate!!
-                        )
+                        eventToAdd = UserSession.currentUser?.id?.let {
+                            Event(
+                                eventName = eventName,
+                                zipcode = zipcode,
+                                city = city,
+                                address = address,
+                                venue = venue,
+                                maxAttendees = maxAttendees.toIntOrNull() ?: 0,
+                                description = description,
+                                isPublic = isPublic,
+                                isFamilyFriendly = isFamilyFriendly,
+                                price = price.toDoubleOrNull() ?: 0.0,
+                                country = selectedCountry,
+                                state = selectedState,
+                                createdBy = it,
+                                numAttendees = 0,
+                                eventDate = eventDate!!
+                            )
+                        }!!
                         coroutineScope.launch {
                             if (!addRecord("events", eventToAdd)) {
                                 println("Error adding event")

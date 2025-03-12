@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,8 +36,10 @@ import com.example.csc490group3.model.Event
 @Composable
 fun EventCard(event: Event,
               onBottomButtonClick: (Event) -> Unit,
+              onEditEvent: (Event) -> Unit,
               showRegisterButton: Boolean = true,
               showUnregisterButton: Boolean = false,
+              showOptionsButton: Boolean = false,
               isHorizontal: Boolean = false,
               modifier: Modifier = Modifier
 ) {
@@ -116,16 +120,35 @@ fun EventCard(event: Event,
             }
             else if(showUnregisterButton) {
                 Button(
-                    onClick = { onBottomButtonClick(event) },
+                    onClick = {onBottomButtonClick(event)},
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)) // Blue color
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)) // Red color
                 ) {
                     Text("Unregister", color = Color.White, fontWeight = FontWeight.Bold)
                 }
-
             }
+            else if(showOptionsButton) {
+                Row (
+                    modifier = Modifier.fillMaxWidth()
 
-
+                ){
+                    Button (
+                        onClick = {onBottomButtonClick(event)},
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                    ) {
+                        Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Button (
+                        onClick = {onEditEvent(event)},
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                    ) {
+                        Text("Edit", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     }
 }
