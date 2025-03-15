@@ -67,7 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
-import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
 import com.example.csc490group3.supabase.SupabaseManagement.AuthManagement.auth
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -169,7 +169,7 @@ fun SignUpActivity(navController: NavController) {
                 this.email = email
                 this.password = password
             }
-            val newUser = PrivateUser(
+            val newUser = IndividualUser(
 
                 email = email,
                 firstName = firstName,

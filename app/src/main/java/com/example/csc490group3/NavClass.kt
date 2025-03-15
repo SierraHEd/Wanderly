@@ -12,7 +12,7 @@ fun Navigation(context: Context) {
     val navController = rememberNavController()
 
 
-    NavHost(navController = navController, startDestination = "splash_screen") {
+    NavHost(navController = navController, startDestination = "register_event_screen") {
         composable("splash_screen") {
             SplashScreen(navController)
         }

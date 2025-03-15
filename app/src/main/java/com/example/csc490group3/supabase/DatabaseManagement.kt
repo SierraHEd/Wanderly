@@ -1,18 +1,11 @@
 package com.example.csc490group3.supabase
 
 import com.example.csc490group3.model.Event
-import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.example.csc490group3.model.UserSession
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -46,19 +39,19 @@ object DatabaseManagement {
      * Fetches a private user from the "private_users" table based on the provided email address.
      *
      * This function filters the table for records where the "email" column matches the given email,
-     * and decodes the response into a [PrivateUser] object.
+     * and decodes the response into a [IndividualUser] object.
      *
      * @param email The email address of the user to fetch.
-     * @return Returns a [PrivateUser] object if a matching record is found, or null if no match is found or an error occurs.
+     * @return Returns a [IndividualUser] object if a matching record is found, or null if no match is found or an error occurs.
      */
-    suspend fun getPrivateUser(email: String): PrivateUser? {
+    suspend fun getPrivateUser(email: String): IndividualUser? {
         return withContext(Dispatchers.IO) {
             try{
                 postgrest.from("private_users").select {
                     filter {
                         eq("email", email)
                     }
-                }.decodeSingle<PrivateUser>()
+                }.decodeSingle<IndividualUser>()
             }catch(e: Exception) {
                 println("Error fetching user record: ${e.localizedMessage}")
                 null

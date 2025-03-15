@@ -1,5 +1,6 @@
 package com.example.csc490group3
 
+import android.icu.number.NumberFormatter.UnitWidth
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -7,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -32,12 +35,15 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,8 +83,8 @@ import kotlinx.datetime.LocalDate
 fun RegisterEventScreen(navController: NavController) {
     var eventToAdd: Event
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
-    val countries = listOf("USA", "Canada", "UK", "Germany", "France")
-    val states = listOf("New York", "California", "Texas", "Florida", "Illinois")
+    var showCountryPicker by remember { mutableStateOf(false) }
+    var showStatePicker by remember { mutableStateOf(false) }
     var price by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
     var zipcode by remember { mutableStateOf("") }
@@ -273,8 +279,56 @@ fun RegisterEventScreen(navController: NavController) {
             EventTextField("Description", description) { description = it }
             EventTextField("Guest Limit", maxAttendees, KeyboardType.Number) { maxAttendees = it }
             EventTextField("Address", address) { address = it }
-            DropdownMenuExample(countries, selectedCountry) { selectedCountry = it }
-            DropdownMenuExample(states, selectedState) { selectedState = it }
+
+            //button for country selection
+            Button(
+                onClick = { showStatePicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedState,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            StatePickerBottomSheet(
+                showSheet = showStatePicker,
+                onDismiss = { showStatePicker = false },
+                onStateSelected = { selectedState = it }
+            )
+            //button for country selection
+            Button(
+                onClick = { showCountryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedCountry,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            //calls to bring up country selection bottom sheet
+            CountryPickerBottomSheet(
+                showSheet = showCountryPicker,
+                onDismiss = { showCountryPicker = false },
+                onStateSelected = { selectedCountry = it }
+            )
             EventTextField("City", city) { city = it }
             EventTextField("Zipcode", zipcode) { zipcode = it }
 
@@ -394,10 +448,11 @@ fun DropdownMenuExample(
     ) {
         Text(
             text = selectedItem,
-            fontSize = 18.sp,
+            fontSize = 22.sp,
             color = Black,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Left
+            textAlign = TextAlign.Left,
+            fontFamily = FontFamily.Default
         )
         Row(
             horizontalArrangement = Arrangement.End
@@ -414,7 +469,7 @@ fun DropdownMenuExample(
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         options.forEach { option ->
             DropdownMenuItem(
-                text = { Text(option, fontSize = 16.sp) },
+                text = { Text(option, fontSize = 22.sp) },
                 onClick = {
                     onItemSelected(option)
                     expanded = false
@@ -466,4 +521,125 @@ fun EventTextField(
             .padding(vertical = 10.dp)
 
     )
+
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatePickerBottomSheet(
+    showSheet: Boolean,
+    onDismiss: () -> Unit,
+    onStateSelected:(String) -> Unit
+) {
+    val states = arrayOf(
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+    )
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    if(showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 400.dp)
+                    .padding(16.dp)
+            ){
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Select Your State", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    states.forEach { state ->
+                        TextButton(
+                            onClick = {
+                                onStateSelected(state)
+                                Toast.makeText(context, "Selected: $state", Toast.LENGTH_SHORT).show()
+                                coroutineScope.launch {sheetState.hide()}
+                                onDismiss()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = state,
+                                fontSize = 20.sp,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+
+                    }
+                }
+            }
+
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CountryPickerBottomSheet(
+    showSheet: Boolean,
+    onDismiss: () -> Unit,
+    onStateSelected:(String) -> Unit
+) {
+    val countries = arrayOf("United States"
+    )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    if(showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 400.dp)
+                    .padding(16.dp)
+            ){
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Select Your Country", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    countries.forEach { country ->
+                        TextButton(
+                            onClick = {
+                                onStateSelected(country)
+                                Toast.makeText(context, "Selected: $country", Toast.LENGTH_SHORT).show()
+                                coroutineScope.launch {sheetState.hide()}
+                                onDismiss()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = country,
+                                fontSize = 20.sp,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+
+                    }
+                }
+            }
+
+        }
+
+    }
+
 }
