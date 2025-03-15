@@ -1,6 +1,5 @@
 package com.example.csc490group3
 
-import android.icu.number.NumberFormatter.UnitWidth
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -19,12 +18,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
@@ -35,6 +36,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -57,11 +59,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -100,9 +105,11 @@ fun RegisterEventScreen(navController: NavController) {
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
     var selectedState by remember { mutableStateOf("State") }
+    var eventDateString by remember { mutableStateOf("") }
     var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
+    var eventDateValue by remember { mutableStateOf(TextFieldValue("")) }
     //the coroutine is to call the fun from database mgmt
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -141,6 +148,54 @@ fun RegisterEventScreen(navController: NavController) {
     fun convertMillisToLocalDate(millis: Long): LocalDate {
         val javaLocalDate = java.time.LocalDate.ofEpochDay(millis / 86400000)
         return LocalDate(javaLocalDate.year, javaLocalDate.monthValue, javaLocalDate.dayOfMonth)
+    }
+    fun convertMillisToLocalString(millis: Long): String {
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+        val localDate = java.time.Instant.ofEpochMilli(millis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        return formatter.format(localDate)
+    }
+    fun convertStringToMillis(dateString: String): Long? {
+        return try {
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+            val localDate = java.time.LocalDate.parse(dateString, formatter)
+            java.time.ZoneId.systemDefault().rules.getOffset(java.time.Instant.now()).totalSeconds.toLong() * 1000 +
+                    java.time.LocalDateTime.of(localDate, java.time.LocalTime.MIDNIGHT)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+        } catch (e: Exception) {
+            null // Return null if the date format is invalid
+        }
+    }
+    fun formatDateInput(input: String) : String {
+        val digits = input.filter {it.isDigit()}
+        val maxLength = 8
+        val cleanInput = if (digits.length > maxLength) {
+            digits.substring(0, maxLength)
+        }
+        else{
+            digits
+        }
+        val formatted = StringBuilder()
+
+        for(i in cleanInput.indices) {
+            formatted.append(cleanInput[i])
+            if((i == 1 || i == 3) && i + 1 < cleanInput.length) {
+                formatted.append("/")
+            }
+        }
+        return formatted.toString()
+    }
+    fun calculateNewCursorPosition(originalText: String, formattedText: String, cursorPosition: Int): Int {
+        var offset = 0
+        for (i in 0 until cursorPosition) {
+            if (i < formattedText.length && formattedText[i] == '/' && (i == 2 || i == 5)) {
+                offset++
+            }
+        }
+        return (cursorPosition + offset).coerceAtMost(formattedText.length)
     }
 
     // Function to show the DatePicker dialog
@@ -182,6 +237,9 @@ fun RegisterEventScreen(navController: NavController) {
                             datePickerState.selectedDateMillis?.let { selectedDateMillis ->
                                 eventDate = convertMillisToLocalDate(selectedDateMillis)
                             }
+                            datePickerState.selectedDateMillis?.let {selectedDateMillis ->
+                                eventDateString = convertMillisToLocalString(selectedDateMillis)
+                            }
                             isDatePickerVisible = false
                         },
                         modifier = Modifier
@@ -196,7 +254,9 @@ fun RegisterEventScreen(navController: NavController) {
                     }
                     // Cancel Button
                     TextButton(
-                        onClick = { isDatePickerVisible = false },
+                        onClick = {
+                            isDatePickerVisible = false
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .background(Color.Red)
@@ -258,18 +318,53 @@ fun RegisterEventScreen(navController: NavController) {
 
             //Fields
             // Event Date Field (Using a Button to show DatePicker)
-            Button(
-                onClick = { showDatePicker() },
-                enabled = true,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6A1B9A),
-                    contentColor = White
+                    .padding(vertical = 10.dp),
+                verticalAlignment =  Alignment.CenterVertically
+            ){
+                OutlinedTextField(
+                    value = eventDateString,
+                    onValueChange = {newText ->
+                        eventDateString = formatDateInput(newText)
+                        val newCursorPosition = calculateNewCursorPosition(newText.text, formattedText, newText.selection.start)
+
+                        eventDateValue = newText.copy(
+                            text = formattedText,
+                            selection = TextRange(newCursorPosition)
+                        )
+                    },
+                    label ={ Text("Event Date")},
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    readOnly = false,
+                    modifier = Modifier
+                        .weight(1f)
+                        .onGloballyPositioned {
+                            convertStringToMillis(eventDateString)?.let{millis ->
+                                datePickerState.selectedDateMillis = millis
+                            }
+                        },
+                    trailingIcon = {
+                        Icon(Icons.Filled.Create, contentDescription = "Select Date")
+                    }
                 )
-            ) {
-                Text(text = eventDate?.toString() ?: "Select Event Date")
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = { isDatePickerVisible = true }, // Open Date Picker
+                    modifier = Modifier
+                        .size(48.dp) // Size of the button
+                        .border(1.dp, Color.Gray, CircleShape)
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday, // Calendar icon
+                        contentDescription = "Open Date Picker",
+                        tint = Color.Black
+                    )
+                }
             }
             // Event Name Field
             EventTextField("Event Name", eventName) { eventName = it }
