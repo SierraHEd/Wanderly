@@ -43,6 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -64,9 +65,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -101,7 +107,6 @@ fun RegisterEventScreen(navController: NavController) {
     var isPublic by remember { mutableStateOf(true) }
     var isFamilyFriendly by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("Category") }
-    var selectedPrice by remember { mutableStateOf("Price Range") }
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
     var selectedState by remember { mutableStateOf("State") }
@@ -109,7 +114,6 @@ fun RegisterEventScreen(navController: NavController) {
     var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
-    var eventDateValue by remember { mutableStateOf(TextFieldValue("")) }
     //the coroutine is to call the fun from database mgmt
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -140,62 +144,57 @@ fun RegisterEventScreen(navController: NavController) {
 // Date Picker
 ///////////////
 
-    // Date Picker Dialog state
+// Date Picker Dialog state
     val datePickerState = rememberDatePickerState()
     var isDatePickerVisible by remember { mutableStateOf(false) }
 
-    // Utility to convert millis to LocalDate
-    fun convertMillisToLocalDate(millis: Long): LocalDate {
-        val javaLocalDate = java.time.LocalDate.ofEpochDay(millis / 86400000)
-        return LocalDate(javaLocalDate.year, javaLocalDate.monthValue, javaLocalDate.dayOfMonth)
+    // Updated conversion functions
+    fun convertMillisToLocalDate(millis: Long): kotlinx.datetime.LocalDate {
+        // Get the zone offset for the instant
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        // Subtract the offset to shift the UTC midnight to local midnight
+        val adjustedMillis = millis - offsetMillis
+        // Convert the adjusted millis into a java.time.LocalDate
+        val javaLocalDate = java.time.Instant.ofEpochMilli(adjustedMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        // Convert to kotlinx.datetime.LocalDate
+        return kotlinx.datetime.LocalDate(
+            javaLocalDate.year,
+            javaLocalDate.monthValue,
+            javaLocalDate.dayOfMonth
+        )
     }
+
     fun convertMillisToLocalString(millis: Long): String {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
-        val localDate = java.time.Instant.ofEpochMilli(millis)
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        val adjustedMillis = millis - offsetMillis
+        val localDate = java.time.Instant.ofEpochMilli(adjustedMillis)
             .atZone(java.time.ZoneId.systemDefault())
             .toLocalDate()
         return formatter.format(localDate)
     }
-    fun convertStringToMillis(dateString: String): Long? {
+
+    fun convertStringToMillis(digits: String): Long? {
+        if (digits.length != 8) return null
+        // Insert slashes into the raw digit string to get the formatted string.
+        val formattedDate = "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
         return try {
             val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
-            val localDate = java.time.LocalDate.parse(dateString, formatter)
-            java.time.ZoneId.systemDefault().rules.getOffset(java.time.Instant.now()).totalSeconds.toLong() * 1000 +
-                    java.time.LocalDateTime.of(localDate, java.time.LocalTime.MIDNIGHT)
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli()
+            val localDate = java.time.LocalDate.parse(formattedDate, formatter)
+            localDate.atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
         } catch (e: Exception) {
-            null // Return null if the date format is invalid
+            null
         }
-    }
-    fun formatDateInput(input: String) : String {
-        val digits = input.filter {it.isDigit()}
-        val maxLength = 8
-        val cleanInput = if (digits.length > maxLength) {
-            digits.substring(0, maxLength)
-        }
-        else{
-            digits
-        }
-        val formatted = StringBuilder()
-
-        for(i in cleanInput.indices) {
-            formatted.append(cleanInput[i])
-            if((i == 1 || i == 3) && i + 1 < cleanInput.length) {
-                formatted.append("/")
-            }
-        }
-        return formatted.toString()
-    }
-    fun calculateNewCursorPosition(originalText: String, formattedText: String, cursorPosition: Int): Int {
-        var offset = 0
-        for (i in 0 until cursorPosition) {
-            if (i < formattedText.length && formattedText[i] == '/' && (i == 2 || i == 5)) {
-                offset++
-            }
-        }
-        return (cursorPosition + offset).coerceAtMost(formattedText.length)
     }
 
     // Function to show the DatePicker dialog
@@ -203,7 +202,7 @@ fun RegisterEventScreen(navController: NavController) {
         isDatePickerVisible = true
     }
 
-    // Handle the DatePicker dialog visibility and selection
+// Handle the DatePicker dialog visibility and selection
     if (isDatePickerVisible) {
         Popup(
             alignment = Alignment.Center,
@@ -236,8 +235,6 @@ fun RegisterEventScreen(navController: NavController) {
                         onClick = {
                             datePickerState.selectedDateMillis?.let { selectedDateMillis ->
                                 eventDate = convertMillisToLocalDate(selectedDateMillis)
-                            }
-                            datePickerState.selectedDateMillis?.let {selectedDateMillis ->
                                 eventDateString = convertMillisToLocalString(selectedDateMillis)
                             }
                             isDatePickerVisible = false
@@ -326,17 +323,12 @@ fun RegisterEventScreen(navController: NavController) {
             ){
                 OutlinedTextField(
                     value = eventDateString,
-                    onValueChange = {newText ->
-                        eventDateString = formatDateInput(newText)
-                        val newCursorPosition = calculateNewCursorPosition(newText.text, formattedText, newText.selection.start)
-
-                        eventDateValue = newText.copy(
-                            text = formattedText,
-                            selection = TextRange(newCursorPosition)
-                        )
+                    onValueChange = { newText ->
+                        eventDateString = newText.filter { it.isDigit() }.take(8) 
                     },
                     label ={ Text("Event Date")},
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = DateInputVisualTransformation(),
                     readOnly = false,
                     modifier = Modifier
                         .weight(1f)
@@ -514,6 +506,43 @@ fun RegisterEventScreen(navController: NavController) {
             }
         }
     }
+}
+
+class DateInputVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        // Extract digits (max 8) from the input
+        val digits = text.text.filter { it.isDigit() }.take(8)
+        // Transform the digits into a formatted string and mapping
+        val (formatted, mapping) = transformDigits(digits)
+
+        // Create the OffsetMapping based on our mapping list.
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // Given an original offset (number of digits), return its transformed offset.
+                return mapping.getOrElse(offset) { formatted.length }
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // Given a transformed offset, find the largest original offset whose mapped value is <= offset.
+                return mapping.indexOfLast { it <= offset }.coerceAtLeast(0)
+            }
+        }
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}
+fun transformDigits(digits: String): Pair<String, List<Int>> {
+    val mapping = mutableListOf<Int>()
+    val sb = StringBuilder()
+    mapping.add(0) // The mapping for offset 0 is 0.
+    for (i in digits.indices) {
+        // Insert a slash at index 2 and 4 (i.e. after 2nd and 4th digit)
+        if (i == 2 || i == 4) {
+            sb.append("/")
+        }
+        sb.append(digits[i])
+        mapping.add(sb.length)
+    }
+    return Pair(sb.toString(), mapping)
 }
 
 ///////////////
