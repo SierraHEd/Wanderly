@@ -88,6 +88,7 @@ import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,6 +108,7 @@ fun RegisterEventScreen(navController: NavController) {
     var isPublic by remember { mutableStateOf(true) }
     var isFamilyFriendly by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("Category") }
+    var eventTime by remember { mutableStateOf("00:00" )}
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
     var selectedState by remember { mutableStateOf("State") }
@@ -313,61 +315,79 @@ fun RegisterEventScreen(navController: NavController) {
                 fontFamily = FontFamily.Serif
             )
 
-            //Fields
-            // Event Date Field (Using a Button to show DatePicker)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                verticalAlignment =  Alignment.CenterVertically
-            ){
-                OutlinedTextField(
-                    value = eventDateString,
-                    onValueChange = { newText ->
-                        eventDateString = newText.filter { it.isDigit() }.take(8) 
-                    },
-                    label ={ Text("Event Date")},
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    visualTransformation = DateInputVisualTransformation(),
-                    readOnly = false,
-                    modifier = Modifier
-                        .weight(1f)
-                        .onGloballyPositioned {
-                            convertStringToMillis(eventDateString)?.let{millis ->
-                                datePickerState.selectedDateMillis = millis
-                            }
-                        },
-                    trailingIcon = {
-                        Icon(Icons.Filled.Create, contentDescription = "Select Date")
-                    }
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(
-                    onClick = { isDatePickerVisible = true }, // Open Date Picker
-                    modifier = Modifier
-                        .size(48.dp) // Size of the button
-                        .border(1.dp, Color.Gray, CircleShape)
-                        .clip(CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CalendarToday, // Calendar icon
-                        contentDescription = "Open Date Picker",
-                        tint = Color.Black
-                    )
-                }
-            }
             // Event Name Field
             EventTextField("Event Name", eventName) { eventName = it }
-            DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
-            EventTextField("Venue", venue) { venue = it }
-            EventTextField("Price", price) { price = it }
             EventTextField("Description", description) { description = it }
-            EventTextField("Guest Limit", maxAttendees, KeyboardType.Number) { maxAttendees = it }
-            EventTextField("Address", address) { address = it }
+            Row (
+                //add stuff here??
+            ) {
+                //Fields
+                // Event Date Field (Using a Button to show DatePicker)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    verticalAlignment =  Alignment.CenterVertically
+                ){
+                    OutlinedTextField(
+                        value = eventDateString,
+                        onValueChange = { newText ->
+                            eventDateString = newText.filter { it.isDigit() }.take(8)
+                        },
+                        label ={ Text("Event Date")},
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        visualTransformation = DateInputVisualTransformation(),
+                        readOnly = false,
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = 0.6f)
+                            .weight(1f)
+                            .onGloballyPositioned {
+                                convertStringToMillis(eventDateString)?.let{millis ->
+                                    datePickerState.selectedDateMillis = millis
+                                }
+                            },
+                        trailingIcon = {
+                            Icon(Icons.Filled.Create, contentDescription = "Select Date")
+                        }
+                    )
 
-            //button for country selection
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = { isDatePickerVisible = true }, // Open Date Picker
+                        modifier = Modifier
+                            .size(48.dp) // Size of the button
+                            .border(1.dp, Color.Gray, CircleShape)
+                            .clip(CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarToday, // Calendar icon
+                            contentDescription = "Open Date Picker",
+                            tint = Color.Black
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    OutlinedTextField(
+                        value = eventTime,
+                        onValueChange = { newTime ->
+                            eventTime = newTime
+                        },
+                        label = { Text("Event Time") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = 0.4f)
+                            .weight(1f)
+                    )
+                }
+
+            }
+
+            EventTextField("Venue", venue) { venue = it }
+            EventTextField("Address", address) { address = it }
+            EventTextField("City", city) { city = it }
+            //button for state selection
             Button(
                 onClick = { showStatePicker = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
@@ -391,6 +411,9 @@ fun RegisterEventScreen(navController: NavController) {
                 onDismiss = { showStatePicker = false },
                 onStateSelected = { selectedState = it }
             )
+
+            EventTextField("Zipcode", zipcode) { zipcode = it }
+
             //button for country selection
             Button(
                 onClick = { showCountryPicker = true },
@@ -416,23 +439,33 @@ fun RegisterEventScreen(navController: NavController) {
                 onDismiss = { showCountryPicker = false },
                 onStateSelected = { selectedCountry = it }
             )
-            EventTextField("City", city) { city = it }
-            EventTextField("Zipcode", zipcode) { zipcode = it }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) { price = it }
+
+                Spacer(Modifier.width(4.dp))
+
+                EventTextField("Guest Limit", maxAttendees, KeyboardType.Number, Modifier.weight(1f)) { maxAttendees = it }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Is A Public Event", color = Black)
-                Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is A Public Event", color = Black)
+                    Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is Family Friendly", color = Black)
+                    Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
+                }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text("Is Family Friendly", color = Black)
-                Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
-            }
+
+            DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
@@ -609,6 +642,7 @@ fun EventTextField(
     label: String,
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -640,12 +674,8 @@ fun EventTextField(
                 modifier = Modifier.padding(horizontal = (30.dp))
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp)
-
+        modifier = modifier
     )
-
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
