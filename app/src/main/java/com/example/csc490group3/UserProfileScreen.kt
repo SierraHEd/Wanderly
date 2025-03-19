@@ -1,43 +1,65 @@
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.R
+import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.unit.TextUnit
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.csc490group3.data.BottomNavBar
-import com.example.csc490group3.model.Event
-import com.example.csc490group3.ui.components.EventCard
-import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 
 
@@ -46,6 +68,8 @@ fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
     // val CurrentUser = UserSession.currentUser?.email.?
+    var context = LocalContext.current
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
 
 
     /*
@@ -189,6 +213,10 @@ fun UserProfileScreen(navController: NavController) {
                 )
             }
         }
+        // Show event detail popup when an event is selected
+        selectedEvent.value?.let { event ->
+            EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+        }
     }
 }
 
@@ -196,6 +224,8 @@ fun UserProfileScreen(navController: NavController) {
 
 fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+
     Row() {
         Text(
             text = title,
@@ -204,7 +234,9 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     LazyRow {
 
         items(events) { event ->
-            EventCard(event = event, onBottomButtonClick = { selectedEvent ->
+            EventCard(event = event,
+                onClick = { selectedEvent.value = event} ,
+                onBottomButtonClick = { selectedEvent ->
                 viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
             },
             onEditEvent = {},
@@ -214,13 +246,13 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
             )
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
     val events by viewModel.createdEvents
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var eventToDelete by remember { mutableStateOf<Event?>(null) }
 
@@ -234,6 +266,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
         items(events) { event ->
             EventCard(
                 event = event,
+                onClick = { selectedEvent.value = event} ,
                 onBottomButtonClick = {selectedEvent ->
                     eventToDelete = event
                     showDeleteDialog = true

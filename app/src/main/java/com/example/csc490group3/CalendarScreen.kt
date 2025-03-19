@@ -51,6 +51,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.time.YearMonth
 import java.util.Locale
+import com.example.csc490group3.ui.components.EventDetailDialog
 
 @Composable
 fun CalendarScreen(
@@ -464,36 +465,4 @@ fun WeekHeader() {
             Text(text = day, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
         }
     }
-}
-
-//Shows all event details in a popup
-@Composable
-fun EventDetailDialog(
-    event: Event,
-    onDismiss: () -> Unit
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text(text = event.eventName) },
-        text = {
-            Column {
-                Text(text = "Date: ${event.eventDate}")
-                Text(text = "Venue: ${event.venue}")
-                Text(text = "Location: ${event.address}, ${event.city}, ${event.state}, ${event.zipcode}")
-                Text(text = "Country: ${event.country}")
-                Text(text = "Description: ${event.description}")
-                Text(text = "Categories: ${event.categories?.joinToString(", ") ?: "No categories"}")
-                Text(text = "Max Attendees: ${event.maxAttendees}")
-                Text(text = "Number of Attendees: ${event.numAttendees ?: 0}")
-                Text(text = "Public: ${event.isPublic?.let { if (it) "Yes" else "No" } ?: "Unknown"}")
-                Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
-                Text(text = "Price: $${event.price ?: 0.0}")
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("Close")
-            }
-        }
-    )
 }
