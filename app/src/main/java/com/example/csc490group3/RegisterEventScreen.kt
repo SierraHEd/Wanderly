@@ -281,7 +281,7 @@ fun RegisterEventScreen(navController: NavController) {
         without the bottom bar moving **/
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .background(PurpleBKG)
                 .padding(16.dp)
         ) {
