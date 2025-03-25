@@ -1,5 +1,6 @@
 package com.example.csc490group3.model
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -28,5 +29,7 @@ data class Event (
     @SerialName("num_attendees")
     val numAttendees: Int? = 0,
     @SerialName("date")
-    val eventDate: LocalDate
+    val eventDate: LocalDate,
+    @SerialName("time")
+    val eventTime: LocalTime
 )

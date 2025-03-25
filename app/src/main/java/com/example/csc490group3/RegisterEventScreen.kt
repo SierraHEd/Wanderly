@@ -1,11 +1,13 @@
 package com.example.csc490group3
 
+import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +33,7 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DropdownMenu
@@ -79,6 +83,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
@@ -89,6 +94,8 @@ import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,6 +104,7 @@ fun RegisterEventScreen(navController: NavController) {
     val categories = listOf("Music", "Food", "Entertainment", "Sports")
     var showCountryPicker by remember { mutableStateOf(false) }
     var showStatePicker by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
     var price by remember { mutableStateOf("") }
     var eventName by remember { mutableStateOf("") }
     var zipcode by remember { mutableStateOf("") }
@@ -107,7 +115,7 @@ fun RegisterEventScreen(navController: NavController) {
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var isFamilyFriendly by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf("Category") }
+    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
     var eventTime by remember { mutableStateOf("00:00" )}
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
@@ -119,6 +127,8 @@ fun RegisterEventScreen(navController: NavController) {
     //the coroutine is to call the fun from database mgmt
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
+
 
 ////////////////
 // Error Handling
@@ -272,6 +282,40 @@ fun RegisterEventScreen(navController: NavController) {
     }
 
 ////////////////
+// Time Picker
+///////////////
+    @Composable
+    fun TimePickerPopup(
+    onTimeSelected: (hour: Int, minute: Int) -> Unit
+) {
+    val context = LocalContext.current
+    var timePicked by remember { mutableStateOf("") }
+
+    // Create a lambda that shows the TimePickerDialog
+    val showTimePicker = {
+        val calendar = Calendar.getInstance()
+        val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val initialMinute = calendar.get(Calendar.MINUTE)
+
+        TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                timePicked = String.format("%02d:%02d", hourOfDay, minute)
+                onTimeSelected(hourOfDay, minute)
+            },
+            initialHour,
+            initialMinute,
+            true  // Set true for 24-hour format, false for AM/PM mode
+        ).show()
+    }
+
+    // This Button triggers the native alarm-style time picker dialog.
+    Button(onClick = showTimePicker) {
+        Text(text = if (timePicked.isEmpty()) "Select Time" else "Time: $timePicked")
+    }
+    }
+
+////////////////
 // Main UI
 ///////////////
 
@@ -328,13 +372,13 @@ fun RegisterEventScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(vertical = 10.dp),
                     verticalAlignment =  Alignment.CenterVertically
-                ){
+                ) {
                     OutlinedTextField(
                         value = eventDateString,
                         onValueChange = { newText ->
                             eventDateString = newText.filter { it.isDigit() }.take(8)
                         },
-                        label ={ Text("Event Date")},
+                        label = { Text("Event Date") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         visualTransformation = DateInputVisualTransformation(),
                         readOnly = false,
@@ -342,7 +386,7 @@ fun RegisterEventScreen(navController: NavController) {
                             .fillMaxWidth(fraction = 0.6f)
                             .weight(1f)
                             .onGloballyPositioned {
-                                convertStringToMillis(eventDateString)?.let{millis ->
+                                convertStringToMillis(eventDateString)?.let { millis ->
                                     datePickerState.selectedDateMillis = millis
                                 }
                             },
@@ -369,19 +413,37 @@ fun RegisterEventScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    OutlinedTextField(
-                        value = eventTime,
-                        onValueChange = { newTime ->
-                            eventTime = newTime
-                        },
-                        label = { Text("Event Time") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .fillMaxWidth(fraction = 0.4f)
-                            .weight(1f)
-                    )
-                }
+                    Box(modifier = Modifier.fillMaxWidth(0.4f)) {
+                        OutlinedTextField(
+                            value = eventTime,
+                            onValueChange = { },
+                            label = { Text("Event Time") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
+                        // Invisible overlay to capture taps over the entire text field.
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable {
+                                    val calendar = Calendar.getInstance()
+                                    val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+                                    val initialMinute = calendar.get(Calendar.MINUTE)
+                                    TimePickerDialog(
+                                        context,
+                                        { _, hour, minute ->
+                                            eventTime = String.format("%02d:%02d", hour, minute)
+                                        },
+                                        initialHour,
+                                        initialMinute,
+                                        true  // 24-hour format. Change to false for AM/PM.
+                                    ).show()
+                                }
+                        )
+                    }
+                }
             }
 
             EventTextField("Venue", venue) { venue = it }
@@ -464,8 +526,33 @@ fun RegisterEventScreen(navController: NavController) {
                     Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
                 }
             }
-
-            DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
+            //Category Button
+            Button(
+                onClick = { showCategoryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedCategories.toString(),
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            //calls to bring up country selection bottom sheet
+            CategoryPickerBottomSheet(
+                showSheet = showCategoryPicker,
+                onDismiss = {showStatePicker = false},
+                onSelectionDone = {selection ->
+                    selectedCategories = selection
+                }
+            )
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
@@ -491,7 +578,8 @@ fun RegisterEventScreen(navController: NavController) {
                                 state = selectedState,
                                 createdBy = it,
                                 numAttendees = 0,
-                                eventDate = eventDate!!
+                                eventDate = eventDate!!,
+                                eventTime = localEventTime
                             )
                         }!!
                         coroutineScope.launch {
@@ -746,8 +834,7 @@ fun CountryPickerBottomSheet(
     onDismiss: () -> Unit,
     onStateSelected:(String) -> Unit
 ) {
-    val countries = arrayOf("United States"
-    )
+    val countries = arrayOf("United States")
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -761,7 +848,7 @@ fun CountryPickerBottomSheet(
                 modifier = Modifier.fillMaxWidth()
                     .heightIn(min = 200.dp, max = 400.dp)
                     .padding(16.dp)
-            ){
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -775,8 +862,9 @@ fun CountryPickerBottomSheet(
                         TextButton(
                             onClick = {
                                 onStateSelected(country)
-                                Toast.makeText(context, "Selected: $country", Toast.LENGTH_SHORT).show()
-                                coroutineScope.launch {sheetState.hide()}
+                                Toast.makeText(context, "Selected: $country", Toast.LENGTH_SHORT)
+                                    .show()
+                                coroutineScope.launch { sheetState.hide() }
                                 onDismiss()
                             },
                             modifier = Modifier.fillMaxWidth()
@@ -795,5 +883,89 @@ fun CountryPickerBottomSheet(
         }
 
     }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryPickerBottomSheet(
+    showSheet: Boolean,
+    onDismiss: () -> Unit,
+    onSelectionDone:(List<String>) -> Unit
+) {
+    val categories = arrayOf("Category 1","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3" )
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
+    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 400.dp)
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Select Your Categories", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    categories.forEach { category ->
+                        Row(
+                            modifier =Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedCategories = if(selectedCategories.contains(category)) {
+                                        selectedCategories - category
+                                    }else {
+                                        selectedCategories + category
+                                    }
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment =  Alignment.CenterVertically
+                        ){
+                            Checkbox(
+                                checked = selectedCategories.contains(category),
+                                onCheckedChange = {isChecked ->
+                                    selectedCategories = if(isChecked){
+                                        selectedCategories + category
+                                    }else{
+                                        selectedCategories - category
+                                    }
+
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = category,
+                                fontSize = 20.sp,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = {
+                            Toast.makeText(context, "Selected: $selectedCategories", Toast.LENGTH_SHORT).show()
+                            coroutineScope.launch {sheetState.hide()}
+                            onSelectionDone(selectedCategories)
+                            onDismiss()
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ){
+                        Text("Done")
+                    }
+                }
+            }
+
+        }
+
+    }
 }
