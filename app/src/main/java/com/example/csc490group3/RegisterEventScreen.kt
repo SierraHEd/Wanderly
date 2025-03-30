@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -96,7 +95,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
+import com.example.csc490group3.ui.components.StatePickerBottomSheet
+import com.example.csc490group3.ui.components.CountryPickerBottomSheet
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterEventScreen(navController: NavController) {
@@ -548,7 +549,7 @@ fun RegisterEventScreen(navController: NavController) {
             //calls to bring up country selection bottom sheet
             CategoryPickerBottomSheet(
                 showSheet = showCategoryPicker,
-                onDismiss = {showStatePicker = false},
+                onDismiss = {showCategoryPicker = false},
                 onSelectionDone = {selection ->
                     selectedCategories = selection
                 }
@@ -670,60 +671,6 @@ fun transformDigits(digits: String): Pair<String, List<Int>> {
 // Composable Functions
 ///////////////
 
-//Dropdown Menu Composable Function
-@Composable
-fun DropdownMenuExample(
-    options: List<String>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Button(
-        onClick = { expanded = true },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = PurpleContainer
-
-        ),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(width = 1.dp, color = White),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 15.dp)
-    ) {
-        Text(
-            text = selectedItem,
-            fontSize = 22.sp,
-            color = Black,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Left,
-            fontFamily = FontFamily.Default
-        )
-        Row(
-            horizontalArrangement = Arrangement.End
-        ) {
-            Icon(
-                Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = Purple40,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-    }
-
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        options.forEach { option ->
-            DropdownMenuItem(
-                text = { Text(option, fontSize = 22.sp) },
-                onClick = {
-                    onItemSelected(option)
-                    expanded = false
-                }
-            )
-        }
-    }
-}
-
 //Textfield Composable Function
 @Composable
 fun EventTextField(
@@ -764,208 +711,4 @@ fun EventTextField(
         },
         modifier = modifier
     )
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StatePickerBottomSheet(
-    showSheet: Boolean,
-    onDismiss: () -> Unit,
-    onStateSelected:(String) -> Unit
-) {
-    val states = arrayOf(
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
-    )
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    if(showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .heightIn(min = 200.dp, max = 400.dp)
-                    .padding(16.dp)
-            ){
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Select Your State", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    states.forEach { state ->
-                        TextButton(
-                            onClick = {
-                                onStateSelected(state)
-                                Toast.makeText(context, "Selected: $state", Toast.LENGTH_SHORT).show()
-                                coroutineScope.launch {sheetState.hide()}
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = state,
-                                fontSize = 20.sp,
-                                fontFamily = FontFamily.Default
-                            )
-                        }
-
-                    }
-                }
-            }
-
-        }
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CountryPickerBottomSheet(
-    showSheet: Boolean,
-    onDismiss: () -> Unit,
-    onStateSelected:(String) -> Unit
-) {
-    val countries = arrayOf("United States")
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    if(showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .heightIn(min = 200.dp, max = 400.dp)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Select Your Country", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    countries.forEach { country ->
-                        TextButton(
-                            onClick = {
-                                onStateSelected(country)
-                                Toast.makeText(context, "Selected: $country", Toast.LENGTH_SHORT)
-                                    .show()
-                                coroutineScope.launch { sheetState.hide() }
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = country,
-                                fontSize = 20.sp,
-                                fontFamily = FontFamily.Default
-                            )
-                        }
-
-                    }
-                }
-            }
-
-        }
-
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CategoryPickerBottomSheet(
-    showSheet: Boolean,
-    onDismiss: () -> Unit,
-    onSelectionDone:(List<String>) -> Unit
-) {
-    val categories = arrayOf("Category 1","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3","Category 2","Category 3" )
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
-
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .heightIn(min = 200.dp, max = 400.dp)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Select Your Categories", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    categories.forEach { category ->
-                        Row(
-                            modifier =Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedCategories = if(selectedCategories.contains(category)) {
-                                        selectedCategories - category
-                                    }else {
-                                        selectedCategories + category
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment =  Alignment.CenterVertically
-                        ){
-                            Checkbox(
-                                checked = selectedCategories.contains(category),
-                                onCheckedChange = {isChecked ->
-                                    selectedCategories = if(isChecked){
-                                        selectedCategories + category
-                                    }else{
-                                        selectedCategories - category
-                                    }
-
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = category,
-                                fontSize = 20.sp,
-                                fontFamily = FontFamily.Default
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Button(
-                        onClick = {
-                            Toast.makeText(context, "Selected: $selectedCategories", Toast.LENGTH_SHORT).show()
-                            coroutineScope.launch {sheetState.hide()}
-                            onSelectionDone(selectedCategories)
-                            onDismiss()
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ){
-                        Text("Done")
-                    }
-                }
-            }
-
-        }
-
-    }
 }
