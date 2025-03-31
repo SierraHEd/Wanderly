@@ -67,6 +67,7 @@ android {
 
 dependencies {
 
+
     implementation (libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -95,6 +96,7 @@ dependencies {
 
     //Supabase dependencies
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.3.1")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.ktor:ktor-client-android:3.1.0")
 
