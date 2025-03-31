@@ -214,6 +214,23 @@ object DatabaseManagement {
 
     }
 
+    suspend fun updateUserProfilePicture(userId: Int, photoUrl: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                postgrest.from("private_users").update({
+                    set("profile_picture_url", photoUrl)
+                }) {
+                    filter { eq("id", userId) }
+                }
+                println("User profile picture updated successfully.")
+                true
+            } catch (e: Exception) {
+                println("Error updating profile picture: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
 
 
 }

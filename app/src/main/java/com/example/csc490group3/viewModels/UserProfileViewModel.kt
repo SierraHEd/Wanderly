@@ -80,12 +80,16 @@ class UserProfileViewModel: ViewModel() {
         viewModelScope.launch {
             val photoUrl = StorageManagement.uploadPhoto(file, userId.toString())
             photoUrl?.let {
-                DatabaseManagement.updateUserProfilePicture(userId, it)
+                val success = DatabaseManagement.updateUserProfilePicture(userId, it)
+                if (success) {
+                    UserSession.currentUser?.profile_picture_url = photoUrl
+                }
             } ?: run {
                 println("Failed to upload and set profile picture.")
             }
         }
     }
+
 
 
 
