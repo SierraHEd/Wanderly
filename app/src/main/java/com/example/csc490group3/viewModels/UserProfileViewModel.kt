@@ -6,11 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
 import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
 import kotlinx.coroutines.launch
+import com.example.csc490group3.supabase.StorageManagement
+import java.io.File
+import java.util.*
 
 class UserProfileViewModel: ViewModel() {
     var registeredEvents = mutableStateOf<List<Event>>(emptyList())
@@ -71,6 +75,18 @@ class UserProfileViewModel: ViewModel() {
     fun editEvent(event: Event) {
         println("You are editing an event")
     }
+
+    fun uploadAndSetProfilePicture(file: File, userId: Int) {
+        viewModelScope.launch {
+            val photoUrl = StorageManagement.uploadPhoto(file, userId.toString())
+            photoUrl?.let {
+                DatabaseManagement.updateUserProfilePicture(userId, it)
+            } ?: run {
+                println("Failed to upload and set profile picture.")
+            }
+        }
+    }
+
 
 
 }
