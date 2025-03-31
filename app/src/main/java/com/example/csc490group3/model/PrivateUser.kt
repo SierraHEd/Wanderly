@@ -13,6 +13,7 @@ data class PrivateUser (
     val firstName: String,
     @SerialName("last_name")
     val lastName: String,
+    val pfp_URL : String? = null,
     val birthday: LocalDate,
     val public: Boolean,
     val affiliation: String? = null,
