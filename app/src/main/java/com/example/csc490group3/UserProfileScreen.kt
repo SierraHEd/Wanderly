@@ -1,3 +1,4 @@
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -6,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,11 +34,18 @@ import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 
@@ -45,6 +54,7 @@ import com.example.csc490group3.viewModels.UserProfileViewModel
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
+
     // val CurrentUser = UserSession.currentUser?.email.?
 
 
@@ -273,15 +283,13 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
 
 }
 
-
-
-
-
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
     var isDarkMode by remember { mutableStateOf(false) }
     var isPublic by remember { mutableStateOf(true) }
     var showEventPrefs by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
+    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
 
     AlertDialog(
 
@@ -308,7 +316,6 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
                     )
                 }
 
-
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
                     onClick = { /* Handle location preferences */ }) {
@@ -316,10 +323,31 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
                 }
 
                 Button(
+                    onClick = { showCategoryPicker = true },
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = {  showEventPrefs = true  }) {
-                    Text("Event Preferences")
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 15.dp)
+                ) {
+                    Text(
+                        text = selectedCategories.joinToString(", ") { it.displayName },
+                        fontSize = 22.sp,
+                        color = White,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Left,
+                        fontFamily = FontFamily.Default
+                    )
                 }
+                //calls to bring up category selection bottom sheet
+                CategoryPickerBottomSheet(
+                    showSheet = showCategoryPicker,
+                    onDismiss = {showCategoryPicker = false},
+                    onSelectionDone = {selection ->
+                        selectedCategories = selection
+                    },
+                    maxSelections = 3
+                )
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),

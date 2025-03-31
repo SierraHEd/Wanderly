@@ -2,6 +2,7 @@ package com.example.csc490group3.ui.components
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import com.example.csc490group3.model.Category
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,17 +42,15 @@ import kotlinx.coroutines.launch
 fun CategoryPickerBottomSheet(
     showSheet: Boolean,
     onDismiss: () -> Unit,
-    onSelectionDone:(List<String>) -> Unit
+    onSelectionDone:(List<Category>) -> Unit,
+    maxSelections: Int = 25
 ) {
-    val categories = arrayOf("Music","Business & Professional","Food & Drink",
-        "Community & Culture","Performing & Visual Arts","Film, Media & Entertainment","Sports & Fitness","Health and Wellness",
-        "Science & Technology","Travel & Outdoor","Charity & Causes","Religion & Spirituality","Family & Education","Seasonal & Holiday","Government & Politics",
-        "Fashion & Beauty", "Home & Lifestyle", "Auto, Boat & Air", "Hobbies & Special Interest","School Activities", "Other")
+    val categories = Category.values()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
+    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
 
     if (showSheet) {
         ModalBottomSheet(
@@ -78,7 +79,15 @@ fun CategoryPickerBottomSheet(
                                     selectedCategories = if(selectedCategories.contains(category)) {
                                         selectedCategories - category
                                     }else {
-                                        selectedCategories + category
+                                        if(selectedCategories.size < maxSelections){
+                                            selectedCategories + category
+                                        }
+                                        else{
+                                            Toast
+                                                .makeText(context, "Maximum of $maxSelections selections reached", Toast.LENGTH_SHORT)
+                                                .show()
+                                            selectedCategories
+                                        }
                                     }
                                 }
                                 .padding(vertical = 8.dp),
@@ -88,8 +97,17 @@ fun CategoryPickerBottomSheet(
                                 checked = selectedCategories.contains(category),
                                 onCheckedChange = {isChecked ->
                                     selectedCategories = if(isChecked){
-                                        selectedCategories + category
-                                    }else{
+                                        if (selectedCategories.size < maxSelections){
+                                            selectedCategories + category
+                                        }
+                                        else{
+                                            Toast
+                                                .makeText(context, "Maximum of $maxSelections selections reached", Toast.LENGTH_SHORT)
+                                                .show()
+                                            selectedCategories
+                                        }
+                                    }
+                                    else{
                                         selectedCategories - category
                                     }
 
@@ -97,24 +115,25 @@ fun CategoryPickerBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = category,
+                                text = category.displayName,
                                 fontSize = 20.sp,
                                 fontFamily = FontFamily.Default
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Button(
-                        onClick = {
-                            Toast.makeText(context, "Selected: $selectedCategories", Toast.LENGTH_SHORT).show()
-                            coroutineScope.launch {sheetState.hide()}
-                            onSelectionDone(selectedCategories)
-                            onDismiss()
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ){
-                        Text("Done")
-                    }
+                }
+                Button(
+                    onClick = {
+                        coroutineScope.launch { sheetState.hide() }
+                        onSelectionDone(selectedCategories)
+                        onDismiss()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Done")
+
                 }
             }
 

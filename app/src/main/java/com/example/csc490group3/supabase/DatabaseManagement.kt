@@ -1,5 +1,6 @@
 package com.example.csc490group3.supabase
 
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
@@ -36,6 +37,27 @@ object DatabaseManagement {
     }
 
     /**
+     * Inserts a event into the event table in the Supabase database.
+     *
+     *
+     * @param event the event object to be inserted
+     * @return returns the event id of teh added event or -1 if an error occurred
+     */
+    suspend fun addEvent(event: Event): Int{
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = postgrest.from("events").insert(event){
+                    select()
+                }.decodeSingle<Event>()
+                return@withContext response?.id!!
+            } catch (e: Exception) {
+                println("Error inserting event: ${e.localizedMessage}")
+                return@withContext -1
+            }
+        }
+    }
+
+    /**
      * Fetches a private user from the "private_users" table based on the provided email address.
      *
      * This function filters the table for records where the "email" column matches the given email,
@@ -56,9 +78,7 @@ object DatabaseManagement {
                 println("Error fetching user record: ${e.localizedMessage}")
                 null
             }
-
         }
-
     }
 
     /**
@@ -191,7 +211,6 @@ object DatabaseManagement {
 
     suspend fun simpleSearch(query: String): List<Event>? {
         return withContext(Dispatchers.IO) {
-            println("THIS WAS CALLED HERE")
             try {
                 val params = JsonObject(mapOf("term" to JsonPrimitive(query)))
 
@@ -207,6 +226,43 @@ object DatabaseManagement {
 
     }
 
+    /**
+     * will form a relationship between categories and either an event or user in the DB
+     *
+     * @param categories a list of categories you cant to add to the user/event
+     * @param id ID number of the event or user you are making the relationship with
+     * @param tableName either event_categories or user_categories depending on what relationship is being made
+     */
+    suspend fun addCategoryRelationship(categories: List<Category>, tableName: String, id:Int){
+        return withContext(Dispatchers.IO) {
+            try {
+                val joinRecords = categories.map{ category ->
+                    mapOf("category_id" to category.id, "event_id" to id)
+                }
 
+                val response = postgrest.from(tableName).insert(joinRecords)
+                println("Categories Inserted Successfully")
 
+            } catch (e: Exception) {
+                println("Error inserting Category: ${e.localizedMessage}")
+                false
+            }
+        }
+
+    }
+
+    suspend fun getFriends(userID: Int): List<IndividualUser>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userID = JsonObject(mapOf("userid" to JsonPrimitive(userID)))
+
+                val result = postgrest.rpc("get_friends", userID).decodeList<IndividualUser>()
+                println(result)
+                result
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
 }

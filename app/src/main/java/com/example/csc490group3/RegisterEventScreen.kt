@@ -85,6 +85,8 @@ import androidx.navigation.NavController
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
+import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -116,7 +118,7 @@ fun RegisterEventScreen(navController: NavController) {
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var isFamilyFriendly by remember { mutableStateOf(false) }
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
+    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
     var eventTime by remember { mutableStateOf("00:00" )}
     //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf("Country") }
@@ -538,7 +540,7 @@ fun RegisterEventScreen(navController: NavController) {
                     .padding(vertical = 15.dp)
             ) {
                 Text(
-                    text = selectedCategories.toString(),
+                    text = selectedCategories.joinToString(", ") { it.displayName },
                     fontSize = 22.sp,
                     color = Black,
                     modifier = Modifier.weight(1f),
@@ -546,13 +548,14 @@ fun RegisterEventScreen(navController: NavController) {
                     fontFamily = FontFamily.Default
                 )
             }
-            //calls to bring up country selection bottom sheet
+            //calls to bring up category selection bottom sheet
             CategoryPickerBottomSheet(
                 showSheet = showCategoryPicker,
                 onDismiss = {showCategoryPicker = false},
                 onSelectionDone = {selection ->
                     selectedCategories = selection
-                }
+                },
+                maxSelections = 3
             )
 
             Button(
@@ -584,8 +587,13 @@ fun RegisterEventScreen(navController: NavController) {
                             )
                         }!!
                         coroutineScope.launch {
-                            if (!addRecord("events", eventToAdd)) {
+                            var newEventID = addEvent(eventToAdd)
+
+                            if (newEventID == -1) {
                                 println("Error adding event")
+                            }
+                            else{
+                                addCategoryRelationship(selectedCategories,"event_categories", newEventID)
                             }
                         }
                         showRegisterSuccessToast = true
