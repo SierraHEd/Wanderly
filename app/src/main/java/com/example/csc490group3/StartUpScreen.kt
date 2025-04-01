@@ -15,14 +15,15 @@ import com.example.csc490group3.data.ButtonComponent
 import com.example.csc490group3.data.ImageCarousel
 import com.example.csc490group3.data.ImageComponent
 import com.example.csc490group3.data.NormalTextComponent
+import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 
 @Composable
 fun StartUpScreen(navController: NavController) {
     Surface (modifier = Modifier.fillMaxSize()
-        .background(PurpleStart)
+        .background(PurpleBKG)
         .padding(28.dp)){
-        Column (modifier = Modifier.background(PurpleStart)){
+        Column (modifier = Modifier.background(PurpleBKG)){
             ImageComponent()
             ImageCarousel()
             ButtonComponent("Login", { navController.navigate("User_login_Screen") }, true);

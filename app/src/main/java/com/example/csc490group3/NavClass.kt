@@ -43,5 +43,8 @@ fun Navigation(context: Context) {
         composable("profile_screen") {
             UserProfileScreen(navController)
         }
+        composable("location_screen"){
+            LocationScreen(navController, context)
+        }
     }
 }
