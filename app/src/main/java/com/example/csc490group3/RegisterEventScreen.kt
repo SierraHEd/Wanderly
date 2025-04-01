@@ -540,7 +540,7 @@ fun RegisterEventScreen(navController: NavController) {
                     .padding(vertical = 15.dp)
             ) {
                 Text(
-                    text = selectedCategories.joinToString(", ") { it.displayName },
+                    text = selectedCategories.joinToString(", ") { it.name},
                     fontSize = 22.sp,
                     color = Black,
                     modifier = Modifier.weight(1f),

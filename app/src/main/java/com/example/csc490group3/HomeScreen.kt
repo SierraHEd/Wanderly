@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -20,10 +21,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.HomeScreenViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -32,6 +35,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val events by viewModel.events
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
@@ -62,11 +66,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
-                /* Add back if a test button is needed
-                Button(onClick = { }) {
+                 //Add back if a test button is needed
+                Button(onClick = {
+                    coroutineScope.launch {
+                        println(UserSession.currentUser?.id?.let { getCategories(it,"user_categories") })
+                    }
+                 }) {
                     Text("TEST")
                 }
-                 */
+
                 when {
                     isLoading -> {
                         Text("Loading events...", style = MaterialTheme.typography.bodyMedium)

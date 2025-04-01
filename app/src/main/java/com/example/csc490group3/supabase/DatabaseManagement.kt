@@ -9,6 +9,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.slf4j.MDC.put
 
 object DatabaseManagement {
 
@@ -264,5 +267,53 @@ object DatabaseManagement {
                 null
             }
         }
+    }
+
+    suspend fun getCategories(id: Int, tableName: String): List<Category>?{
+        return withContext(Dispatchers.IO) {
+            try {
+                val params = buildJsonObject {
+                    put("id", id)
+                    put("table_name", tableName)
+                }
+
+                val result = postgrest.rpc("get_categories", params).decodeList<Category>()
+                result
+
+            }catch(e: Exception) {
+                println("Error fetching categories: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+    suspend fun deleteCategories(id: Int, tableName: String){
+        return withContext(Dispatchers.IO) {
+
+            val idString = when (tableName) {
+                "event_categories" -> "event_categories"
+                "user_categories" -> "user_categories"
+                else -> {
+                    println("ERROR - UNRECOGNIZED TABLE")
+                    null
+                }
+            }
+
+            try {
+                postgrest.from(tableName).delete {
+                    select()
+                    filter {
+                        if (idString != null) {
+                            eq(idString, id)
+                        }
+                    }
+                }.decodeSingle<Event>()
+
+            }catch(e: Exception) {
+                println("Error deleting event: ${e.localizedMessage}")
+                null
+            }
+        }
+
     }
 }

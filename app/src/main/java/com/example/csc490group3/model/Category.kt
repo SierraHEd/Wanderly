@@ -1,8 +1,16 @@
 package com.example.csc490group3.model
 
-enum class Category(
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Category(
     val id: Int,
-    val displayName: String) {
+    val name: String
+)
+
+/*
+{
 
     MUSIC(1, "Music"),
     BUSINESS_AND_PROFESSIONAL(2, "Business & Professional"),
@@ -26,4 +34,4 @@ enum class Category(
     SCHOOL_ACTIVITIES(20, "School Activities"),
     OTHER(21, "Other")
 
-}
+}*/

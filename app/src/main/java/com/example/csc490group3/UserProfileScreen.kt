@@ -331,7 +331,7 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
                         .padding(vertical = 15.dp)
                 ) {
                     Text(
-                        text = selectedCategories.joinToString(", ") { it.displayName },
+                        text = selectedCategories.joinToString(", ") { it.name },
                         fontSize = 22.sp,
                         color = White,
                         modifier = Modifier.weight(1f),

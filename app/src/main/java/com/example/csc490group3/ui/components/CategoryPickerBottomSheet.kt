@@ -45,7 +45,29 @@ fun CategoryPickerBottomSheet(
     onSelectionDone:(List<Category>) -> Unit,
     maxSelections: Int = 25
 ) {
-    val categories = Category.values()
+    val categories = listOf(
+        Category(id = 1, name = "Music"),
+        Category(id = 2, name = "Business & Professional"),
+        Category(id = 3, name = "Food & Drink"),
+        Category(id = 4, name = "Community & Culture"),
+        Category(id = 5, name = "Performing & Visual Arts"),
+        Category(id = 6, name = "Film, Media & Entertainment"),
+        Category(id = 7, name = "Sports & Fitness"),
+        Category(id = 8, name = "Health and Wellness"),
+        Category(id = 9, name = "Science & Technology"),
+        Category(id = 10, name = "Travel & Outdoor"),
+        Category(id = 11, name = "Charity & Causes"),
+        Category(id = 12, name = "Religion & Spirituality"),
+        Category(id = 13, name = "Family & Education"),
+        Category(id = 14, name = "Seasonal & Holiday"),
+        Category(id = 15, name = "Government & Politics"),
+        Category(id = 16, name = "Fashion & Beauty"),
+        Category(id = 17, name = "Home & Lifestyle"),
+        Category(id = 18, name = "Auto, Boat & Air"),
+        Category(id = 19, name = "Hobbies & Special Interest"),
+        Category(id = 20, name = "School Activities"),
+        Category(id = 21, name = "Other")
+    )
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -115,7 +137,7 @@ fun CategoryPickerBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = category.displayName,
+                                text = category.name,
                                 fontSize = 20.sp,
                                 fontFamily = FontFamily.Default
                             )
