@@ -35,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.example.csc490group3.model.Category
+import com.example.csc490group3.model.User
+import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
+import com.example.csc490group3.supabase.DatabaseManagement.deleteCategories
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +47,11 @@ fun CategoryPickerBottomSheet(
     showSheet: Boolean,
     onDismiss: () -> Unit,
     onSelectionDone:(List<Category>) -> Unit,
-    maxSelections: Int = 25
+    maxSelections: Int = 25,
+    initialSelectedCategories: List<Category> = emptyList(),
+    updateCategories: Boolean = false,
+    userCategories: Boolean = false,
+    eventCategories:Boolean = false
 ) {
     val categories = listOf(
         Category(id = 1, name = "Music"),
@@ -71,8 +79,8 @@ fun CategoryPickerBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    var selectedCategories by remember(initialSelectedCategories) {mutableStateOf(initialSelectedCategories.toList())}
 
-    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
 
     if (showSheet) {
         ModalBottomSheet(
@@ -146,16 +154,30 @@ fun CategoryPickerBottomSheet(
                 }
                 Button(
                     onClick = {
-                        coroutineScope.launch { sheetState.hide() }
+                        coroutineScope.launch {
+                            if(updateCategories){
+                                if(userCategories){
+                                    UserSession.currentUser?.id?.let { deleteCategories(it,"user_categories") }
+                                    UserSession.currentUser?.id?.let {
+                                        addCategoryRelationship(selectedCategories, "user_categories",
+                                            it
+                                        )
+                                    }
+                                }
+                                if(eventCategories){
+
+                                }
+                            }
+                            sheetState.hide() }
                         onSelectionDone(selectedCategories)
                         onDismiss()
+
                     },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(top = 8.dp)
                 ) {
                     Text("Done")
-
                 }
             }
 

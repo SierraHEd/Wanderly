@@ -289,7 +289,7 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
     var isPublic by remember { mutableStateOf(true) }
     var showEventPrefs by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
-    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
+    var selectedCategories by remember { mutableStateOf(UserSession.currentUserCategory) }
 
     AlertDialog(
 
@@ -346,7 +346,10 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
                     onSelectionDone = {selection ->
                         selectedCategories = selection
                     },
-                    maxSelections = 3
+                    maxSelections = 3,
+                    initialSelectedCategories = UserSession.currentUserCategory,
+                    userCategories = true,
+                    updateCategories = true
                 )
 
                 Button(

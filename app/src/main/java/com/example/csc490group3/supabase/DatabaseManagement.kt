@@ -239,8 +239,17 @@ object DatabaseManagement {
     suspend fun addCategoryRelationship(categories: List<Category>, tableName: String, id:Int){
         return withContext(Dispatchers.IO) {
             try {
+                val idString = when (tableName) {
+                    "event_categories" -> "event_id"
+                    "user_categories" -> "user_id"
+                    else -> {
+                        println("ERROR - UNRECOGNIZED TABLE")
+                        null
+                    }
+                }
+
                 val joinRecords = categories.map{ category ->
-                    mapOf("category_id" to category.id, "event_id" to id)
+                    mapOf("category_id" to category.id, idString to id)
                 }
 
                 val response = postgrest.from(tableName).insert(joinRecords)
@@ -291,14 +300,13 @@ object DatabaseManagement {
         return withContext(Dispatchers.IO) {
 
             val idString = when (tableName) {
-                "event_categories" -> "event_categories"
-                "user_categories" -> "user_categories"
+                "event_categories" -> "event_id"
+                "user_categories" -> "user_id"
                 else -> {
                     println("ERROR - UNRECOGNIZED TABLE")
                     null
                 }
             }
-
             try {
                 postgrest.from(tableName).delete {
                     select()
@@ -307,10 +315,9 @@ object DatabaseManagement {
                             eq(idString, id)
                         }
                     }
-                }.decodeSingle<Event>()
-
+                }
             }catch(e: Exception) {
-                println("Error deleting event: ${e.localizedMessage}")
+                println("Error deleting categories: ${e.localizedMessage}")
                 null
             }
         }
