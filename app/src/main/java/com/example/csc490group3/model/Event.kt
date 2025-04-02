@@ -20,7 +20,7 @@ data class Event (
     val isPublic: Boolean? = true,
     @SerialName("is_family_friendly")
     val isFamilyFriendly: Boolean,
-    val categories: List<Category>? = null,
+    val categories: Set<Category>? = null,
     val price: Double? = 0.0,
     val country: String,
     val state: String,
@@ -30,7 +30,6 @@ data class Event (
     val numAttendees: Int? = 0,
     @SerialName("date")
     val eventDate: LocalDate,
-    val photoUrl: String? = null,
     @SerialName("time")
-    val eventTime: LocalTime = LocalTime.parse("00:00:00")
+    val eventTime: LocalTime
 )

@@ -9,4 +9,3 @@ object UserSession {
     var currentUserEmail: String? by mutableStateOf(null)
     var currentUserCategory: List<Category> by mutableStateOf(emptyList())
 }
-
