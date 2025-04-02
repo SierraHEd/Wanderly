@@ -23,30 +23,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Event
 
 @Composable
-fun EventCard(event: Event,
-              onBottomButtonClick: (Event) -> Unit,
-              onEditEvent: (Event) -> Unit,
-              showRegisterButton: Boolean = true,
-              showUnregisterButton: Boolean = false,
-              showOptionsButton: Boolean = false,
-              isHorizontal: Boolean = false,
-              modifier: Modifier = Modifier
+fun EventCard(
+    event: Event,
+    onBottomButtonClick: (Event) -> Unit,
+    onEditEvent: (Event) -> Unit,
+    showRegisterButton: Boolean = true,
+    showUnregisterButton: Boolean = false,
+    showOptionsButton: Boolean = false,
+    isHorizontal: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = Modifier
             .then(
-                if(isHorizontal) Modifier.width(250.dp)
+                if (isHorizontal) Modifier.width(250.dp)
                 else Modifier.fillMaxWidth()
             )
             .wrapContentHeight()
@@ -55,18 +56,33 @@ fun EventCard(event: Event,
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            //Placeholder for eventual image
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .background(Color.Gray, shape = RoundedCornerShape(12.dp))
-            ) {
-                Text(
-                    text = "Event Image",
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center)
+
+            //if available, else show a placeholder
+            if (event.photoUrl != null && event.photoUrl.isNotEmpty()) {
+
+                androidx.compose.foundation.Image(//display photo blah blah blah
+                    painter = rememberAsyncImagePainter(event.photoUrl),
+                    contentDescription = "Event Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                // placeholder if no photo URL is available
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(12.dp))
+                ) {
+                    Text(
+                        text = "Event Image",
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -79,18 +95,19 @@ fun EventCard(event: Event,
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            //Location and address
+            // location and address
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "${event.venue}, ${event.address} ${event.city} ${event.state} ${event.zipcode}",
+                Text(
+                    text = "${event.venue}, ${event.address} ${event.city} ${event.state} ${event.zipcode}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Attendees & Price
+            // attendees & Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -108,8 +125,8 @@ fun EventCard(event: Event,
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            //Hides register button if needed
-            if(showRegisterButton) {
+            // action buttons
+            if (showRegisterButton) {
                 Button(
                     onClick = { onBottomButtonClick(event) },
                     modifier = Modifier.fillMaxWidth(),
@@ -117,31 +134,26 @@ fun EventCard(event: Event,
                 ) {
                     Text("Register", color = Color.White, fontWeight = FontWeight.Bold)
                 }
-            }
-            else if(showUnregisterButton) {
+            } else if (showUnregisterButton) {
                 Button(
-                    onClick = {onBottomButtonClick(event)},
+                    onClick = { onBottomButtonClick(event) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)) // Red color
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500))
                 ) {
                     Text("Unregister", color = Color.White, fontWeight = FontWeight.Bold)
                 }
-            }
-            else if(showOptionsButton) {
-                Row (
-                    modifier = Modifier.fillMaxWidth()
-
-                ){
-                    Button (
-                        onClick = {onBottomButtonClick(event)},
+            } else if (showOptionsButton) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { onBottomButtonClick(event) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                     ) {
                         Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Button (
-                        onClick = {onEditEvent(event)},
+                    Button(
+                        onClick = { onEditEvent(event) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                     ) {

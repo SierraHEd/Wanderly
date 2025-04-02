@@ -48,12 +48,22 @@ import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import io.ktor.http.ContentDisposition.Companion.File
+import java.io.File
+import java.util.*
+import coil.compose.rememberAsyncImagePainter
 
 
 @Composable
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
+    val profilePictureUrl = UserSession.currentUser?.profile_picture_url
+    // val CurrentUser = UserSession.currentUser?.email.?
+
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
@@ -95,8 +105,8 @@ fun UserProfileScreen(navController: NavController) {
                 ) {
                     //pfp
                     Image(
-                        painter = painterResource(id = R.drawable.app_icon),
-                        contentDescription = null,
+                        painter = rememberAsyncImagePainter(profilePictureUrl ?: R.drawable.app_icon),
+                        contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
@@ -213,9 +223,26 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
 }
 
 @Composable
-fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
+fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
+
+    val context = LocalContext.current
+
+    val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val file = File(context.cacheDir, "profile_${UUID.randomUUID()}.jpg")
+            inputStream.use { input ->
+                file.outputStream().use { output ->
+                    input?.copyTo(output)
+                }
+            }
+            UserSession.currentUser?.id?.let { userId ->
+                viewModel.uploadAndSetProfilePicture(file, userId)
+            }
+        }
+    }
     var isDarkMode by remember { mutableStateOf(false) }
-    var isPublic by remember { mutableStateOf(true) }
+    var isPublic by remember { mutableStateOf(true) } // <-- ADD THIS LINE BACK
     var showEventPrefs by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(UserSession.currentUserCategory) }
@@ -283,7 +310,7 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* Handle profile picture change */ }) {
+                    onClick = { filePicker.launch("image/*") }) {
                     Text("Change Profile Picture")
                 }
                 Button(

@@ -30,6 +30,7 @@ data class Event (
     val numAttendees: Int? = 0,
     @SerialName("date")
     val eventDate: LocalDate,
+    val photoUrl: String? = null,
     @SerialName("time")
     val eventTime: LocalTime = LocalTime.parse("00:00:00")
 )

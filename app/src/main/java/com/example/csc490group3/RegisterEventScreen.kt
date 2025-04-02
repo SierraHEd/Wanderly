@@ -1,7 +1,11 @@
 package com.example.csc490group3
 
+
+import android.net.Uri
 import android.app.TimePickerDialog
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -82,12 +86,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
 import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
+import com.example.csc490group3.supabase.StorageManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -95,12 +101,15 @@ import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import java.io.File
+import java.util.UUID
 import kotlinx.datetime.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.StatePickerBottomSheet
 import com.example.csc490group3.ui.components.CountryPickerBottomSheet
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,6 +138,8 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     var eventDate by remember { mutableStateOf(initialEvent?.eventDate) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
+    var eventImageUri by remember { mutableStateOf<Uri?>(null) }// store image url
+    var eventImageFile by remember { mutableStateOf<File?>(null) }
     //the coroutine is to call the fun from database mgmt
     val context = LocalContext.current
     val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
@@ -140,6 +151,20 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
             if (fetchedCategories != null) {
                 selectedCategories = fetchedCategories
             }
+        }
+    }
+
+    val eventImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            eventImageUri = it
+            val inputStream = context.contentResolver.openInputStream(it)
+            val file = File(context.cacheDir, "event_${UUID.randomUUID()}.jpg")
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            eventImageFile = file
         }
     }
 
@@ -524,17 +549,44 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     selectedCategories = selection
                 },
                 maxSelections = 3
-            )
+            )        
+            
+
+            Button(
+                onClick = { eventImagePicker.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Select Event Photo")
+            }
+
+            eventImageUri?.let { uri ->
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Selected Event Photo",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
-                    // Check if eventDate is null
                     if (eventDate == null) {
-                        // Trigger the toast by setting the state
                         showDateErrorToast = true
                     } else {
-                        eventToAdd = UserSession.currentUser?.id?.let {
+
+                      coroutineScope.launch {
+                            // If an event image is selected, upload it first.
+                            val eventPhotoUrl = eventImageFile?.let { file ->
+                                StorageManagement.uploadEventPhoto(file, UUID.randomUUID().toString())
+                            }
+                      
+                      eventToAdd = UserSession.currentUser?.id?.let {
                             Event(
                                 eventName = eventName,
                                 zipcode = zipcode,
@@ -551,7 +603,8 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                                 createdBy = it,
                                 numAttendees = 0,
                                 eventDate = eventDate!!,
-                                eventTime = localEventTime
+                                eventTime = localEventTime,
+                                photoUrl = eventPhotoUrl // <-- new field for the event image
                             )
                         }!!
                         coroutineScope.launch {
@@ -564,10 +617,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                                 addCategoryRelationship(selectedCategories,"event_categories", newEventID)
                             }
                         }
-                        showRegisterSuccessToast = true
-                        navController.navigate("Home_Screen")
                     }
-
                 },
                 modifier = Modifier
                     .fillMaxWidth()
