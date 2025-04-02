@@ -163,6 +163,7 @@ fun CategoryPickerBottomSheet(
                                             it
                                         )
                                     }
+                                    UserSession.currentUserCategory = selectedCategories
                                 }
                                 if(eventCategories){
 

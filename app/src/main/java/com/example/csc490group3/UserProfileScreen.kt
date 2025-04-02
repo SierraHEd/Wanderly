@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
@@ -382,14 +383,33 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
                         .fillMaxWidth()
                         .padding(vertical = 15.dp)
                 ) {
-                    Text(
-                        text = selectedCategories.joinToString(", ") { it.name },
-                        fontSize = 22.sp,
-                        color = White,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Left,
-                        fontFamily = FontFamily.Default
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Icon",
+                            tint = White,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Event Suggestion Preferences:",
+                                fontSize = 18.sp,
+                                color = White,
+                                textAlign = TextAlign.Left,
+                                fontFamily = FontFamily.Default
+                            )
+                            Text(
+                                text = selectedCategories.joinToString(", ") { it.name },
+                                fontSize = 22.sp,
+                                color = White,
+                                textAlign = TextAlign.Left,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
                 }
                 //calls to bring up category selection bottom sheet
                 CategoryPickerBottomSheet(
@@ -398,7 +418,7 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
                     onSelectionDone = {selection ->
                         selectedCategories = selection
                     },
-                    maxSelections = 3,
+                    maxSelections = 5,
                     initialSelectedCategories = UserSession.currentUserCategory,
                     userCategories = true,
                     updateCategories = true
