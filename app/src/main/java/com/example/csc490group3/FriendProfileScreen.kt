@@ -98,14 +98,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     LazyRow {
 
         items(events) { event ->
-            EventCard(event = event, onBottomButtonClick = { selectedEvent ->
 
-            },
-                onEditEvent = {},
-                isHorizontal = true,
-                showRegisterButton = false,
-                showUnregisterButton = false
-            )
         }
     }
 
@@ -125,19 +118,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     LazyRow {
 
         items(events) { event ->
-            EventCard(
-                event = event,
-                onBottomButtonClick = {selectedEvent ->
-                    eventToDelete = event
-                    showDeleteDialog = true
-                },
-                onEditEvent = {selectedEvent ->
-                    viewModel.editEvent(selectedEvent)
-                },
-                isHorizontal = true,
-                showRegisterButton = false,
-                showOptionsButton = true,
-            )
+
         }
     }
 
