@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
+import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
@@ -49,17 +50,18 @@ class HomeScreenViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val result = getAllEvents()
-                if(result != null) {
+                if (result != null) {
                     events.value = result
                 }
-            }catch(e: Exception) {
+            } catch (e: Exception) {
                 errorMessage.value = "Error: ${e.localizedMessage}"
-            }finally {
+            } finally {
                 isLoading.value = false
             }
 
         }
     }
+
     fun registerForEvent(event: Event, user: User?) {
         if (user == null) return
 
@@ -69,6 +71,17 @@ class HomeScreenViewModel: ViewModel() {
             } catch (e: Exception) {
                 errorMessage.value = "Registration failed: ${e.localizedMessage}"
             }
+        }
+    }
+
+    suspend fun isUserRegisteredForEvent(userID: Int, eventID: Int): Boolean {
+        return try {
+            // Query user_events table to see if the user is already registered for this event
+            val userEvents = DatabaseManagement.getUserEvents(userID)
+            userEvents?.any { it.id == eventID } == true
+        } catch (e: Exception) {
+            errorMessage.value = "Error checking registration: ${e.localizedMessage}"
+            false
         }
     }
 }
