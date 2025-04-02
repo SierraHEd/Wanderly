@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +32,9 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.viewModels.HomeScreenViewModel
-import com.example.csc490group3.CalendarScreen
-import com.example.csc490group3.ui.components.EventDetailDialog
 
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = viewModel()) {
@@ -44,6 +44,23 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val errorMessage by viewModel.errorMessage
     var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    val isRegistered = remember { mutableStateOf(false) }
+    val isCheckingRegistration = remember { mutableStateOf(false) } // To track if registration is being checked
+
+    // Check if the user is registered for the event when an event is selected
+    selectedEvent.value?.let { event ->
+        val currentUser = UserSession.currentUser
+        if (currentUser != null) {
+            val userID = currentUser.id
+            // Use LaunchedEffect to perform the check asynchronously
+            LaunchedEffect(userID, event.id) {
+                isCheckingRegistration.value = true
+                isRegistered.value = (userID != null && event.id != null) &&
+                        viewModel.isUserRegisteredForEvent(userID, event.id)
+                isCheckingRegistration.value = false
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
@@ -94,7 +111,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         LazyColumn {
                             items(events) { event ->
                                 EventCard(
-                                    onClick = { selectedEvent.value = event} ,
+                                    onClick = {
+                                        if (selectedEvent.value != event) {
+                                            selectedEvent.value = event
+                                        }
+                                    },
                                     event = event, onBottomButtonClick = { selectedEvent ->
                                         viewModel.registerForEvent(
                                             selectedEvent,
@@ -111,10 +132,24 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
 
             }
         }
+
         // Show event detail popup when an event is selected
         selectedEvent.value?.let { event ->
-            EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+            EventDetailDialog(
+                event = event,
+                onDismiss = { selectedEvent.value = null },
+                showRegisterButton = if (isRegistered.value || isCheckingRegistration.value) false else true, // Hide if checking or already registered
+                onRegister = {
+                    // When the user clicks the register button, we manually trigger the registration
+                    isRegistered.value = true // Mark the user as registered
+                    viewModel.registerForEvent(
+                        event,
+                        UserSession.currentUser
+                    ) // Perform registration
+                    Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
+                },
+                alreadyRegisteredText = if (isRegistered.value) "Already Registered" else null // Pass the message to the dialog
+            )
         }
-
     }
 }

@@ -66,6 +66,7 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
     val keyboardController = LocalSoftwareKeyboardController.current
     var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -158,7 +159,11 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
         }
         // Show event detail popup when an event is selected
         selectedEvent.value?.let { event ->
-            EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+            EventDetailDialog(event = event,
+                onDismiss = { selectedEvent.value = null },
+                showRegisterButton = true,
+                onRegister = { isRegistered.value = true}
+            )
         }
     }
 }

@@ -70,7 +70,7 @@ fun UserProfileScreen(navController: NavController) {
     // val CurrentUser = UserSession.currentUser?.email.?
     var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
-
+    var isRegistered = remember { mutableStateOf(false) }
 
     /*
     Column(
@@ -213,10 +213,7 @@ fun UserProfileScreen(navController: NavController) {
                 )
             }
         }
-        // Show event detail popup when an event is selected
-        selectedEvent.value?.let { event ->
-            EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
-        }
+
     }
 }
 
@@ -225,6 +222,7 @@ fun UserProfileScreen(navController: NavController) {
 fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
     Row() {
         Text(
@@ -241,10 +239,17 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
             },
             onEditEvent = {},
                 isHorizontal = true,
-                showRegisterButton = false,
                 showUnregisterButton = true
             )
         }
+    }
+    // Show event detail popup when an event is selected
+    selectedEvent.value?.let { event ->
+        EventDetailDialog(event = event,
+            onDismiss = { selectedEvent.value = null },
+            showRegisterButton = false,
+            onRegister = { isRegistered.value = true }
+        )
     }
 }
 
@@ -255,6 +260,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var eventToDelete by remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
     Row() {
         Text(
@@ -275,7 +281,6 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                     viewModel.editEvent(selectedEvent)
                 },
                 isHorizontal = true,
-                showRegisterButton = false,
                 showOptionsButton = true,
             )
         }
@@ -303,7 +308,12 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
             }
         )
     }
-
+    // Show event detail popup when an event is selected
+    selectedEvent.value?.let { event ->
+        EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
+            showRegisterButton = false,
+            onRegister = { isRegistered.value = true })
+    }
 }
 
 

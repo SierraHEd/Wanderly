@@ -75,6 +75,8 @@ fun CalendarScreen(
     val eventsForSelectedDay = remember { mutableStateOf<List<Event>>(emptyList()) }
     val showEventsPopup = remember { mutableStateOf(false) }
 
+    var isRegistered = remember { mutableStateOf(false) }
+
     // Sort events by date and filter out past events
     val upcomingEvents = events
         .filter { it.eventDate >= currentDate }  // Filter out events that have passed
@@ -296,7 +298,12 @@ fun CalendarScreen(
 
             // Show event detail popup when an event is selected
             selectedEvent.value?.let { event ->
-                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
+                    showRegisterButton = false,
+                    onRegister =  {
+                        isRegistered.value = true;
+                }
+                )
             }
 
             // Show the popup dialog with the list of events for the selected day
