@@ -1,6 +1,9 @@
 package com.example.csc490group3
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -62,15 +65,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
+import com.example.csc490group3.supabase.StorageManagement
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import java.io.File
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,9 +104,25 @@ fun RegisterEventScreen(navController: NavController) {
     var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
+    var eventImageUri by remember { mutableStateOf<Uri?>(null) }// store image url
+    var eventImageFile by remember { mutableStateOf<File?>(null) }
     //the coroutine is to call the fun from database mgmt
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    val eventImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            eventImageUri = it
+            val inputStream = context.contentResolver.openInputStream(it)
+            val file = File(context.cacheDir, "event_${UUID.randomUUID()}.jpg")
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            eventImageFile = file
+        }
+    }
 
 ////////////////
 // Error Handling
@@ -292,43 +315,67 @@ fun RegisterEventScreen(navController: NavController) {
                 Text("Is Family Friendly", color = Black)
                 Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
             }
+            Button(
+                onClick = { eventImagePicker.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Select Event Photo")
+            }
+
+            eventImageUri?.let { uri ->
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Selected Event Photo",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
-                    // Check if eventDate is null
                     if (eventDate == null) {
-                        // Trigger the toast by setting the state
                         showDateErrorToast = true
                     } else {
-                        eventToAdd = UserSession.currentUser?.id?.let {
-                            Event(
-                                eventName = eventName,
-                                zipcode = zipcode,
-                                city = city,
-                                address = address,
-                                venue = venue,
-                                maxAttendees = maxAttendees.toIntOrNull() ?: 0,
-                                description = description,
-                                isPublic = isPublic,
-                                isFamilyFriendly = isFamilyFriendly,
-                                price = price.toDoubleOrNull() ?: 0.0,
-                                country = selectedCountry,
-                                state = selectedState,
-                                createdBy = it,
-                                numAttendees = 0,
-                                eventDate = eventDate!!
-                            )
-                        }!!
                         coroutineScope.launch {
+                            // If an event image is selected, upload it first.
+                            val eventPhotoUrl = eventImageFile?.let { file ->
+                                StorageManagement.uploadEventPhoto(file, UUID.randomUUID().toString())
+                            }
+
+                            // Create the event record including the photo URL (if available)
+                            eventToAdd = UserSession.currentUser?.id?.let { userId ->
+                                Event(
+                                    eventName = eventName,
+                                    zipcode = zipcode,
+                                    city = city,
+                                    address = address,
+                                    venue = venue,
+                                    maxAttendees = maxAttendees.toIntOrNull() ?: 0,
+                                    description = description,
+                                    isPublic = isPublic,
+                                    isFamilyFriendly = isFamilyFriendly,
+                                    price = price.toDoubleOrNull() ?: 0.0,
+                                    country = selectedCountry,
+                                    state = selectedState,
+                                    createdBy = userId,
+                                    numAttendees = 0,
+                                    eventDate = eventDate!!,
+                                    photoUrl = eventPhotoUrl // <-- new field for the event image
+                                )
+                            }!!
+
                             if (!addRecord("events", eventToAdd)) {
                                 println("Error adding event")
                             }
+                            showRegisterSuccessToast = true
+                            navController.navigate("Home_Screen")
                         }
-                        showRegisterSuccessToast = true
-                        navController.navigate("Home_Screen")
                     }
-
                 },
                 modifier = Modifier
                     .fillMaxWidth()
