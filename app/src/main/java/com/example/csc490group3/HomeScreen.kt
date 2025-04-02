@@ -3,6 +3,7 @@ package com.example.csc490group3
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -154,11 +155,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         items(suggestedEvents) { event ->
                             EventCard(
                                 event = event,
-                                onBottomButtonClick = { selectedEvent ->
-                                    viewModel.registerForEvent(selectedEvent, UserSession.currentUser)
-                                },
+                                onBottomButtonClick = {},
                                 onEditEvent = {},
-                                isHorizontal = true
+                                isHorizontal = true,
+                                onClick = {}
                             )
                         }
                     }
@@ -185,8 +185,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         }
                     }
                     else -> {
-
-                        LazyColumn {
                             items(events) { event ->
                                 EventCard(
                                     onClick = {
@@ -203,9 +201,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                     },
                                     onEditEvent = {}
                                 )
-                            }                  
-
-                        }
+                            }
                     }
                 }
             }
