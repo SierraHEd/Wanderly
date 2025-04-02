@@ -6,12 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement
+import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
+import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {
     var events = mutableStateOf<List<Event>>(emptyList())
+        private set
+
+    var suggestedEvents = mutableStateOf<List<Event>>(emptyList())
         private set
 
     var isLoading = mutableStateOf(true)
@@ -22,6 +27,23 @@ class HomeScreenViewModel: ViewModel() {
 
     init {
         fetchEvents()
+        fetchSuggestedEvents()
+    }
+
+    private fun fetchSuggestedEvents() {
+        viewModelScope.launch {
+            try {
+                val result = UserSession.currentUser?.id?.let { getAllSuggestedEvents(it) }
+                if(result != null) {
+                    suggestedEvents.value = result
+                }
+            }catch(e: Exception) {
+                errorMessage.value = "Error: ${e.localizedMessage}"
+            }finally {
+                isLoading.value = false
+            }
+
+        }
     }
 
     private fun fetchEvents() {

@@ -31,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.csc490group3.R
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 
@@ -48,7 +50,6 @@ fun EventCard(
     showOptionsButton: Boolean = false,
     isHorizontal: Boolean = false,
     modifier: Modifier = Modifier
-
 ) {
     Card(
         modifier = Modifier
@@ -63,18 +64,33 @@ fun EventCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            //Placeholder for eventual image
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .background(Color.Gray, shape = RoundedCornerShape(12.dp))
-            ) {
-                Text(
-                    text = "Event Image",
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center)
+
+            //if available, else show a placeholder
+            if (event.photoUrl != null && event.photoUrl.isNotEmpty()) {
+
+                androidx.compose.foundation.Image(//display photo blah blah blah
+                    painter = rememberAsyncImagePainter(event.photoUrl),
+                    contentDescription = "Event Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                // placeholder if no photo URL is available
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(Color.Gray, shape = RoundedCornerShape(12.dp))
+                ) {
+                    Text(
+                        text = "Event Image",
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -87,7 +103,7 @@ fun EventCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            //Location and address
+            // location and address
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray)
                 Spacer(modifier = Modifier.width(4.dp))
@@ -99,7 +115,7 @@ fun EventCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Attendees & Price
+            // attendees & Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -137,13 +153,16 @@ fun EventCard(
                     onClick = { onBottomButtonClick(event) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)) // Yellow color
+        
+      
                 ) {
                     Text("Unregister", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             } else if (showOptionsButton) {
+
                 Row(
                     modifier = Modifier.fillMaxWidth()
-                ) {
+                ) {            
                     Button(
                         onClick = { onBottomButtonClick(event) },
                         modifier = Modifier.weight(1f),

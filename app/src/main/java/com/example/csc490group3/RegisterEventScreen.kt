@@ -1,43 +1,59 @@
 package com.example.csc490group3
 
+
+import android.net.Uri
+import android.app.TimePickerDialog
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,98 +67,163 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
+import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
+import com.example.csc490group3.supabase.StorageManagement
+import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import java.io.File
+import java.util.UUID
+import kotlinx.datetime.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
+import com.example.csc490group3.ui.components.StatePickerBottomSheet
+import com.example.csc490group3.ui.components.CountryPickerBottomSheet
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterEventScreen(navController: NavController) {
-    var eventToAdd: Event
-    val categories = listOf("Music", "Food", "Entertainment", "Sports")
-    val countries = listOf("USA", "Canada", "UK", "Germany", "France")
-    val states = listOf("New York", "California", "Texas", "Florida", "Illinois")
-    var price by remember { mutableStateOf("") }
-    var eventName by remember { mutableStateOf("") }
-    var zipcode by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var venue by remember { mutableStateOf("") }
-    var maxAttendees by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var isPublic by remember { mutableStateOf(true) }
-    var isFamilyFriendly by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf("Category") }
-    var selectedPrice by remember { mutableStateOf("Price Range") }
-    //TODO: make it so that the states will change depending on which country is selected.
-    var selectedCountry by remember { mutableStateOf("Country") }
-    var selectedState by remember { mutableStateOf("State") }
-    var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
-    var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
-    var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
-    //the coroutine is to call the fun from database mgmt
+fun RegisterEventScreen(navController: NavController, initialEvent: Event? = null) {
     val coroutineScope = rememberCoroutineScope()
+    var eventToAdd: Event
+    var showCountryPicker by remember { mutableStateOf(false) }
+    var showStatePicker by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
+    var price by remember { mutableStateOf(initialEvent?.price?.toString() ?: "") }
+    var eventName by remember { mutableStateOf(initialEvent?.eventName ?: "") }
+    var zipcode by remember { mutableStateOf(initialEvent?.zipcode ?: "") }
+    var city by remember { mutableStateOf(initialEvent?.city ?: "") }
+    var address by remember { mutableStateOf(initialEvent?.address ?: "") }
+    var venue by remember { mutableStateOf(initialEvent?.venue ?: "") }
+    var maxAttendees by remember { mutableStateOf(initialEvent?.maxAttendees?.toString() ?: "") }
+    var description by remember { mutableStateOf(initialEvent?.description ?: "") }
+    var isPublic by remember { mutableStateOf(initialEvent?.isPublic ?: true) }
+    var isFamilyFriendly by remember { mutableStateOf(initialEvent?.isFamilyFriendly ?: false) }
+    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
+    var eventTime by remember { mutableStateOf(initialEvent?.eventTime?.toString() ?: "00:00") }
+    var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "Country") }
+    var selectedState by remember { mutableStateOf(initialEvent?.state ?: "State") }
+    var eventDateString by remember { mutableStateOf("") }
+    var eventDate by remember { mutableStateOf(initialEvent?.eventDate) }
+    var showDateErrorToast by remember { mutableStateOf(false) }
+    var showRegisterSuccessToast by remember { mutableStateOf(false) }
+    var eventImageUri by remember { mutableStateOf<Uri?>(null) }
+    var eventImageFile by remember { mutableStateOf<File?>(null) }
     val context = LocalContext.current
+    val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
 
-////////////////
-// Error Handling
-///////////////
+    if (initialEvent != null) {
+        LaunchedEffect(initialEvent.id) {
+            val fetchedCategories = getCategories(initialEvent.id!!, "event_categories")
+            if (fetchedCategories != null) {
+                selectedCategories = fetchedCategories
+            }
+        }
+    }
+
+    val eventImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            eventImageUri = it
+            val inputStream = context.contentResolver.openInputStream(it)
+            val file = File(context.cacheDir, "event_${UUID.randomUUID()}.jpg")
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            eventImageFile = file
+        }
+    }
 
     if (showDateErrorToast) {
-        // Show the toast when `showToast` becomes true
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Please select an event date.", Toast.LENGTH_SHORT).show()
         }
-        // Reset the showToast state to false to avoid showing it multiple times
         showDateErrorToast = false
     }
-
     if (showRegisterSuccessToast) {
-        // Show the toast when `showToast` becomes true
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Event Created!", Toast.LENGTH_SHORT).show()
         }
-        // Reset the showToast state to false to avoid showing it multiple times
-        showDateErrorToast = false
+        showRegisterSuccessToast = false
     }
 
-////////////////
-// Date Picker
-///////////////
-
-    // Date Picker Dialog state
     val datePickerState = rememberDatePickerState()
     var isDatePickerVisible by remember { mutableStateOf(false) }
 
-    // Utility to convert millis to LocalDate
-    fun convertMillisToLocalDate(millis: Long): LocalDate {
-        val javaLocalDate = java.time.LocalDate.ofEpochDay(millis / 86400000)
-        return LocalDate(javaLocalDate.year, javaLocalDate.monthValue, javaLocalDate.dayOfMonth)
+    fun convertMillisToLocalDate(millis: Long): kotlinx.datetime.LocalDate {
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        val adjustedMillis = millis - offsetMillis
+        val javaLocalDate = java.time.Instant.ofEpochMilli(adjustedMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        return kotlinx.datetime.LocalDate(
+            javaLocalDate.year,
+            javaLocalDate.monthValue,
+            javaLocalDate.dayOfMonth
+        )
     }
 
-    // Function to show the DatePicker dialog
-    fun showDatePicker() {
-        isDatePickerVisible = true
+    fun convertMillisToLocalString(millis: Long): String {
+        val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        val adjustedMillis = millis - offsetMillis
+        val localDate = java.time.Instant.ofEpochMilli(adjustedMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        return formatter.format(localDate)
     }
 
-    // Handle the DatePicker dialog visibility and selection
+    fun convertStringToMillis(digits: String): Long? {
+        if (digits.length != 8) return null
+        val formattedDate = "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+            val localDate = java.time.LocalDate.parse(formattedDate, formatter)
+            localDate.atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     if (isDatePickerVisible) {
         Popup(
             alignment = Alignment.Center,
@@ -158,23 +239,19 @@ fun RegisterEventScreen(navController: NavController) {
             ) {
                 DatePicker(
                     state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = PurpleBKG
-                    ),
+                    colors = DatePickerDefaults.colors(containerColor = PurpleBKG),
                     modifier = Modifier.height(540.dp)
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(30.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Confirm Button
                     TextButton(
                         onClick = {
                             datePickerState.selectedDateMillis?.let { selectedDateMillis ->
                                 eventDate = convertMillisToLocalDate(selectedDateMillis)
+                                eventDateString = convertMillisToLocalString(selectedDateMillis)
                             }
                             isDatePickerVisible = false
                         },
@@ -182,48 +259,33 @@ fun RegisterEventScreen(navController: NavController) {
                             .weight(1f)
                             .background(PurpleDarkBKG)
                     ) {
-                        Text(
-                            text = "Confirm",
-                            color = White,
-                            modifier = Modifier.padding(8.dp)
-                        )
+                        Text("Confirm", color = White, modifier = Modifier.padding(8.dp))
                     }
-                    // Cancel Button
                     TextButton(
                         onClick = { isDatePickerVisible = false },
                         modifier = Modifier
                             .weight(1f)
                             .background(Color.Red)
                     ) {
-                        Text(
-                            text = "Cancel",
-                            color = Black,
-                            modifier = Modifier.padding(8.dp)
-                        )
+                        Text("Cancel", color = Black, modifier = Modifier.padding(8.dp))
                     }
                 }
             }
         }
     }
 
-////////////////
-// Main UI
-///////////////
-
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        /** ^^ This guy holds everything. Assumably, if making bottom bar, this should
-        probably go inside of it. like embedded. This way we can have scrolling functional
-        without the bottom bar moving **/
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .background(PurpleBKG)
                 .padding(16.dp)
         ) {
-            // Spacer to bring title and logo down a little
             Spacer(modifier = Modifier.height(36.dp))
-            // My header for the form w/ logo and all that.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_icon),
                     contentDescription = null,
@@ -249,86 +311,248 @@ fun RegisterEventScreen(navController: NavController) {
                 color = Black,
                 fontFamily = FontFamily.Serif
             )
-
-            //Fields
-            // Event Date Field (Using a Button to show DatePicker)
-            Button(
-                onClick = { showDatePicker() },
-                enabled = true,
+            EventTextField("Event Name", eventName) { eventName = it }
+            EventTextField("Description", description) { description = it }
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6A1B9A),
-                    contentColor = White
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = eventDateString,
+                    onValueChange = { newText ->
+                        eventDateString = newText.filter { it.isDigit() }.take(8)
+                    },
+                    label = { Text("Event Date") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = DateInputVisualTransformation(),
+                    readOnly = false,
+                    modifier = Modifier
+                        .fillMaxWidth(fraction = 0.6f)
+                        .weight(1f)
+                        .onGloballyPositioned {
+                            convertStringToMillis(eventDateString)?.let { millis ->
+                                datePickerState.selectedDateMillis = millis
+                            }
+                        },
+                    trailingIcon = {
+                        Icon(Icons.Filled.Create, contentDescription = "Select Date")
+                    }
                 )
-            ) {
-                Text(text = eventDate?.toString() ?: "Select Event Date")
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { isDatePickerVisible = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .border(1.dp, Color.Gray, CircleShape)
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday,
+                        contentDescription = "Open Date Picker",
+                        tint = Color.Black
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(modifier = Modifier.fillMaxWidth(0.4f)) {
+                    OutlinedTextField(
+                        value = eventTime,
+                        onValueChange = { },
+                        label = { Text("Event Time") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable {
+                                val calendar = Calendar.getInstance()
+                                val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+                                val initialMinute = calendar.get(Calendar.MINUTE)
+                                TimePickerDialog(
+                                    context,
+                                    { _, hour, minute ->
+                                        eventTime = String.format("%02d:%02d", hour, minute)
+                                    },
+                                    initialHour,
+                                    initialMinute,
+                                    true
+                                ).show()
+                            }
+                    )
+                }
             }
-            // Event Name Field
-            EventTextField("Event Name", eventName) { eventName = it }
-            DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
             EventTextField("Venue", venue) { venue = it }
-            EventTextField("Price", price) { price = it }
-            EventTextField("Description", description) { description = it }
-            EventTextField("Guest Limit", maxAttendees, KeyboardType.Number) { maxAttendees = it }
             EventTextField("Address", address) { address = it }
-            DropdownMenuExample(countries, selectedCountry) { selectedCountry = it }
-            DropdownMenuExample(states, selectedState) { selectedState = it }
             EventTextField("City", city) { city = it }
+            Button(
+                onClick = { showStatePicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedState,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            StatePickerBottomSheet(
+                showSheet = showStatePicker,
+                onDismiss = { showStatePicker = false },
+                onStateSelected = { selectedState = it }
+            )
             EventTextField("Zipcode", zipcode) { zipcode = it }
-
+            Button(
+                onClick = { showCountryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedCountry,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            CountryPickerBottomSheet(
+                showSheet = showCountryPicker,
+                onDismiss = { showCountryPicker = false },
+                onStateSelected = { selectedCountry = it }
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Is A Public Event", color = Black)
-                Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) { price = it }
+                Spacer(modifier = Modifier.width(4.dp))
+                EventTextField("Guest Limit", maxAttendees, KeyboardType.Number, Modifier.weight(1f)) { maxAttendees = it }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Is Family Friendly", color = Black)
-                Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is A Public Event", color = Black)
+                    Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is Family Friendly", color = Black)
+                    Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
+                }
+            }
+            Button(
+                onClick = { showCategoryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = if (selectedCategories.isEmpty()) "Select Categories"
+                    else selectedCategories.joinToString(", ") { it.name },
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            CategoryPickerBottomSheet(
+                showSheet = showCategoryPicker,
+                onDismiss = { showCategoryPicker = false },
+                onSelectionDone = { selection -> selectedCategories = selection },
+                maxSelections = 3
+            )
+
+            Button(
+                onClick = { eventImagePicker.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) {
+                Text(text = "Select Event Photo")
+            }
+
+            eventImageUri?.let { uri ->
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Selected Event Photo",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
             }
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
-                    // Check if eventDate is null
                     if (eventDate == null) {
-                        // Trigger the toast by setting the state
                         showDateErrorToast = true
                     } else {
-                        eventToAdd = UserSession.currentUser?.id?.let {
-                            Event(
-                                eventName = eventName,
-                                zipcode = zipcode,
-                                city = city,
-                                address = address,
-                                venue = venue,
-                                maxAttendees = maxAttendees.toIntOrNull() ?: 0,
-                                description = description,
-                                isPublic = isPublic,
-                                isFamilyFriendly = isFamilyFriendly,
-                                price = price.toDoubleOrNull() ?: 0.0,
-                                country = selectedCountry,
-                                state = selectedState,
-                                createdBy = it,
-                                numAttendees = 0,
-                                eventDate = eventDate!!
-                            )
-                        }!!
                         coroutineScope.launch {
-                            if (!addRecord("events", eventToAdd)) {
-                                println("Error adding event")
+                            // If an event image is selected, upload it first.
+                            val eventPhotoUrl = eventImageFile?.let { file ->
+                                StorageManagement.uploadEventPhoto(
+                                    file,
+                                    UUID.randomUUID().toString()
+                                )
                             }
-                        }
-                        showRegisterSuccessToast = true
-                        navController.navigate("Home_Screen")
-                    }
 
+                            eventToAdd = UserSession.currentUser?.id?.let {
+                                Event(
+                                    eventName = eventName,
+                                    zipcode = zipcode,
+                                    city = city,
+                                    address = address,
+                                    venue = venue,
+                                    maxAttendees = maxAttendees.toIntOrNull() ?: 0,
+                                    description = description,
+                                    isPublic = isPublic,
+                                    isFamilyFriendly = isFamilyFriendly,
+                                    price = price.toDoubleOrNull() ?: 0.0,
+                                    country = selectedCountry,
+                                    state = selectedState,
+                                    createdBy = it,
+                                    numAttendees = 0,
+                                    eventDate = eventDate!!,
+                                    eventTime = localEventTime,
+                                    photoUrl = eventPhotoUrl
+                                )
+                            }!!
+                            coroutineScope.launch {
+                                val newEventID = addEvent(eventToAdd)
+                                if (newEventID == -1) {
+                                    println("Error adding event")
+                                } else {
+                                    addCategoryRelationship(
+                                        selectedCategories,
+                                        "event_categories",
+                                        newEventID
+                                    )
+                                }
+                            }
+                            showRegisterSuccessToast = true
+                            navController.navigate("Home_Screen")
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -343,13 +567,10 @@ fun RegisterEventScreen(navController: NavController) {
                     fontFamily = FontFamily.Default
                 )
             }
-
-            Spacer(Modifier.padding(8.dp))
-
-            Button(colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
-                onClick = {
-                    navController.navigate("Home_Screen")
-                },
+            Spacer(modifier = Modifier.padding(8.dp))
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
+                onClick = { navController.navigate("Home_Screen") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .size(50.dp)
@@ -367,69 +588,44 @@ fun RegisterEventScreen(navController: NavController) {
     }
 }
 
-///////////////
-// Composable Functions
-///////////////
-
-//Dropdown Menu Composable Function
-@Composable
-fun DropdownMenuExample(
-    options: List<String>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Button(
-        onClick = { expanded = true },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = PurpleContainer
-
-        ),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(width = 1.dp, color = White),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 15.dp)
-    ) {
-        Text(
-            text = selectedItem,
-            fontSize = 18.sp,
-            color = Black,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Left
-        )
-        Row(
-            horizontalArrangement = Arrangement.End
-        ) {
-            Icon(
-                Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = Purple40,
-                modifier = Modifier.size(40.dp)
-            )
+class DateInputVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text.filter { it.isDigit() }.take(8)
+        val (formatted, mapping) = transformDigits(digits)
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                return mapping.getOrElse(offset) { formatted.length }
+            }
+            override fun transformedToOriginal(offset: Int): Int {
+                return mapping.indexOfLast { it <= offset }.coerceAtLeast(0)
+            }
         }
-    }
-
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        options.forEach { option ->
-            DropdownMenuItem(
-                text = { Text(option, fontSize = 16.sp) },
-                onClick = {
-                    onItemSelected(option)
-                    expanded = false
-                }
-            )
-        }
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
     }
 }
 
-//Textfield Composable Function
+fun transformDigits(digits: String): Pair<String, List<Int>> {
+    val mapping = mutableListOf<Int>()
+    val sb = StringBuilder()
+    mapping.add(0)
+    for (i in digits.indices) {
+        if (i == 2 || i == 4) {
+            sb.append("/")
+        }
+        sb.append(digits[i])
+        mapping.add(sb.length)
+    }
+    return Pair(sb.toString(), mapping)
+}
+
 @Composable
 fun EventTextField(
     label: String,
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 10.dp),
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -458,12 +654,9 @@ fun EventTextField(
                 Icons.Filled.Create,
                 "",
                 tint = Purple40,
-                modifier = Modifier.padding(horizontal = (30.dp))
+                modifier = Modifier.padding(horizontal = 30.dp)
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp)
-
+        modifier = modifier
     )
 }

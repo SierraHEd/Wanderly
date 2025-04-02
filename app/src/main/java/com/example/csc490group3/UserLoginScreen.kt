@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.AuthManagement.accountValidation
 import com.example.csc490group3.supabase.AuthManagement.getActiveUser
+import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.theme.PurpleBKG
 import kotlinx.coroutines.coroutineScope
@@ -121,6 +122,11 @@ fun UserLoginScreen(navController: NavController) {
                                 val validAccount = accountValidation(email, password)
                                 if(validAccount) {
                                     UserSession.currentUser = getPrivateUser(email)
+                                    val categories =
+                                        UserSession.currentUser?.id?.let { getCategories(it, "user_categories") }
+                                    if(categories != null){
+                                        UserSession.currentUserCategory = categories
+                                    }
                                     navController.navigate("Home_Screen")
                                 }
                                 else {

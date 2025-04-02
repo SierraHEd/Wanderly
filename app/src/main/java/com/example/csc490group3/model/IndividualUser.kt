@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("individual")
-data class PrivateUser (
+data class IndividualUser (
     override val id: Int? = null,
     override val email: String,
     @SerialName("first_name")
