@@ -38,17 +38,21 @@ import com.example.csc490group3.ui.theme.PurpleBKG
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.SearchScreenViewModel
 
@@ -60,6 +64,9 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
     val errorMessage by viewModel.errorMessage
     val isLoading by viewModel.isLoading
     val keyboardController = LocalSoftwareKeyboardController.current
+    var context = LocalContext.current
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -135,6 +142,7 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
                         LazyColumn {
                             items(events) { event ->
                                 EventCard(
+                                    onClick = { selectedEvent.value = event} ,
                                     event = event, onBottomButtonClick = { selectedEvent ->
                                         viewModel.registerForEvent(
                                             selectedEvent,
@@ -147,7 +155,15 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
                         }
                     }
                 }
-            }           
+            }
+        }
+        // Show event detail popup when an event is selected
+        selectedEvent.value?.let { event ->
+            EventDetailDialog(event = event,
+                onDismiss = { selectedEvent.value = null },
+                showRegisterButton = true,
+                onRegister = { isRegistered.value = true}
+            )
         }
     }
 }

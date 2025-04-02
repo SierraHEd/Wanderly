@@ -51,6 +51,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.time.YearMonth
 import java.util.Locale
+import com.example.csc490group3.ui.components.EventDetailDialog
 
 @Composable
 fun CalendarScreen(
@@ -73,6 +74,8 @@ fun CalendarScreen(
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     val eventsForSelectedDay = remember { mutableStateOf<List<Event>>(emptyList()) }
     val showEventsPopup = remember { mutableStateOf(false) }
+
+    var isRegistered = remember { mutableStateOf(false) }
 
     // Sort events by date and filter out past events
     val upcomingEvents = events
@@ -295,7 +298,12 @@ fun CalendarScreen(
 
             // Show event detail popup when an event is selected
             selectedEvent.value?.let { event ->
-                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null })
+                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
+                    showRegisterButton = false,
+                    onRegister =  {
+                        isRegistered.value = true;
+                }
+                )
             }
 
             // Show the popup dialog with the list of events for the selected day
@@ -464,36 +472,4 @@ fun WeekHeader() {
             Text(text = day, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
         }
     }
-}
-
-//Shows all event details in a popup
-@Composable
-fun EventDetailDialog(
-    event: Event,
-    onDismiss: () -> Unit
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text(text = event.eventName) },
-        text = {
-            Column {
-                Text(text = "Date: ${event.eventDate}")
-                Text(text = "Venue: ${event.venue}")
-                Text(text = "Location: ${event.address}, ${event.city}, ${event.state}, ${event.zipcode}")
-                Text(text = "Country: ${event.country}")
-                Text(text = "Description: ${event.description}")
-                Text(text = "Categories: ${event.categories?.joinToString(", ") ?: "No categories"}")
-                Text(text = "Max Attendees: ${event.maxAttendees}")
-                Text(text = "Number of Attendees: ${event.numAttendees ?: 0}")
-                Text(text = "Public: ${event.isPublic?.let { if (it) "Yes" else "No" } ?: "Unknown"}")
-                Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
-                Text(text = "Price: $${event.price ?: 0.0}")
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("Close")
-            }
-        }
-    )
 }
