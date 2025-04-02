@@ -1,11 +1,7 @@
 package com.example.csc490group3
 
-
-import android.net.Uri
 import android.app.TimePickerDialog
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -86,87 +82,56 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
 import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
-import com.example.csc490group3.supabase.StorageManagement
-import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import java.io.File
-import java.util.UUID
 import kotlinx.datetime.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.StatePickerBottomSheet
 import com.example.csc490group3.ui.components.CountryPickerBottomSheet
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterEventScreen(navController: NavController, initialEvent: Event? = null) {
-    val coroutineScope = rememberCoroutineScope()
+fun RegisterEventScreen(navController: NavController) {
     var eventToAdd: Event
+    val categories = listOf("Music", "Food", "Entertainment", "Sports")
     var showCountryPicker by remember { mutableStateOf(false) }
     var showStatePicker by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
-    var price by remember { mutableStateOf(initialEvent?.price?.toString() ?: "") }
-    var eventName by remember { mutableStateOf(initialEvent?.eventName ?: "") }
-    var zipcode by remember { mutableStateOf(initialEvent?.zipcode ?: "") }
-    var city by remember { mutableStateOf(initialEvent?.city ?: "") }
-    var address by remember { mutableStateOf(initialEvent?.address ?: "") }
-    var venue by remember { mutableStateOf(initialEvent?.venue ?: "") }
-    var maxAttendees by remember { mutableStateOf(initialEvent?.maxAttendees?.toString() ?: "") }
-    var description by remember { mutableStateOf(initialEvent?.description ?: "") }
-    var isPublic by remember { mutableStateOf(initialEvent?.isPublic ?: true) }
-    var isFamilyFriendly by remember { mutableStateOf(initialEvent?.isFamilyFriendly ?: false) }
+    var price by remember { mutableStateOf("") }
+    var eventName by remember { mutableStateOf("") }
+    var zipcode by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var venue by remember { mutableStateOf("") }
+    var maxAttendees by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var isPublic by remember { mutableStateOf(true) }
+    var isFamilyFriendly by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
-    var eventTime by remember { mutableStateOf(initialEvent?.eventTime?.toString() ?: "00:00") }
+    var eventTime by remember { mutableStateOf("00:00" )}
     //TODO: make it so that the states will change depending on which country is selected.
-    var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "Country") }
-    var selectedState by remember { mutableStateOf(initialEvent?.state ?: "State") }
+    var selectedCountry by remember { mutableStateOf("Country") }
+    var selectedState by remember { mutableStateOf("State") }
     var eventDateString by remember { mutableStateOf("") }
-    var eventDate by remember { mutableStateOf(initialEvent?.eventDate) } // Store the event date input
+    var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
-    var eventImageUri by remember { mutableStateOf<Uri?>(null) }// store image url
-    var eventImageFile by remember { mutableStateOf<File?>(null) }
     //the coroutine is to call the fun from database mgmt
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
 
-    if (initialEvent != null) {
-        LaunchedEffect(initialEvent.id) {
-            // Fetch categories asynchronously and update the state.
-            val fetchedCategories = getCategories(initialEvent.id!!, "event_categories")
-            if (fetchedCategories != null) {
-                selectedCategories = fetchedCategories
-            }
-        }
-    }
-
-    val eventImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            eventImageUri = it
-            val inputStream = context.contentResolver.openInputStream(it)
-            val file = File(context.cacheDir, "event_${UUID.randomUUID()}.jpg")
-            inputStream?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            eventImageFile = file
-        }
-    }
 
 ////////////////
 // Error Handling
@@ -247,6 +212,11 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 
+    // Function to show the DatePicker dialog
+    fun showDatePicker() {
+        isDatePickerVisible = true
+    }
+
 // Handle the DatePicker dialog visibility and selection
     if (isDatePickerVisible) {
         Popup(
@@ -313,6 +283,41 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
             }
         }
     }
+
+////////////////
+// Time Picker
+///////////////
+    @Composable
+    fun TimePickerPopup(
+    onTimeSelected: (hour: Int, minute: Int) -> Unit
+) {
+    val context = LocalContext.current
+    var timePicked by remember { mutableStateOf("") }
+
+    // Create a lambda that shows the TimePickerDialog
+    val showTimePicker = {
+        val calendar = Calendar.getInstance()
+        val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val initialMinute = calendar.get(Calendar.MINUTE)
+
+        TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                timePicked = String.format("%02d:%02d", hourOfDay, minute)
+                onTimeSelected(hourOfDay, minute)
+            },
+            initialHour,
+            initialMinute,
+            true  // Set true for 24-hour format, false for AM/PM mode
+        ).show()
+    }
+
+    // This Button triggers the native alarm-style time picker dialog.
+    Button(onClick = showTimePicker) {
+        Text(text = if (timePicked.isEmpty()) "Select Time" else "Time: $timePicked")
+    }
+    }
+
 ////////////////
 // Main UI
 ///////////////
@@ -356,6 +361,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 color = Black,
                 fontFamily = FontFamily.Serif
             )
+
             // Event Name Field
             EventTextField("Event Name", eventName) { eventName = it }
             EventTextField("Description", description) { description = it }
@@ -442,6 +448,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     }
                 }
             }
+
             EventTextField("Venue", venue) { venue = it }
             EventTextField("Address", address) { address = it }
             EventTextField("City", city) { city = it }
@@ -549,44 +556,17 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     selectedCategories = selection
                 },
                 maxSelections = 3
-            )        
-            
-
-            Button(
-                onClick = { eventImagePicker.launch("image/*") },
-                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-            ) {
-                Text(text = "Select Event Photo")
-            }
-
-            eventImageUri?.let { uri ->
-                Image(
-                    painter = rememberAsyncImagePainter(uri),
-                    contentDescription = "Selected Event Photo",
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
+            )
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
+                    // Check if eventDate is null
                     if (eventDate == null) {
+                        // Trigger the toast by setting the state
                         showDateErrorToast = true
                     } else {
-
-                      coroutineScope.launch {
-                            // If an event image is selected, upload it first.
-                            val eventPhotoUrl = eventImageFile?.let { file ->
-                                StorageManagement.uploadEventPhoto(file, UUID.randomUUID().toString())
-                            }
-                      
-                      eventToAdd = UserSession.currentUser?.id?.let {
+                        eventToAdd = UserSession.currentUser?.id?.let {
                             Event(
                                 eventName = eventName,
                                 zipcode = zipcode,
@@ -603,8 +583,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                                 createdBy = it,
                                 numAttendees = 0,
                                 eventDate = eventDate!!,
-                                eventTime = localEventTime,
-                                photoUrl = eventPhotoUrl // <-- new field for the event image
+                                eventTime = localEventTime
                             )
                         }!!
                         coroutineScope.launch {
@@ -617,7 +596,10 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                                 addCategoryRelationship(selectedCategories,"event_categories", newEventID)
                             }
                         }
+                        showRegisterSuccessToast = true
+                        navController.navigate("Home_Screen")
                     }
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -655,6 +637,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 }
+
 class DateInputVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         // Extract digits (max 8) from the input

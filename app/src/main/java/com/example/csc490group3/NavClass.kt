@@ -43,5 +43,10 @@ fun Navigation(context: Context) {
         composable("profile_screen") {
             UserProfileScreen(navController)
         }
+        composable("friends_profile_screen/{friendID}") { backStackEntry ->
+            // Retrieve the friend's ID from the route's arguments
+            val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
+            FriendProfileScreen(navController = navController, friendEmail = friendEmail)
+        }
     }
 }

@@ -3,12 +3,9 @@ package com.example.csc490group3.supabase
 import com.example.csc490group3.BuildConfig
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.status.SessionSource
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.storage.Storage
-
 
 object SupabaseManagement {
     val supabase by lazy {
@@ -18,9 +15,6 @@ object SupabaseManagement {
         ) {
             install(Postgrest)
             install(Auth)
-            install(Storage)
-
-
         }
     }
     object DatabaseManagement {
@@ -30,6 +24,4 @@ object SupabaseManagement {
     object AuthManagement {
         val auth get() = supabase.auth
     }
-
-
 }

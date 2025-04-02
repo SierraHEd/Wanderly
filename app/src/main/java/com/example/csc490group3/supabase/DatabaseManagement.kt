@@ -228,40 +228,6 @@ object DatabaseManagement {
         }
 
     }
-    suspend fun updateEventPhoto(eventId: Int, photoUrl: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                postgrest.from("events").update({
-                    set("photo_url", photoUrl)
-                }) {
-                    filter { eq("id", eventId) }
-                }
-                println("Event photo updated successfully.")
-                true
-            } catch (e: Exception) {
-                println("Error updating event photo: ${e.localizedMessage}")
-                false
-            }
-        }
-    }
-
-
-    suspend fun updateUserProfilePicture(userId: Int, photoUrl: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                postgrest.from("private_users").update({
-                    set("profile_picture_url", photoUrl)
-                }) {
-                    filter { eq("id", userId) }
-                }
-                println("User profile picture updated successfully.")
-                true
-            } catch (e: Exception) {
-                println("Error updating profile picture: ${e.localizedMessage}")
-                false
-            }
-        }
-    }
 
     /**
      * will form a relationship between categories and either an event or user in the DB
@@ -352,22 +318,6 @@ object DatabaseManagement {
                 }
             }catch(e: Exception) {
                 println("Error deleting categories: ${e.localizedMessage}")
-                null
-            }
-        }
-
-    }
-
-    suspend fun getAllSuggestedEvents(userID:Int): List<Event>?{
-        return withContext(Dispatchers.IO) {
-            try {
-                val userID = JsonObject(mapOf("user_id" to JsonPrimitive(userID)))
-
-                val result = postgrest.rpc("all_suggested_events", userID).decodeList<Event>()
-                println("Suggested events fetched successfully")
-                result
-            }catch(e: Exception) {
-                println("Error fetching suggested events: ${e.localizedMessage}")
                 null
             }
         }
