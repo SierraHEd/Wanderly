@@ -323,4 +323,20 @@ object DatabaseManagement {
         }
 
     }
+
+    suspend fun getAllSuggestedEvents(userID:Int): List<Event>?{
+        return withContext(Dispatchers.IO) {
+            try {
+                val userID = JsonObject(mapOf("user_id" to JsonPrimitive(userID)))
+
+                val result = postgrest.rpc("all_suggested_events", userID).decodeList<Event>()
+                println("Suggested events fetched successfully")
+                result
+            }catch(e: Exception) {
+                println("Error fetching suggested events: ${e.localizedMessage}")
+                null
+            }
+        }
+
+    }
 }
