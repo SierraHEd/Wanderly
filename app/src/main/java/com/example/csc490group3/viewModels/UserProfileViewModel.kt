@@ -71,6 +71,4 @@ class UserProfileViewModel: ViewModel() {
     fun editEvent(event: Event) {
         println("You are editing an event")
     }
-
-
 }

@@ -1,20 +1,17 @@
 package com.example.csc490group3.supabase
 
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
-import com.example.csc490group3.model.PrivateUser
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.example.csc490group3.model.UserSession
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.slf4j.MDC.put
 
 object DatabaseManagement {
 
@@ -43,29 +40,48 @@ object DatabaseManagement {
     }
 
     /**
+     * Inserts a event into the event table in the Supabase database.
+     *
+     *
+     * @param event the event object to be inserted
+     * @return returns the event id of teh added event or -1 if an error occurred
+     */
+    suspend fun addEvent(event: Event): Int{
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = postgrest.from("events").insert(event){
+                    select()
+                }.decodeSingle<Event>()
+                return@withContext response?.id!!
+            } catch (e: Exception) {
+                println("Error inserting event: ${e.localizedMessage}")
+                return@withContext -1
+            }
+        }
+    }
+
+    /**
      * Fetches a private user from the "private_users" table based on the provided email address.
      *
      * This function filters the table for records where the "email" column matches the given email,
-     * and decodes the response into a [PrivateUser] object.
+     * and decodes the response into a [IndividualUser] object.
      *
      * @param email The email address of the user to fetch.
-     * @return Returns a [PrivateUser] object if a matching record is found, or null if no match is found or an error occurs.
+     * @return Returns a [IndividualUser] object if a matching record is found, or null if no match is found or an error occurs.
      */
-    suspend fun getPrivateUser(email: String): PrivateUser? {
+    suspend fun getPrivateUser(email: String): IndividualUser? {
         return withContext(Dispatchers.IO) {
             try{
                 postgrest.from("private_users").select {
                     filter {
                         eq("email", email)
                     }
-                }.decodeSingle<PrivateUser>()
+                }.decodeSingle<IndividualUser>()
             }catch(e: Exception) {
                 println("Error fetching user record: ${e.localizedMessage}")
                 null
             }
-
         }
-
     }
 
     /**
@@ -198,7 +214,6 @@ object DatabaseManagement {
 
     suspend fun simpleSearch(query: String): List<Event>? {
         return withContext(Dispatchers.IO) {
-            println("THIS WAS CALLED HERE")
             try {
                 val params = JsonObject(mapOf("term" to JsonPrimitive(query)))
 
@@ -214,6 +229,114 @@ object DatabaseManagement {
 
     }
 
+    /**
+     * will form a relationship between categories and either an event or user in the DB
+     *
+     * @param categories a list of categories you cant to add to the user/event
+     * @param id ID number of the event or user you are making the relationship with
+     * @param tableName either event_categories or user_categories depending on what relationship is being made
+     */
+    suspend fun addCategoryRelationship(categories: List<Category>, tableName: String, id:Int){
+        return withContext(Dispatchers.IO) {
+            try {
+                val idString = when (tableName) {
+                    "event_categories" -> "event_id"
+                    "user_categories" -> "user_id"
+                    else -> {
+                        println("ERROR - UNRECOGNIZED TABLE")
+                        null
+                    }
+                }
 
+                val joinRecords = categories.map{ category ->
+                    mapOf("category_id" to category.id, idString to id)
+                }
 
+                val response = postgrest.from(tableName).insert(joinRecords)
+                println("Categories Inserted Successfully")
+
+            } catch (e: Exception) {
+                println("Error inserting Category: ${e.localizedMessage}")
+                false
+            }
+        }
+
+    }
+
+    suspend fun getFriends(userID: Int): List<IndividualUser>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userID = JsonObject(mapOf("userid" to JsonPrimitive(userID)))
+
+                val result = postgrest.rpc("get_friends", userID).decodeList<IndividualUser>()
+                println(result)
+                result
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+    suspend fun getCategories(id: Int, tableName: String): List<Category>?{
+        return withContext(Dispatchers.IO) {
+            try {
+                val params = buildJsonObject {
+                    put("id", id)
+                    put("table_name", tableName)
+                }
+
+                val result = postgrest.rpc("get_categories", params).decodeList<Category>()
+                result
+
+            }catch(e: Exception) {
+                println("Error fetching categories: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+    suspend fun deleteCategories(id: Int, tableName: String){
+        return withContext(Dispatchers.IO) {
+
+            val idString = when (tableName) {
+                "event_categories" -> "event_id"
+                "user_categories" -> "user_id"
+                else -> {
+                    println("ERROR - UNRECOGNIZED TABLE")
+                    null
+                }
+            }
+            try {
+                postgrest.from(tableName).delete {
+                    select()
+                    filter {
+                        if (idString != null) {
+                            eq(idString, id)
+                        }
+                    }
+                }
+            }catch(e: Exception) {
+                println("Error deleting categories: ${e.localizedMessage}")
+                null
+            }
+        }
+
+    }
+
+    suspend fun getAllSuggestedEvents(userID:Int): List<Event>?{
+        return withContext(Dispatchers.IO) {
+            try {
+                val userID = JsonObject(mapOf("user_id" to JsonPrimitive(userID)))
+
+                val result = postgrest.rpc("all_suggested_events", userID).decodeList<Event>()
+                println("Suggested events fetched successfully")
+                result
+            }catch(e: Exception) {
+                println("Error fetching suggested events: ${e.localizedMessage}")
+                null
+            }
+        }
+
+    }
 }

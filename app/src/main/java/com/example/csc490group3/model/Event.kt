@@ -1,5 +1,6 @@
 package com.example.csc490group3.model
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,7 +20,7 @@ data class Event (
     val isPublic: Boolean? = true,
     @SerialName("is_family_friendly")
     val isFamilyFriendly: Boolean,
-    val categories: Set<Category>? = null,
+    val categories: List<Category>? = null,
     val price: Double? = 0.0,
     val country: String,
     val state: String,
@@ -28,5 +29,7 @@ data class Event (
     @SerialName("num_attendees")
     val numAttendees: Int? = 0,
     @SerialName("date")
-    val eventDate: LocalDate
+    val eventDate: LocalDate,
+    @SerialName("time")
+    val eventTime: LocalTime = LocalTime.parse("00:00:00")
 )

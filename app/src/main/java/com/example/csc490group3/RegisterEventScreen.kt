@@ -1,43 +1,55 @@
 package com.example.csc490group3
 
+import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,55 +63,85 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
+import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
+import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
+import com.example.csc490group3.ui.components.StatePickerBottomSheet
+import com.example.csc490group3.ui.components.CountryPickerBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterEventScreen(navController: NavController) {
+fun RegisterEventScreen(navController: NavController, initialEvent: Event? = null) {
+    val coroutineScope = rememberCoroutineScope()
     var eventToAdd: Event
-    val categories = listOf("Music", "Food", "Entertainment", "Sports")
-    val countries = listOf("USA", "Canada", "UK", "Germany", "France")
-    val states = listOf("New York", "California", "Texas", "Florida", "Illinois")
-    var price by remember { mutableStateOf("") }
-    var eventName by remember { mutableStateOf("") }
-    var zipcode by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var venue by remember { mutableStateOf("") }
-    var maxAttendees by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var isPublic by remember { mutableStateOf(true) }
-    var isFamilyFriendly by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf("Category") }
-    var selectedPrice by remember { mutableStateOf("Price Range") }
+    var showCountryPicker by remember { mutableStateOf(false) }
+    var showStatePicker by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
+    var price by remember { mutableStateOf(initialEvent?.price?.toString() ?: "") }
+    var eventName by remember { mutableStateOf(initialEvent?.eventName ?: "") }
+    var zipcode by remember { mutableStateOf(initialEvent?.zipcode ?: "") }
+    var city by remember { mutableStateOf(initialEvent?.city ?: "") }
+    var address by remember { mutableStateOf(initialEvent?.address ?: "") }
+    var venue by remember { mutableStateOf(initialEvent?.venue ?: "") }
+    var maxAttendees by remember { mutableStateOf(initialEvent?.maxAttendees?.toString() ?: "") }
+    var description by remember { mutableStateOf(initialEvent?.description ?: "") }
+    var isPublic by remember { mutableStateOf(initialEvent?.isPublic ?: true) }
+    var isFamilyFriendly by remember { mutableStateOf(initialEvent?.isFamilyFriendly ?: false) }
+    var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
+    var eventTime by remember { mutableStateOf(initialEvent?.eventTime?.toString() ?: "00:00") }
     //TODO: make it so that the states will change depending on which country is selected.
-    var selectedCountry by remember { mutableStateOf("Country") }
-    var selectedState by remember { mutableStateOf("State") }
-    var eventDate by remember { mutableStateOf<LocalDate?>(null) } // Store the event date input
+    var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "Country") }
+    var selectedState by remember { mutableStateOf(initialEvent?.state ?: "State") }
+    var eventDateString by remember { mutableStateOf("") }
+    var eventDate by remember { mutableStateOf(initialEvent?.eventDate) } // Store the event date input
     var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
     var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
     //the coroutine is to call the fun from database mgmt
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
+
+    if (initialEvent != null) {
+        LaunchedEffect(initialEvent.id) {
+            // Fetch categories asynchronously and update the state.
+            val fetchedCategories = getCategories(initialEvent.id!!, "event_categories")
+            if (fetchedCategories != null) {
+                selectedCategories = fetchedCategories
+            }
+        }
+    }
 
 ////////////////
 // Error Handling
@@ -127,22 +169,60 @@ fun RegisterEventScreen(navController: NavController) {
 // Date Picker
 ///////////////
 
-    // Date Picker Dialog state
+// Date Picker Dialog state
     val datePickerState = rememberDatePickerState()
     var isDatePickerVisible by remember { mutableStateOf(false) }
 
-    // Utility to convert millis to LocalDate
-    fun convertMillisToLocalDate(millis: Long): LocalDate {
-        val javaLocalDate = java.time.LocalDate.ofEpochDay(millis / 86400000)
-        return LocalDate(javaLocalDate.year, javaLocalDate.monthValue, javaLocalDate.dayOfMonth)
+    // Updated conversion functions
+    fun convertMillisToLocalDate(millis: Long): kotlinx.datetime.LocalDate {
+        // Get the zone offset for the instant
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        // Subtract the offset to shift the UTC midnight to local midnight
+        val adjustedMillis = millis - offsetMillis
+        // Convert the adjusted millis into a java.time.LocalDate
+        val javaLocalDate = java.time.Instant.ofEpochMilli(adjustedMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        // Convert to kotlinx.datetime.LocalDate
+        return kotlinx.datetime.LocalDate(
+            javaLocalDate.year,
+            javaLocalDate.monthValue,
+            javaLocalDate.dayOfMonth
+        )
     }
 
-    // Function to show the DatePicker dialog
-    fun showDatePicker() {
-        isDatePickerVisible = true
+    fun convertMillisToLocalString(millis: Long): String {
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+        val offsetMillis = java.time.ZoneId.systemDefault()
+            .rules
+            .getOffset(java.time.Instant.ofEpochMilli(millis))
+            .totalSeconds * 1000L
+        val adjustedMillis = millis - offsetMillis
+        val localDate = java.time.Instant.ofEpochMilli(adjustedMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        return formatter.format(localDate)
     }
 
-    // Handle the DatePicker dialog visibility and selection
+    fun convertStringToMillis(digits: String): Long? {
+        if (digits.length != 8) return null
+        // Insert slashes into the raw digit string to get the formatted string.
+        val formattedDate = "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
+        return try {
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+            val localDate = java.time.LocalDate.parse(formattedDate, formatter)
+            localDate.atStartOfDay(java.time.ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+// Handle the DatePicker dialog visibility and selection
     if (isDatePickerVisible) {
         Popup(
             alignment = Alignment.Center,
@@ -175,6 +255,7 @@ fun RegisterEventScreen(navController: NavController) {
                         onClick = {
                             datePickerState.selectedDateMillis?.let { selectedDateMillis ->
                                 eventDate = convertMillisToLocalDate(selectedDateMillis)
+                                eventDateString = convertMillisToLocalString(selectedDateMillis)
                             }
                             isDatePickerVisible = false
                         },
@@ -190,7 +271,9 @@ fun RegisterEventScreen(navController: NavController) {
                     }
                     // Cancel Button
                     TextButton(
-                        onClick = { isDatePickerVisible = false },
+                        onClick = {
+                            isDatePickerVisible = false
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .background(Color.Red)
@@ -205,7 +288,6 @@ fun RegisterEventScreen(navController: NavController) {
             }
         }
     }
-
 ////////////////
 // Main UI
 ///////////////
@@ -216,7 +298,7 @@ fun RegisterEventScreen(navController: NavController) {
         without the bottom bar moving **/
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .background(PurpleBKG)
                 .padding(16.dp)
         ) {
@@ -249,49 +331,200 @@ fun RegisterEventScreen(navController: NavController) {
                 color = Black,
                 fontFamily = FontFamily.Serif
             )
-
-            //Fields
-            // Event Date Field (Using a Button to show DatePicker)
-            Button(
-                onClick = { showDatePicker() },
-                enabled = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6A1B9A),
-                    contentColor = White
-                )
-            ) {
-                Text(text = eventDate?.toString() ?: "Select Event Date")
-            }
             // Event Name Field
             EventTextField("Event Name", eventName) { eventName = it }
-            DropdownMenuExample(categories, selectedCategory) { selectedCategory = it }
-            EventTextField("Venue", venue) { venue = it }
-            EventTextField("Price", price) { price = it }
             EventTextField("Description", description) { description = it }
-            EventTextField("Guest Limit", maxAttendees, KeyboardType.Number) { maxAttendees = it }
+            Row (
+                //add stuff here??
+            ) {
+                //Fields
+                // Event Date Field (Using a Button to show DatePicker)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    verticalAlignment =  Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = eventDateString,
+                        onValueChange = { newText ->
+                            eventDateString = newText.filter { it.isDigit() }.take(8)
+                        },
+                        label = { Text("Event Date") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        visualTransformation = DateInputVisualTransformation(),
+                        readOnly = false,
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = 0.6f)
+                            .weight(1f)
+                            .onGloballyPositioned {
+                                convertStringToMillis(eventDateString)?.let { millis ->
+                                    datePickerState.selectedDateMillis = millis
+                                }
+                            },
+                        trailingIcon = {
+                            Icon(Icons.Filled.Create, contentDescription = "Select Date")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = { isDatePickerVisible = true }, // Open Date Picker
+                        modifier = Modifier
+                            .size(48.dp) // Size of the button
+                            .border(1.dp, Color.Gray, CircleShape)
+                            .clip(CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarToday, // Calendar icon
+                            contentDescription = "Open Date Picker",
+                            tint = Color.Black
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box(modifier = Modifier.fillMaxWidth(0.4f)) {
+                        OutlinedTextField(
+                            value = eventTime,
+                            onValueChange = { },
+                            label = { Text("Event Time") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Invisible overlay to capture taps over the entire text field.
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable {
+                                    val calendar = Calendar.getInstance()
+                                    val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+                                    val initialMinute = calendar.get(Calendar.MINUTE)
+                                    TimePickerDialog(
+                                        context,
+                                        { _, hour, minute ->
+                                            eventTime = String.format("%02d:%02d", hour, minute)
+                                        },
+                                        initialHour,
+                                        initialMinute,
+                                        true  // 24-hour format. Change to false for AM/PM.
+                                    ).show()
+                                }
+                        )
+                    }
+                }
+            }
+            EventTextField("Venue", venue) { venue = it }
             EventTextField("Address", address) { address = it }
-            DropdownMenuExample(countries, selectedCountry) { selectedCountry = it }
-            DropdownMenuExample(states, selectedState) { selectedState = it }
             EventTextField("City", city) { city = it }
+            //button for state selection
+            Button(
+                onClick = { showStatePicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedState,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            StatePickerBottomSheet(
+                showSheet = showStatePicker,
+                onDismiss = { showStatePicker = false },
+                onStateSelected = { selectedState = it }
+            )
+
             EventTextField("Zipcode", zipcode) { zipcode = it }
+
+            //button for country selection
+            Button(
+                onClick = { showCountryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
+            ) {
+                Text(
+                    text = selectedCountry,
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
+            }
+            //calls to bring up country selection bottom sheet
+            CountryPickerBottomSheet(
+                showSheet = showCountryPicker,
+                onDismiss = { showCountryPicker = false },
+                onStateSelected = { selectedCountry = it }
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) { price = it }
+
+                Spacer(Modifier.width(4.dp))
+
+                EventTextField("Guest Limit", maxAttendees, KeyboardType.Number, Modifier.weight(1f)) { maxAttendees = it }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Is A Public Event", color = Black)
-                Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is A Public Event", color = Black)
+                    Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Is Family Friendly", color = Black)
+                    Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
+                }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            //Category Button
+            Button(
+                onClick = { showCategoryPicker = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(width = 1.dp, color = White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 15.dp)
             ) {
-                Text("Is Family Friendly", color = Black)
-                Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
+                Text(
+                    text = selectedCategories.joinToString(", ") { it.name},
+                    fontSize = 22.sp,
+                    color = Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Left,
+                    fontFamily = FontFamily.Default
+                )
             }
+            //calls to bring up category selection bottom sheet
+            CategoryPickerBottomSheet(
+                showSheet = showCategoryPicker,
+                onDismiss = {showCategoryPicker = false},
+                onSelectionDone = {selection ->
+                    selectedCategories = selection
+                },
+                maxSelections = 3
+            )
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
@@ -317,12 +550,18 @@ fun RegisterEventScreen(navController: NavController) {
                                 state = selectedState,
                                 createdBy = it,
                                 numAttendees = 0,
-                                eventDate = eventDate!!
+                                eventDate = eventDate!!,
+                                eventTime = localEventTime
                             )
                         }!!
                         coroutineScope.launch {
-                            if (!addRecord("events", eventToAdd)) {
+                            var newEventID = addEvent(eventToAdd)
+
+                            if (newEventID == -1) {
                                 println("Error adding event")
+                            }
+                            else{
+                                addCategoryRelationship(selectedCategories,"event_categories", newEventID)
                             }
                         }
                         showRegisterSuccessToast = true
@@ -366,63 +605,46 @@ fun RegisterEventScreen(navController: NavController) {
         }
     }
 }
+class DateInputVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        // Extract digits (max 8) from the input
+        val digits = text.text.filter { it.isDigit() }.take(8)
+        // Transform the digits into a formatted string and mapping
+        val (formatted, mapping) = transformDigits(digits)
+
+        // Create the OffsetMapping based on our mapping list.
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // Given an original offset (number of digits), return its transformed offset.
+                return mapping.getOrElse(offset) { formatted.length }
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // Given a transformed offset, find the largest original offset whose mapped value is <= offset.
+                return mapping.indexOfLast { it <= offset }.coerceAtLeast(0)
+            }
+        }
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}
+fun transformDigits(digits: String): Pair<String, List<Int>> {
+    val mapping = mutableListOf<Int>()
+    val sb = StringBuilder()
+    mapping.add(0) // The mapping for offset 0 is 0.
+    for (i in digits.indices) {
+        // Insert a slash at index 2 and 4 (i.e. after 2nd and 4th digit)
+        if (i == 2 || i == 4) {
+            sb.append("/")
+        }
+        sb.append(digits[i])
+        mapping.add(sb.length)
+    }
+    return Pair(sb.toString(), mapping)
+}
 
 ///////////////
 // Composable Functions
 ///////////////
-
-//Dropdown Menu Composable Function
-@Composable
-fun DropdownMenuExample(
-    options: List<String>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Button(
-        onClick = { expanded = true },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = PurpleContainer
-
-        ),
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(width = 1.dp, color = White),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 15.dp)
-    ) {
-        Text(
-            text = selectedItem,
-            fontSize = 18.sp,
-            color = Black,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Left
-        )
-        Row(
-            horizontalArrangement = Arrangement.End
-        ) {
-            Icon(
-                Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = Purple40,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-    }
-
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        options.forEach { option ->
-            DropdownMenuItem(
-                text = { Text(option, fontSize = 16.sp) },
-                onClick = {
-                    onItemSelected(option)
-                    expanded = false
-                }
-            )
-        }
-    }
-}
 
 //Textfield Composable Function
 @Composable
@@ -430,6 +652,7 @@ fun EventTextField(
     label: String,
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -461,9 +684,6 @@ fun EventTextField(
                 modifier = Modifier.padding(horizontal = (30.dp))
             )
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp)
-
+        modifier = modifier
     )
 }
