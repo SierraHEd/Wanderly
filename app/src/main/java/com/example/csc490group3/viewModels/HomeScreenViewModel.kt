@@ -8,8 +8,8 @@ import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
-import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
+import com.example.csc490group3.supabase.getAllSuggestedEvents
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {

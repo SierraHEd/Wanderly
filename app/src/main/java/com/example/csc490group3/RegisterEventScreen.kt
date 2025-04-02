@@ -90,6 +90,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
 import com.example.csc490group3.supabase.DatabaseManagement.addEvent
 import com.example.csc490group3.supabase.DatabaseManagement.addRecord
@@ -510,7 +511,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                         coroutineScope.launch {
                             // If an event image is selected, upload it first.
                             val eventPhotoUrl = eventImageFile?.let { file ->
-                                StorageManagement.uploadEventPhoto(
+                               StorageManagement.uploadEventPhoto(
                                     file,
                                     UUID.randomUUID().toString()
                                 )

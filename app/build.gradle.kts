@@ -93,8 +93,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    //coil
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     //Supabase dependencies
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.3.1")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.ktor:ktor-client-android:3.1.0")
 
@@ -103,11 +107,6 @@ dependencies {
 
     //Add the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:21.3.0")
-
-    //Supabase
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.ktor:ktor-client-android:3.1.0")
 
     //Date and time
     implementation("androidx.compose.material3:material3:1.4.0-alpha07")

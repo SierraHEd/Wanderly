@@ -5,4 +5,6 @@ import kotlinx.serialization.Serializable
 sealed class User {
     abstract val id: Int?
     abstract val email: String
+    var profile_picture_url: String? = null
+
 }

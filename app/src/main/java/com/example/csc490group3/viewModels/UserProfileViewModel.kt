@@ -6,11 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
 import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
+import com.example.csc490group3.supabase.StorageManagement
 import kotlinx.coroutines.launch
+import java.io.File
 
 class UserProfileViewModel: ViewModel() {
     var registeredEvents = mutableStateOf<List<Event>>(emptyList())
@@ -68,9 +71,37 @@ class UserProfileViewModel: ViewModel() {
             }
         }
     }
+
     fun editEvent(event: Event) {
         println("You are editing an event")
     }
 
+    fun uploadAndSetEventPhoto(file: File, eventId: Int) {
+        viewModelScope.launch {
+            val photoUrl = StorageManagement.uploadEventPhoto(file, eventId.toString())
+            photoUrl?.let {
+                val success = DatabaseManagement.updateEventPhoto(eventId, it)
+                if (success) {
+                    // Optionally update the local event object so the UI reflects the change
+                    println("Event photo updated.")
+                }
+            } ?: run {
+                println("Failed to upload event photo.")
+            }
+        }
+    }
 
+    fun uploadAndSetProfilePicture(file: File, userId: Int) {
+        viewModelScope.launch {
+            val photoUrl = StorageManagement.uploadPhoto(file, userId.toString())
+            photoUrl?.let {
+                val success = DatabaseManagement.updateUserProfilePicture(userId, it)
+                if (success) {
+                    UserSession.currentUser?.profile_picture_url = photoUrl
+                }
+            } ?: run {
+                println("Failed to upload and set profile picture.")
+            }
+        }
+    }
 }

@@ -1,10 +1,20 @@
 import android.annotation.SuppressLint
-import androidx.compose.foundation.BorderStroke
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -12,54 +22,66 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
+import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
+import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.csc490group3.data.BottomNavBar
-import com.example.csc490group3.model.Category
-import com.example.csc490group3.model.Event
-import com.example.csc490group3.model.IndividualUser
-import com.example.csc490group3.supabase.DatabaseManagement.getFriends
-import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
-import com.example.csc490group3.ui.components.EventCard
-import com.example.csc490group3.ui.theme.PurpleContainer
-import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
-import kotlinx.coroutines.launch
-
+import java.io.File
+import java.util.UUID
 
 @Composable
 fun UserProfileScreen(navController: NavController) {
     var showSettings by remember { mutableStateOf(false) }
     var showFriends by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
-
+    val profilePictureUrl = UserSession.currentUser?.profile_picture_url
     // val CurrentUser = UserSession.currentUser?.email.?
 
 
@@ -172,8 +194,8 @@ fun UserProfileScreen(navController: NavController) {
                 ) {
                     //pfp
                     Image(
-                        painter = painterResource(id = R.drawable.app_icon),
-                        contentDescription = null,
+                        painter = rememberAsyncImagePainter(profilePictureUrl ?: R.drawable.app_icon),
+                        contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
@@ -232,8 +254,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
                 viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
             },
             onEditEvent = {},
+                onClick = {},
                 isHorizontal = true,
-                showRegisterButton = false,
                 showUnregisterButton = true
             )
         }
@@ -265,8 +287,8 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                 onEditEvent = {selectedEvent ->
                     viewModel.editEvent(selectedEvent)
                 },
+                onClick = {},
                 isHorizontal = true,
-                showRegisterButton = false,
                 showOptionsButton = true,
             )
         }
@@ -298,7 +320,23 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
 }
 
 @Composable
-fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
+fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
+    val context = LocalContext.current
+
+    val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val file = File(context.cacheDir, "profile_${UUID.randomUUID()}.jpg")
+            inputStream.use { input ->
+                file.outputStream().use { output ->
+                    input?.copyTo(output)
+                }
+            }
+            UserSession.currentUser?.id?.let { userId ->
+                viewModel.uploadAndSetProfilePicture(file, userId)
+            }
+        }
+    }
     var isDarkMode by remember { mutableStateOf(false) }
     var isPublic by remember { mutableStateOf(true) }
     var showEventPrefs by remember { mutableStateOf(false) }
@@ -366,9 +404,10 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController) {
                     updateCategories = true
                 )
 
+
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = { /* Handle profile picture change */ }) {
+                    onClick = { filePicker.launch("image/*") }) {
                     Text("Change Profile Picture")
                 }
                 Button(
