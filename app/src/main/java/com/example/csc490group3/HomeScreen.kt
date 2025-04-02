@@ -123,14 +123,14 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                /*Spacer(modifier = Modifier.height(20.dp))
                 Button(onClick = {
-                    coroutineScope.launch {
+                   coroutineScope.launch {
                         println(UserSession.currentUser?.id?.let { getCategories(it, "user_categories") })
                     }
                 }) {
                     Text("TEST")
-                }
+                }*/
                 //Spacer(modifier = Modifier.height(4.dp))
             }
             // Scrollable content area using LazyColumn
@@ -140,29 +140,31 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                item {
-                    Text(
-                        text = "Suggested Events",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(PurpleBKG)
-                    ) {
-                        items(suggestedEvents) { event ->
-                            EventCard(
-                                event = event,
-                                onBottomButtonClick = {},
-                                onEditEvent = {},
-                                isHorizontal = true,
-                                onClick = {}
-                            )
+                if(suggestedEvents.isNotEmpty()){
+                    item {
+                        Text(
+                            text = "Suggested Events",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(PurpleBKG)
+                        ) {
+                            items(suggestedEvents) { event ->
+                                EventCard(
+                                    event = event,
+                                    onBottomButtonClick = {},
+                                    onEditEvent = {},
+                                    isHorizontal = true,
+                                    onClick = {}
+                                )
+                            }
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 when {
