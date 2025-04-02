@@ -202,7 +202,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                     onEditEvent = {}
                                 )
                             }
-
                     }
                 }
             }
