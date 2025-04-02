@@ -131,22 +131,19 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     var isFamilyFriendly by remember { mutableStateOf(initialEvent?.isFamilyFriendly ?: false) }
     var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
     var eventTime by remember { mutableStateOf(initialEvent?.eventTime?.toString() ?: "00:00") }
-    //TODO: make it so that the states will change depending on which country is selected.
     var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "Country") }
     var selectedState by remember { mutableStateOf(initialEvent?.state ?: "State") }
     var eventDateString by remember { mutableStateOf("") }
-    var eventDate by remember { mutableStateOf(initialEvent?.eventDate) } // Store the event date input
-    var showDateErrorToast by remember { mutableStateOf(false) } // State to trigger toast
-    var showRegisterSuccessToast by remember { mutableStateOf(false) } // State to trigger toast
-    var eventImageUri by remember { mutableStateOf<Uri?>(null) }// store image url
+    var eventDate by remember { mutableStateOf(initialEvent?.eventDate) }
+    var showDateErrorToast by remember { mutableStateOf(false) }
+    var showRegisterSuccessToast by remember { mutableStateOf(false) }
+    var eventImageUri by remember { mutableStateOf<Uri?>(null) }
     var eventImageFile by remember { mutableStateOf<File?>(null) }
-    //the coroutine is to call the fun from database mgmt
     val context = LocalContext.current
     val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
 
     if (initialEvent != null) {
         LaunchedEffect(initialEvent.id) {
-            // Fetch categories asynchronously and update the state.
             val fetchedCategories = getCategories(initialEvent.id!!, "event_categories")
             if (fetchedCategories != null) {
                 selectedCategories = fetchedCategories
@@ -168,50 +165,31 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 
-////////////////
-// Error Handling
-///////////////
-
     if (showDateErrorToast) {
-        // Show the toast when `showToast` becomes true
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Please select an event date.", Toast.LENGTH_SHORT).show()
         }
-        // Reset the showToast state to false to avoid showing it multiple times
         showDateErrorToast = false
     }
-
     if (showRegisterSuccessToast) {
-        // Show the toast when `showToast` becomes true
         LaunchedEffect(Unit) {
             Toast.makeText(context, "Event Created!", Toast.LENGTH_SHORT).show()
         }
-        // Reset the showToast state to false to avoid showing it multiple times
-        showDateErrorToast = false
+        showRegisterSuccessToast = false
     }
 
-////////////////
-// Date Picker
-///////////////
-
-// Date Picker Dialog state
     val datePickerState = rememberDatePickerState()
     var isDatePickerVisible by remember { mutableStateOf(false) }
 
-    // Updated conversion functions
     fun convertMillisToLocalDate(millis: Long): kotlinx.datetime.LocalDate {
-        // Get the zone offset for the instant
         val offsetMillis = java.time.ZoneId.systemDefault()
             .rules
             .getOffset(java.time.Instant.ofEpochMilli(millis))
             .totalSeconds * 1000L
-        // Subtract the offset to shift the UTC midnight to local midnight
         val adjustedMillis = millis - offsetMillis
-        // Convert the adjusted millis into a java.time.LocalDate
         val javaLocalDate = java.time.Instant.ofEpochMilli(adjustedMillis)
             .atZone(java.time.ZoneId.systemDefault())
             .toLocalDate()
-        // Convert to kotlinx.datetime.LocalDate
         return kotlinx.datetime.LocalDate(
             javaLocalDate.year,
             javaLocalDate.monthValue,
@@ -220,7 +198,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     }
 
     fun convertMillisToLocalString(millis: Long): String {
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+        val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
         val offsetMillis = java.time.ZoneId.systemDefault()
             .rules
             .getOffset(java.time.Instant.ofEpochMilli(millis))
@@ -234,10 +212,9 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
 
     fun convertStringToMillis(digits: String): Long? {
         if (digits.length != 8) return null
-        // Insert slashes into the raw digit string to get the formatted string.
         val formattedDate = "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
         return try {
-            val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+            val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
             val localDate = java.time.LocalDate.parse(formattedDate, formatter)
             localDate.atStartOfDay(java.time.ZoneId.systemDefault())
                 .toInstant()
@@ -247,7 +224,6 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 
-// Handle the DatePicker dialog visibility and selection
     if (isDatePickerVisible) {
         Popup(
             alignment = Alignment.Center,
@@ -263,19 +239,14 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
             ) {
                 DatePicker(
                     state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = PurpleBKG
-                    ),
+                    colors = DatePickerDefaults.colors(containerColor = PurpleBKG),
                     modifier = Modifier.height(540.dp)
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(30.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Confirm Button
                     TextButton(
                         onClick = {
                             datePickerState.selectedDateMillis?.let { selectedDateMillis ->
@@ -288,49 +259,33 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                             .weight(1f)
                             .background(PurpleDarkBKG)
                     ) {
-                        Text(
-                            text = "Confirm",
-                            color = White,
-                            modifier = Modifier.padding(8.dp)
-                        )
+                        Text("Confirm", color = White, modifier = Modifier.padding(8.dp))
                     }
-                    // Cancel Button
                     TextButton(
-                        onClick = {
-                            isDatePickerVisible = false
-                        },
+                        onClick = { isDatePickerVisible = false },
                         modifier = Modifier
                             .weight(1f)
                             .background(Color.Red)
                     ) {
-                        Text(
-                            text = "Cancel",
-                            color = Black,
-                            modifier = Modifier.padding(8.dp)
-                        )
+                        Text("Cancel", color = Black, modifier = Modifier.padding(8.dp))
                     }
                 }
             }
         }
     }
-////////////////
-// Main UI
-///////////////
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        /** ^^ This guy holds everything. Assumably, if making bottom bar, this should
-        probably go inside of it. like embedded. This way we can have scrolling functional
-        without the bottom bar moving **/
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(PurpleBKG)
                 .padding(16.dp)
         ) {
-            // Spacer to bring title and logo down a little
             Spacer(modifier = Modifier.height(36.dp))
-            // My header for the form w/ logo and all that.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_icon),
                     contentDescription = null,
@@ -356,101 +311,87 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 color = Black,
                 fontFamily = FontFamily.Serif
             )
-            // Event Name Field
             EventTextField("Event Name", eventName) { eventName = it }
             EventTextField("Description", description) { description = it }
-            Row (
-                //add stuff here??
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                //Fields
-                // Event Date Field (Using a Button to show DatePicker)
-                Row(
+                OutlinedTextField(
+                    value = eventDateString,
+                    onValueChange = { newText ->
+                        eventDateString = newText.filter { it.isDigit() }.take(8)
+                    },
+                    label = { Text("Event Date") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    visualTransformation = DateInputVisualTransformation(),
+                    readOnly = false,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    verticalAlignment =  Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = eventDateString,
-                        onValueChange = { newText ->
-                            eventDateString = newText.filter { it.isDigit() }.take(8)
+                        .fillMaxWidth(fraction = 0.6f)
+                        .weight(1f)
+                        .onGloballyPositioned {
+                            convertStringToMillis(eventDateString)?.let { millis ->
+                                datePickerState.selectedDateMillis = millis
+                            }
                         },
-                        label = { Text("Event Date") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        visualTransformation = DateInputVisualTransformation(),
-                        readOnly = false,
-                        modifier = Modifier
-                            .fillMaxWidth(fraction = 0.6f)
-                            .weight(1f)
-                            .onGloballyPositioned {
-                                convertStringToMillis(eventDateString)?.let { millis ->
-                                    datePickerState.selectedDateMillis = millis
-                                }
-                            },
-                        trailingIcon = {
-                            Icon(Icons.Filled.Create, contentDescription = "Select Date")
-                        }
+                    trailingIcon = {
+                        Icon(Icons.Filled.Create, contentDescription = "Select Date")
+                    }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { isDatePickerVisible = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .border(1.dp, Color.Gray, CircleShape)
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday,
+                        contentDescription = "Open Date Picker",
+                        tint = Color.Black
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = { isDatePickerVisible = true }, // Open Date Picker
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(modifier = Modifier.fillMaxWidth(0.4f)) {
+                    OutlinedTextField(
+                        value = eventTime,
+                        onValueChange = { },
+                        label = { Text("Event Time") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
                         modifier = Modifier
-                            .size(48.dp) // Size of the button
-                            .border(1.dp, Color.Gray, CircleShape)
-                            .clip(CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CalendarToday, // Calendar icon
-                            contentDescription = "Open Date Picker",
-                            tint = Color.Black
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Box(modifier = Modifier.fillMaxWidth(0.4f)) {
-                        OutlinedTextField(
-                            value = eventTime,
-                            onValueChange = { },
-                            label = { Text("Event Time") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Invisible overlay to capture taps over the entire text field.
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable {
-                                    val calendar = Calendar.getInstance()
-                                    val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
-                                    val initialMinute = calendar.get(Calendar.MINUTE)
-                                    TimePickerDialog(
-                                        context,
-                                        { _, hour, minute ->
-                                            eventTime = String.format("%02d:%02d", hour, minute)
-                                        },
-                                        initialHour,
-                                        initialMinute,
-                                        true  // 24-hour format. Change to false for AM/PM.
-                                    ).show()
-                                }
-                        )
-                    }
+                            .matchParentSize()
+                            .clickable {
+                                val calendar = Calendar.getInstance()
+                                val initialHour = calendar.get(Calendar.HOUR_OF_DAY)
+                                val initialMinute = calendar.get(Calendar.MINUTE)
+                                TimePickerDialog(
+                                    context,
+                                    { _, hour, minute ->
+                                        eventTime = String.format("%02d:%02d", hour, minute)
+                                    },
+                                    initialHour,
+                                    initialMinute,
+                                    true
+                                ).show()
+                            }
+                    )
                 }
             }
             EventTextField("Venue", venue) { venue = it }
             EventTextField("Address", address) { address = it }
             EventTextField("City", city) { city = it }
-            //button for state selection
             Button(
                 onClick = { showStatePicker = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(width = 1.dp, color = White),
+                border = BorderStroke(1.dp, White),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 15.dp)
@@ -469,15 +410,12 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 onDismiss = { showStatePicker = false },
                 onStateSelected = { selectedState = it }
             )
-
             EventTextField("Zipcode", zipcode) { zipcode = it }
-
-            //button for country selection
             Button(
                 onClick = { showCountryPicker = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(width = 1.dp, color = White),
+                border = BorderStroke(1.dp, White),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 15.dp)
@@ -491,24 +429,19 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     fontFamily = FontFamily.Default
                 )
             }
-            //calls to bring up country selection bottom sheet
             CountryPickerBottomSheet(
                 showSheet = showCountryPicker,
                 onDismiss = { showCountryPicker = false },
                 onStateSelected = { selectedCountry = it }
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) { price = it }
-
-                Spacer(Modifier.width(4.dp))
-
+                Spacer(modifier = Modifier.width(4.dp))
                 EventTextField("Guest Limit", maxAttendees, KeyboardType.Number, Modifier.weight(1f)) { maxAttendees = it }
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -522,18 +455,18 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     Switch(checked = isFamilyFriendly, onCheckedChange = { isFamilyFriendly = it })
                 }
             }
-            //Category Button
             Button(
                 onClick = { showCategoryPicker = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(width = 1.dp, color = White),
+                border = BorderStroke(1.dp, White),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 15.dp)
             ) {
                 Text(
-                    text = selectedCategories.joinToString(", ") { it.name},
+                    text = if (selectedCategories.isEmpty()) "Select Categories"
+                    else selectedCategories.joinToString(", ") { it.name },
                     fontSize = 22.sp,
                     color = Black,
                     modifier = Modifier.weight(1f),
@@ -541,16 +474,12 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     fontFamily = FontFamily.Default
                 )
             }
-            //calls to bring up category selection bottom sheet
             CategoryPickerBottomSheet(
                 showSheet = showCategoryPicker,
-                onDismiss = {showCategoryPicker = false},
-                onSelectionDone = {selection ->
-                    selectedCategories = selection
-                },
+                onDismiss = { showCategoryPicker = false },
+                onSelectionDone = { selection -> selectedCategories = selection },
                 maxSelections = 3
-            )        
-            
+            )
 
             Button(
                 onClick = { eventImagePicker.launch("image/*") },
@@ -572,50 +501,56 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 )
             }
 
-
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
                 onClick = {
                     if (eventDate == null) {
                         showDateErrorToast = true
                     } else {
-
-                      coroutineScope.launch {
+                        coroutineScope.launch {
                             // If an event image is selected, upload it first.
                             val eventPhotoUrl = eventImageFile?.let { file ->
-                                StorageManagement.uploadEventPhoto(file, UUID.randomUUID().toString())
+                                StorageManagement.uploadEventPhoto(
+                                    file,
+                                    UUID.randomUUID().toString()
+                                )
                             }
-                      
-                      eventToAdd = UserSession.currentUser?.id?.let {
-                            Event(
-                                eventName = eventName,
-                                zipcode = zipcode,
-                                city = city,
-                                address = address,
-                                venue = venue,
-                                maxAttendees = maxAttendees.toIntOrNull() ?: 0,
-                                description = description,
-                                isPublic = isPublic,
-                                isFamilyFriendly = isFamilyFriendly,
-                                price = price.toDoubleOrNull() ?: 0.0,
-                                country = selectedCountry,
-                                state = selectedState,
-                                createdBy = it,
-                                numAttendees = 0,
-                                eventDate = eventDate!!,
-                                eventTime = localEventTime,
-                                photoUrl = eventPhotoUrl // <-- new field for the event image
-                            )
-                        }!!
-                        coroutineScope.launch {
-                            var newEventID = addEvent(eventToAdd)
 
-                            if (newEventID == -1) {
-                                println("Error adding event")
+                            eventToAdd = UserSession.currentUser?.id?.let {
+                                Event(
+                                    eventName = eventName,
+                                    zipcode = zipcode,
+                                    city = city,
+                                    address = address,
+                                    venue = venue,
+                                    maxAttendees = maxAttendees.toIntOrNull() ?: 0,
+                                    description = description,
+                                    isPublic = isPublic,
+                                    isFamilyFriendly = isFamilyFriendly,
+                                    price = price.toDoubleOrNull() ?: 0.0,
+                                    country = selectedCountry,
+                                    state = selectedState,
+                                    createdBy = it,
+                                    numAttendees = 0,
+                                    eventDate = eventDate!!,
+                                    eventTime = localEventTime,
+                                    photoUrl = eventPhotoUrl
+                                )
+                            }!!
+                            coroutineScope.launch {
+                                val newEventID = addEvent(eventToAdd)
+                                if (newEventID == -1) {
+                                    println("Error adding event")
+                                } else {
+                                    addCategoryRelationship(
+                                        selectedCategories,
+                                        "event_categories",
+                                        newEventID
+                                    )
+                                }
                             }
-                            else{
-                                addCategoryRelationship(selectedCategories,"event_categories", newEventID)
-                            }
+                            showRegisterSuccessToast = true
+                            navController.navigate("Home_Screen")
                         }
                     }
                 },
@@ -632,13 +567,10 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     fontFamily = FontFamily.Default
                 )
             }
-
-            Spacer(Modifier.padding(8.dp))
-
-            Button(colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
-                onClick = {
-                    navController.navigate("Home_Screen")
-                },
+            Spacer(modifier = Modifier.padding(8.dp))
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleBKG),
+                onClick = { navController.navigate("Home_Screen") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .size(50.dp)
@@ -655,34 +587,28 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 }
+
 class DateInputVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        // Extract digits (max 8) from the input
         val digits = text.text.filter { it.isDigit() }.take(8)
-        // Transform the digits into a formatted string and mapping
         val (formatted, mapping) = transformDigits(digits)
-
-        // Create the OffsetMapping based on our mapping list.
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                // Given an original offset (number of digits), return its transformed offset.
                 return mapping.getOrElse(offset) { formatted.length }
             }
-
             override fun transformedToOriginal(offset: Int): Int {
-                // Given a transformed offset, find the largest original offset whose mapped value is <= offset.
                 return mapping.indexOfLast { it <= offset }.coerceAtLeast(0)
             }
         }
         return TransformedText(AnnotatedString(formatted), offsetMapping)
     }
 }
+
 fun transformDigits(digits: String): Pair<String, List<Int>> {
     val mapping = mutableListOf<Int>()
     val sb = StringBuilder()
-    mapping.add(0) // The mapping for offset 0 is 0.
+    mapping.add(0)
     for (i in digits.indices) {
-        // Insert a slash at index 2 and 4 (i.e. after 2nd and 4th digit)
         if (i == 2 || i == 4) {
             sb.append("/")
         }
@@ -692,17 +618,14 @@ fun transformDigits(digits: String): Pair<String, List<Int>> {
     return Pair(sb.toString(), mapping)
 }
 
-///////////////
-// Composable Functions
-///////////////
-
-//Textfield Composable Function
 @Composable
 fun EventTextField(
     label: String,
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    modifier: Modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 10.dp),
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -731,7 +654,7 @@ fun EventTextField(
                 Icons.Filled.Create,
                 "",
                 tint = Purple40,
-                modifier = Modifier.padding(horizontal = (30.dp))
+                modifier = Modifier.padding(horizontal = 30.dp)
             )
         },
         modifier = modifier
