@@ -68,6 +68,7 @@ import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getFriends
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
@@ -83,7 +84,9 @@ fun UserProfileScreen(navController: NavController) {
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
     val profilePictureUrl = UserSession.currentUser?.profile_picture_url
     // val CurrentUser = UserSession.currentUser?.email.?
-
+    var context = LocalContext.current
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
     /*
     Column(
@@ -239,9 +242,11 @@ fun UserProfileScreen(navController: NavController) {
 }
 
 @Composable
-
 fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
+
     Row() {
         Text(
             text = title,
@@ -250,25 +255,36 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     LazyRow {
 
         items(events) { event ->
-            EventCard(event = event, onBottomButtonClick = { selectedEvent ->
-                viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
-            },
-            onEditEvent = {},
-                onClick = {},
+            EventCard(event = event,
+                onClick = { selectedEvent.value = event} ,
+                onBottomButtonClick = { selectedEvent ->
+                    viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
+                },
+                onEditEvent = {},
                 isHorizontal = true,
                 showUnregisterButton = true
             )
         }
     }
-
+    // Show event detail popup when an event is selected
+    selectedEvent.value?.let { event ->
+        EventDetailDialog(event = event,
+            onDismiss = { selectedEvent.value = null },
+            showRegisterButton = false,
+            onRegister = { isRegistered.value = true }
+        )
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
     val events by viewModel.createdEvents
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var eventToDelete by remember { mutableStateOf<Event?>(null) }
+    var isRegistered = remember { mutableStateOf(false) }
 
     Row() {
         Text(
@@ -287,7 +303,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                 onEditEvent = {selectedEvent ->
                     viewModel.editEvent(selectedEvent)
                 },
-                onClick = {},
+                onClick = {selectedEvent.value = event},
                 isHorizontal = true,
                 showOptionsButton = true,
             )
@@ -317,6 +333,12 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
         )
     }
 
+    // Show event detail popup when an event is selected
+    selectedEvent.value?.let { event ->
+        EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
+            showRegisterButton = false,
+            onRegister = { isRegistered.value = true })
+    }
 }
 
 @Composable

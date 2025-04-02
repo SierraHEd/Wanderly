@@ -14,15 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -158,7 +155,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                 onBottomButtonClick = {},
                                 onEditEvent = {},
                                 isHorizontal = true,
-                                onClick = {}
+                                onClick = {selectedEvent.value = event}
                             )
                         }
                     }
@@ -192,7 +189,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                             selectedEvent.value = event
                                         }
                                     },
-                                    event = event, onBottomButtonClick = { selectedEvent ->
+                                    event = event,
+                                    onBottomButtonClick = { selectedEvent ->
                                         viewModel.registerForEvent(
                                             selectedEvent,
                                             UserSession.currentUser
