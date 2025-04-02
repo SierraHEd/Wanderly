@@ -28,5 +28,6 @@ data class Event (
     @SerialName("num_attendees")
     val numAttendees: Int? = 0,
     @SerialName("date")
-    val eventDate: LocalDate
+    val eventDate: LocalDate,
+    val photoUrl: String? = null
 )
