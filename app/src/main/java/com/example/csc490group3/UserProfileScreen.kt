@@ -62,17 +62,16 @@ import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
+
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Category
-import com.example.csc490group3.model.Event
+
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.PurpleContainer
