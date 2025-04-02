@@ -1,41 +1,56 @@
 package com.example.csc490group3
 
-import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.csc490group3.ui.theme.PurpleBKG
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-
-private lateinit var fusedLocationClient: FusedLocationProviderClient
-private lateinit var locationCallback: LocationCallback
-private var locationRequired: Boolean = false
+import com.example.csc490group3.viewModels.LocationScreenViewState
+import com.google.android.libraries.mapsplatform.transportation.consumer.model.MarkerType
+import com.google.maps.android.compose.GoogleMap
+import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun LocationScreen(navController: NavController, context: Context) {
-    Surface (modifier = Modifier.fillMaxSize()
-        .background(PurpleBKG)
-        .padding(28.dp)) {
-        Box(modifier = Modifier.fillMaxSize()){
-            Column(modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally){
+fun LocationScreen(
+    paddingValues: PaddingValues,
+    viewState: LocationScreenViewState.MountainList,
+    eventFlow: Flow<LocationScreenEvent>,
+    selectedMarkerType: MarkerType,
+) {
+    var isMapLoaded by remember { mutableStateOf(false) }
 
-                Text(text = "Your Location")
-                Button(onClick = { /*TODO*/}) {
-                    Text(text = "Get your location")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        // Add GoogleMap here
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            onMapLoaded = { isMapLoaded = true }
+        ){
+            when (selectedMarkerType) {
+                MarkerType.Basic -> {
+                    BasicMarkersMapContent(
+                        mountains = viewState.mountains,
+                    )
+                }
+
+                MarkerType.Advanced -> {
+                    AdvancedMarkersMapContent(
+                        mountains = viewState.mountains,
+                    )
+                }
+
+                MarkerType.Clustered -> {
+                    ClusteringMarkersMapContent(
+                        mountains = viewState.mountains,
+                    )
                 }
             }
         }
