@@ -19,6 +19,10 @@ object StorageManagement {
         return uploadFile(file, userId, "photos")
     }
 
+    suspend fun uploadEventPhoto(file: File, eventId: String): String? {
+        return uploadFile(file, eventId, "event_photos")
+    }
+
 
     suspend fun uploadVideo(file: File, userId: String): String? {
         return uploadFile(file, userId, "videos")

@@ -76,6 +76,22 @@ class UserProfileViewModel: ViewModel() {
         println("You are editing an event")
     }
 
+    fun uploadAndSetEventPhoto(file: File, eventId: Int) {
+        viewModelScope.launch {
+            val photoUrl = StorageManagement.uploadEventPhoto(file, eventId.toString())
+            photoUrl?.let {
+                val success = DatabaseManagement.updateEventPhoto(eventId, it)
+                if (success) {
+                    // Optionally update the local event object so the UI reflects the change
+                    println("Event photo updated.")
+                }
+            } ?: run {
+                println("Failed to upload event photo.")
+            }
+        }
+    }
+
+
     fun uploadAndSetProfilePicture(file: File, userId: Int) {
         viewModelScope.launch {
             val photoUrl = StorageManagement.uploadPhoto(file, userId.toString())
