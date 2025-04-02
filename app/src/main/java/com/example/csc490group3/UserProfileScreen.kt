@@ -1,3 +1,4 @@
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -6,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,11 +34,18 @@ import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.data.BottomNavBar
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
+import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import com.example.csc490group3.viewModels.UserProfileViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -56,69 +65,6 @@ fun UserProfileScreen(navController: NavController) {
     // val CurrentUser = UserSession.currentUser?.email.?
 
 
-    /*
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .padding(16.dp)
-
-    ) {
-
-        Row(Modifier.background(PurpleBKG))
-
-        {
-            // Profile Picture
-            Image(
-                painter = painterResource(id = R.drawable.app_icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .clickable { navController.navigate("Home_Screen") }
-                    .border(0.dp, Color.Transparent, CircleShape)
-                    .padding(5.dp),
-                contentScale = ContentScale.Crop
-            )
-
-
-
-            Text(
-                text = "Welcome back, " + (currentUserEmail.toString().substringBefore("@")),
-                modifier = Modifier.padding(10.dp),
-                fontSize = 24.sp,
-                color = Color.Black,
-
-                )
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            }
-            // Settings Button (Only for current user)
-
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.Right) {
-                    Button(
-                        modifier = Modifier,
-                        onClick = { showSettings = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(20.dp),
-                            tint = PurpleDarkBKG
-                        )
-                    }
-                }
-            }
-
-             */
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { paddingValues ->
@@ -152,10 +98,7 @@ fun UserProfileScreen(navController: NavController) {
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -185,7 +128,6 @@ fun UserProfileScreen(navController: NavController) {
                 if (isCurrentUser) {
                     Section1(title = "My Saved Events", fontSize = 20.sp)
                 }
-
                 // Hosted Events (seen by non current users)
                 Section2(title = "My Hosted Events", fontSize = 20.sp)
             }
@@ -201,7 +143,6 @@ fun UserProfileScreen(navController: NavController) {
 }
 
 @Composable
-
 fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
     val events by viewModel.registeredEvents
     Row() {
@@ -281,10 +222,6 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
 
 }
 
-
-
-
-
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
 
@@ -307,6 +244,9 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
     var isDarkMode by remember { mutableStateOf(false) }
     var isPublic by remember { mutableStateOf(true) } // <-- ADD THIS LINE BACK
     var showEventPrefs by remember { mutableStateOf(false) }
+    var showCategoryPicker by remember { mutableStateOf(false) }
+    var selectedCategories by remember { mutableStateOf(UserSession.currentUserCategory) }
+
     AlertDialog(
 
         onDismissRequest = onDismiss,
@@ -332,7 +272,6 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
                     )
                 }
 
-
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
                     onClick = { /* Handle location preferences */ }) {
@@ -340,10 +279,34 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
                 }
 
                 Button(
+                    onClick = { showCategoryPicker = true },
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
-                    onClick = {  showEventPrefs = true  }) {
-                    Text("Event Preferences")
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 15.dp)
+                ) {
+                    Text(
+                        text = selectedCategories.joinToString(", ") { it.name },
+                        fontSize = 22.sp,
+                        color = White,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Left,
+                        fontFamily = FontFamily.Default
+                    )
                 }
+                //calls to bring up category selection bottom sheet
+                CategoryPickerBottomSheet(
+                    showSheet = showCategoryPicker,
+                    onDismiss = {showCategoryPicker = false},
+                    onSelectionDone = {selection ->
+                        selectedCategories = selection
+                    },
+                    maxSelections = 6,
+                    initialSelectedCategories = UserSession.currentUserCategory,
+                    userCategories = true,
+                    updateCategories = true
+                )
 
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
@@ -375,56 +338,5 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
             }
         }
     )
-    if (showEventPrefs) {
-        EventPreferencesDialog(onDismiss = { showEventPrefs = false })
-    }
 }
 
-@Composable
-fun EventPreferencesDialog(onDismiss: () -> Unit) {
-    val preferences = listOf(
-        "Music", "Food", "Comedy", "Theater", "Movies", "Festivals", "Performance", "Sports", "Charity Events",
-        "Sightseeing", "Conferences", "Art", "Cars", "Gaming", "Networking", "BarHopping", "Local Parties"
-    )
-    val selectedPreferences = remember { mutableStateOf(setOf<String>()) }
-
-    AlertDialog(
-        containerColor = PurpleStart,
-        icon = { Icon(Icons.Filled.Celebration, "", tint = Purple40, modifier = Modifier.padding(horizontal = (30.dp))) },
-        onDismissRequest = onDismiss,
-        title = { Text("Select Event Preferences") },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                preferences.forEach { preference ->
-                    val isSelected = preference in selectedPreferences.value
-                    Button(
-                        onClick = {
-                            selectedPreferences.value = if (isSelected) {
-                                selectedPreferences.value - preference
-                            } else {
-                                selectedPreferences.value + preference
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Color.Gray else PurpleDarkBKG
-                        ),
-                        modifier = Modifier
-                    ) {
-                        Icon(
-                            imageVector = if (isSelected) Icons.Filled.Remove else Icons.Default.Add,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(preference)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        }
-    )
-}

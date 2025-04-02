@@ -76,6 +76,7 @@ class UserProfileViewModel: ViewModel() {
         println("You are editing an event")
     }
 
+
     fun uploadAndSetEventPhoto(file: File, eventId: Int) {
         viewModelScope.launch {
             val photoUrl = StorageManagement.uploadEventPhoto(file, eventId.toString())
@@ -105,8 +106,4 @@ class UserProfileViewModel: ViewModel() {
             }
         }
     }
-
-
-
-
 }
