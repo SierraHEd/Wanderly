@@ -33,6 +33,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -460,20 +461,37 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 onClick = { showCategoryPicker = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, White),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 15.dp)
             ) {
-                Text(
-                    text = if (selectedCategories.isEmpty()) "Select Categories"
-                    else selectedCategories.joinToString(", ") { it.name },
-                    fontSize = 22.sp,
-                    color = Black,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Left,
-                    fontFamily = FontFamily.Default
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit Icon",
+                        tint = White,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Event Categories:",
+                            fontSize = 18.sp,
+                            color = Black,
+                            textAlign = TextAlign.Left,
+                            fontFamily = FontFamily.Default
+                        )
+                        Text(
+                            text = selectedCategories.joinToString(", ") { it.name },
+                            fontSize = 22.sp,
+                            color = Black,
+                            textAlign = TextAlign.Left,
+                            fontFamily = FontFamily.Default
+                        )
+                    }
+                }
             }
             CategoryPickerBottomSheet(
                 showSheet = showCategoryPicker,
