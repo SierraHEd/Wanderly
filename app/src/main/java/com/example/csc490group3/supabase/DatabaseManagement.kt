@@ -84,6 +84,29 @@ object DatabaseManagement {
         }
     }
 
+    suspend fun getPrivateUser(id: Int): IndividualUser? {
+        return withContext(Dispatchers.IO) {
+            try{
+                postgrest.from("private_users").select {
+                    filter {
+                        eq("id", id)
+                    }
+                }.decodeSingle<IndividualUser>()
+            }catch(e: Exception) {
+                println("Error fetching user record: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
     /**
      * Deletes an event from the "events" table based on the provided event ID.
      *

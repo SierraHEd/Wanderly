@@ -300,6 +300,7 @@ fun CalendarScreen(
             selectedEvent.value?.let { event ->
                 EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
                     showRegisterButton = false,
+                    //navController = NavController(),
                     onRegister =  {
                         isRegistered.value = true;
                 }
