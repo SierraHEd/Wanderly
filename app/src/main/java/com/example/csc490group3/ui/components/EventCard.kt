@@ -204,6 +204,7 @@ fun EventDetailDialog(
     showRegisterButton: Boolean, // Pass this flag to conditionally show the button
     isUserRegistered: Boolean = false, //Check user events table for match
     alreadyRegisteredText: String? = null, // New parameter for showing registered text
+    navController: NavController
 
 
 ) {
@@ -258,7 +259,7 @@ fun EventDetailDialog(
                 Text(
                     text = "Created by: $firstName $lastName",
                     modifier = Modifier.clickable { navToUser = true
-                        //navController.navigate("friends_profile_screen/${email}")
+                        navController.navigate("friends_profile_screen/${email}")
 
                         // Handle click here (e.g., navigate to user profile, open dialog, etc.)
                     })

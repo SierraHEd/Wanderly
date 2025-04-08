@@ -223,7 +223,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     ) // Perform registration
                     Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
                 },
-                alreadyRegisteredText = if (isRegistered.value) "Already Registered" else null // Pass the message to the dialog
+                alreadyRegisteredText = if (isRegistered.value) "Already Registered" else null,
+
+                navController = navController
             )
         }
     }

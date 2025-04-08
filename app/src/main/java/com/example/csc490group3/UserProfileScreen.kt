@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
 import com.example.csc490group3.data.BottomNavBar
@@ -221,11 +222,18 @@ fun UserProfileScreen(navController: NavController) {
 
                 // Saved Events (seen by current user only)
                 if (isCurrentUser) {
-                    Section1(title = "My Saved Events", fontSize = 20.sp)
+                    Section1(title = "My Saved Events",
+                        fontSize = 20.sp,
+                        navController = navController
+                    )
                 }
 
                 // Hosted Events (seen by non current users)
-                Section2(title = "My Hosted Events", fontSize = 20.sp)
+                Section2(
+                    title = "My Hosted Events",
+                    fontSize = 20.sp,
+                    navController = navController,
+                )
             }
 
             if (showSettings) {
@@ -245,7 +253,7 @@ fun UserProfileScreen(navController: NavController) {
 }
 
 @Composable
-fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
+fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit, navController: NavController) {
     val events by viewModel.registeredEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var isRegistered = remember { mutableStateOf(false) }
@@ -274,7 +282,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         EventDetailDialog(event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
-            onRegister = { isRegistered.value = true }
+            onRegister = { isRegistered.value = true },
+            navController = navController
         )
     }
 }
@@ -282,7 +291,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
+fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit, navController: NavController) {
     val events by viewModel.createdEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -330,7 +339,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text("Delete", color = White)
                 }
             }
         )
@@ -340,7 +349,9 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     selectedEvent.value?.let { event ->
         EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            navController = navController,
             onRegister = { isRegistered.value = true })
+
     }
 }
 
