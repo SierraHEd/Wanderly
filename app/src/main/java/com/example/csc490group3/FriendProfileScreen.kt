@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.components.EventCard
@@ -35,12 +36,19 @@ import com.example.csc490group3.viewModels.UserProfileViewModel
 @Composable
 fun FriendProfileScreen(navController: NavController, friendEmail: String) {
     var showSettings by remember { mutableStateOf(false) }
-    val isCurrentUser = false // This is false since you're viewing someone else's profile
-    val friend =  LaunchedEffect(Unit) { getPrivateUser(friendEmail)}
+    var friend by remember { mutableStateOf<IndividualUser?>(null) }
 
+    // 🔁 Fetch the user info once when the screen loads
+    LaunchedEffect(friendEmail) {
+        friend = getPrivateUser(friendEmail)
+    }
+
+    val firstName = friend?.firstName
+    val lastName = friend?.lastName
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(PurpleBKG)
             .padding(16.dp)
     ) {
@@ -70,8 +78,9 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
+            // ✅ Proper display name
             Text(
-                text =  LaunchedEffect(Unit) { getPrivateUser(friendEmail)?.firstName }.toString() + LaunchedEffect(Unit) { getPrivateUser(friendEmail)?.lastName }.toString(),
+                text = "$firstName $lastName",
                 fontSize = 24.sp,
                 color = Color.Black
             )
@@ -79,12 +88,9 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Section1(title = LaunchedEffect(Unit) { getPrivateUser(friendEmail)?.firstName }.toString()+"'s Saved Events", fontSize = 20.sp)
-
-        // Display friend's events (read-only)
-        Section2(title = LaunchedEffect(Unit) { getPrivateUser(friendEmail)?.firstName }.toString()+"'s Hosted Events", fontSize = 20.sp)
+        Section1(title = "$firstName's Saved Events", fontSize = 20.sp)
+        Section2(title = "$firstName's Hosted Events", fontSize = 20.sp)
     }
-
 }
 @Composable
 

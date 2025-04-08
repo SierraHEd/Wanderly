@@ -1,5 +1,6 @@
 package com.example.csc490group3.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -26,6 +28,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +42,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 
 @Composable
 fun EventCard(
@@ -48,7 +59,7 @@ fun EventCard(
     showUnregisterButton: Boolean = false,
     showOptionsButton: Boolean = false,
     isHorizontal: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = Modifier
@@ -67,7 +78,7 @@ fun EventCard(
             //if available, else show a placeholder
             if (event.photoUrl != null && event.photoUrl.isNotEmpty()) {
 
-                androidx.compose.foundation.Image(//display photo blah blah blah
+                Image(//display photo blah blah blah
                     painter = rememberAsyncImagePainter(event.photoUrl),
                     contentDescription = "Event Photo",
                     modifier = Modifier
@@ -185,15 +196,34 @@ fun EventCard(
 
 //Shows all event details in a popup
 @Composable
+
 fun EventDetailDialog(
     event: Event,
     onDismiss: () -> Unit, // Close button action
     onRegister: (Event) -> Unit, // Click Register button actions
     showRegisterButton: Boolean, // Pass this flag to conditionally show the button
     isUserRegistered: Boolean = false, //Check user events table for match
-    alreadyRegisteredText: String? = null // New parameter for showing registered text
+    alreadyRegisteredText: String? = null, // New parameter for showing registered text
+    navController: NavController
+
+
 ) {
-    androidx.compose.material3.AlertDialog(
+
+        var firstName by remember { mutableStateOf("") }
+        var lastName by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
+        var navToUser by remember { mutableStateOf(false) }
+        var userEmail by remember { mutableStateOf("") }
+
+
+        LaunchedEffect(event.createdBy) {
+            val user = getPrivateUser(event.createdBy)
+            firstName = user?.firstName ?: ""
+            lastName = user?.lastName ?: ""
+            email = user?.email ?: ""
+            userEmail = UserSession.currentUser?.email ?: ""
+        }
+    AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = event.eventName) },
         text = {
@@ -227,6 +257,28 @@ fun EventDetailDialog(
                 Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
                 Text(text = "Price: $${event.price ?: 0.0}")
 
+
+                Text(
+                    text = "Created by: $firstName $lastName",
+                    modifier = Modifier.clickable { navToUser = true
+                        if(email.compareTo(userEmail) == 0){
+                            navController.navigate("profile_screen")
+                        }
+                        else {
+                            navController.navigate("friends_profile_screen/${email}")
+                        }
+                        // Handle click here (e.g., navigate to user profile, open dialog, etc.)
+                    })
+
+
+
+
+
+
+
+                if(email.compareTo(userEmail) == 0) {
+                }
+                else{
                 // Display "Already Registered" text if user is registered
                 if (alreadyRegisteredText != null) {
                     Spacer(modifier = Modifier.height(12.dp))
@@ -276,6 +328,7 @@ fun EventDetailDialog(
                     }
                 }
             }
+            }
         },
         confirmButton = {
             Button(onClick = { onDismiss() }) {
@@ -283,4 +336,17 @@ fun EventDetailDialog(
             }
         }
     )
+
+    if (navToUser) {
+        navToUser(
+            onDismiss = { navToUser = false },
+        //    navController = NavController
+        )
+    }
 }
+
+fun navToUser (onDismiss: () -> Unit, //navController: NavController //
+) {
+    
+}
+

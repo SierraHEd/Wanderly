@@ -2,6 +2,7 @@ package com.example.csc490group3
 
 import UserProfileScreen
 import android.content.Context
+import android.util.Log
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
@@ -43,8 +44,7 @@ fun Navigation(context: Context) {
         composable("profile_screen") {
             UserProfileScreen(navController)
         }
-        composable("friends_profile_screen/{friendID}") { backStackEntry ->
-            // Retrieve the friend's ID from the route's arguments
+        composable("friends_profile_screen/{friendEmail}") { backStackEntry ->
             val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
             FriendProfileScreen(navController = navController, friendEmail = friendEmail)
         }

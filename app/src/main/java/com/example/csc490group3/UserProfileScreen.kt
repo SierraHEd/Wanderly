@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -35,6 +36,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -60,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
 import com.example.csc490group3.data.BottomNavBar
@@ -219,11 +222,18 @@ fun UserProfileScreen(navController: NavController) {
 
                 // Saved Events (seen by current user only)
                 if (isCurrentUser) {
-                    Section1(title = "My Saved Events", fontSize = 20.sp)
+                    Section1(title = "My Saved Events",
+                        fontSize = 20.sp,
+                        navController = navController
+                    )
                 }
 
                 // Hosted Events (seen by non current users)
-                Section2(title = "My Hosted Events", fontSize = 20.sp)
+                Section2(
+                    title = "My Hosted Events",
+                    fontSize = 20.sp,
+                    navController = navController,
+                )
             }
 
             if (showSettings) {
@@ -243,7 +253,7 @@ fun UserProfileScreen(navController: NavController) {
 }
 
 @Composable
-fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit) {
+fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit, navController: NavController) {
     val events by viewModel.registeredEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var isRegistered = remember { mutableStateOf(false) }
@@ -272,7 +282,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         EventDetailDialog(event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
-            onRegister = { isRegistered.value = true }
+            onRegister = { isRegistered.value = true },
+            navController = navController
         )
     }
 }
@@ -280,7 +291,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit) {
+fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit, navController: NavController) {
     val events by viewModel.createdEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -328,7 +339,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text("Delete", color = White)
                 }
             }
         )
@@ -338,7 +349,9 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     selectedEvent.value?.let { event ->
         EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            navController = navController,
             onRegister = { isRegistered.value = true })
+
     }
 }
 
@@ -486,28 +499,24 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
 @Composable
 fun FriendsDialog(onDismiss: () -> Unit, navController: NavController) {
 
-    // Change from dummy data to database data.
-    // Make buttons change in database.
-    // Make scrollable.
-    // Only put buttons if viewing own account.
-    // Make names clickable to view their account.
+    val isCurrentUser = true
+    val friendsList = remember { mutableStateOf<List<IndividualUser>?>(null) }
+    val searchQuery = remember { mutableStateOf("") }
 
-    val isCurrentUser = true // Modify based on current user logic
-    val friendsList = remember { mutableStateOf<List<IndividualUser>?>(null) } // Store the friends list
-
-    // Fetch the friends list asynchronously
     LaunchedEffect(Unit) {
         friendsList.value = getFriends(UserSession.currentUser?.id ?: return@LaunchedEffect)
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Manage Friends") },
+        title = { Text("Manage Following") },
         containerColor = PurpleStart,
         icon = {
             Icon(
-                Icons.Filled.Celebration, contentDescription = "",
-                tint = Purple40, modifier = Modifier.padding(horizontal = 30.dp)
+                Icons.Filled.People,
+                contentDescription = "",
+                tint = Purple40,
+                modifier = Modifier.padding(horizontal = 30.dp)
             )
         },
         text = {
@@ -515,7 +524,23 @@ fun FriendsDialog(onDismiss: () -> Unit, navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                Text("Friends List", fontSize = 18.sp)
+                OutlinedTextField(
+                    value = searchQuery.value,
+                    onValueChange = { searchQuery.value = it },
+                    placeholder = { Text("Search for a user...") },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon"
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    singleLine = true
+                )
+
+                Text("Followed Users", fontSize = 18.sp)
 
                 friendsList.value?.forEach { friend ->
                     Row(
@@ -523,28 +548,24 @@ fun FriendsDialog(onDismiss: () -> Unit, navController: NavController) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Make friend's name clickable
                         Text(
                             text = "${friend.firstName} ${friend.lastName}",
                             fontSize = 16.sp,
                             modifier = Modifier.clickable {
-                                // Navigate to friend's profile screen
                                 navController.navigate("friends_profile_screen/${friend.email}")
                             }
                         )
                         if (isCurrentUser) {
                             IconButton(onClick = {
-                            /* Unfriend logic */
+                                /* Unfriend logic */
                             }) {
-                                Icon(Icons.Filled.Remove, "Unfriend")
+                                Icon(Icons.Filled.Remove, "Unfollow")
                             }
                         }
                     }
-                } ?: Text("Loading friends...", fontSize = 16.sp)
+                } ?: Text("Loading following...", fontSize = 16.sp)
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-
             }
         },
         confirmButton = {
