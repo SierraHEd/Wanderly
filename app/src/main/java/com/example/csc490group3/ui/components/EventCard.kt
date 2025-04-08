@@ -213,6 +213,7 @@ fun EventDetailDialog(
         var lastName by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var navToUser by remember { mutableStateOf(false) }
+        var userEmail by remember { mutableStateOf("") }
 
 
         LaunchedEffect(event.createdBy) {
@@ -220,6 +221,7 @@ fun EventDetailDialog(
             firstName = user?.firstName ?: ""
             lastName = user?.lastName ?: ""
             email = user?.email ?: ""
+            userEmail = UserSession.currentUser?.email ?: ""
         }
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -259,8 +261,12 @@ fun EventDetailDialog(
                 Text(
                     text = "Created by: $firstName $lastName",
                     modifier = Modifier.clickable { navToUser = true
-                        navController.navigate("friends_profile_screen/${email}")
-
+                        if(email.compareTo(userEmail) == 0){
+                            navController.navigate("profile_screen")
+                        }
+                        else {
+                            navController.navigate("friends_profile_screen/${email}")
+                        }
                         // Handle click here (e.g., navigate to user profile, open dialog, etc.)
                     })
 
@@ -270,7 +276,9 @@ fun EventDetailDialog(
 
 
 
-
+                if(email.compareTo(userEmail) == 0) {
+                }
+                else{
                 // Display "Already Registered" text if user is registered
                 if (alreadyRegisteredText != null) {
                     Spacer(modifier = Modifier.height(12.dp))
@@ -319,6 +327,7 @@ fun EventDetailDialog(
                         )
                     }
                 }
+            }
             }
         },
         confirmButton = {

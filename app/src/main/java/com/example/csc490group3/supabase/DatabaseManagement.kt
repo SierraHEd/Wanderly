@@ -83,7 +83,6 @@ object DatabaseManagement {
             }
         }
     }
-
     suspend fun getPrivateUser(id: Int): IndividualUser? {
         return withContext(Dispatchers.IO) {
             try{
