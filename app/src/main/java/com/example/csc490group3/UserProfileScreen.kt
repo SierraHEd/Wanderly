@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -66,7 +67,7 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+import com.example.csc490group3.supabase.getFriends
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.theme.Purple40
@@ -177,11 +178,18 @@ fun UserProfileScreen(navController: NavController) {
                         Icon(imageVector = Icons.Default.People, contentDescription = "Friends")
                     }
                     if (isCurrentUser) {
+                        IconButton(onClick = {navController.navigate("friend_requests_screen")}) {
+                            Icon(
+                                imageVector = Icons.Default.PersonAdd,
+                                contentDescription = "Friend Requests"
+                            )
+                        }
                         IconButton(onClick = { showSettings = true }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings"
                             )
+
                         }
                     }
                 }

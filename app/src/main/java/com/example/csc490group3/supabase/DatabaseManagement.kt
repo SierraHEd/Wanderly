@@ -11,7 +11,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.slf4j.MDC.put
 
 object DatabaseManagement {
 
@@ -195,7 +194,7 @@ object DatabaseManagement {
             }
         }
     }
-    /*
+    /**
     *Fetches a list of all events that a certain user created
     *
     *@param userID the user id of the user who you want to retrieve the events for
@@ -246,18 +245,27 @@ object DatabaseManagement {
         }
 
     }
-    /*
+    /**
     *Fetches a list of users that match the quesry, matches will be done on the users first and last name as
     * well as email address
     * @param query search term that will try and match either first name last name or email
     * @return list of users
      */
     suspend fun userSearch(query: String): List<IndividualUser>? {
-        TODO()
+        return withContext(Dispatchers.IO) {
+            try {
+                val params = JsonObject(mapOf("term" to JsonPrimitive(query)))
+
+                val result = postgrest.rpc("search_users", params).decodeList<IndividualUser>()
+                println(result)
+                result
+
+            }catch(e: Exception) {
+                println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
     }
-
-
-
 
     ////////////////////////
     //CATEGORY MANIPULATION
@@ -341,7 +349,7 @@ object DatabaseManagement {
         }
 
     }
-    /*
+    /**
     *Fetches a list of events to suggest to a user matching their set categories with event set categories
     *
     *
@@ -406,12 +414,12 @@ object DatabaseManagement {
 //FRIEND FUNCTIONS
 //////////////////
 
-/*
+/**
 *Fetches a list of users that are friends with the inputted user id
 *
 * @param userID the user you want to retrieve all the friends for
 * @return a list of users
- */
+*/
 suspend fun getFriends(userID: Int): List<IndividualUser>? {
     return withContext(Dispatchers.IO) {
         try {
@@ -426,25 +434,46 @@ suspend fun getFriends(userID: Int): List<IndividualUser>? {
         }
     }
 }
-/*
-*Will allow a user to follow another user
+/**
+*Will allow a user to send a friend request to another user
 *
 * @param currentUser the user who is logged in
 * @param the user they want to follow
 *
 * @return true if follow was successful false if not
  */
-suspend fun follow(currentUser: IndividualUser, userToFollow: IndividualUser): Boolean {
+suspend fun friendRequest(currentUser: IndividualUser, userToFriend: IndividualUser): Boolean {
     TODO()
 }
-/*
-*Will allow a user to unfollow another user
+/**
+*Will allow a user to unfriend another user
 *
 * @param currentUser the user who is logged in
-* @param the user they want to unfollow
+* @param userToUnfriend user they want to unfollow
 *
 * @return true if unfollow was successful false if not
  */
-suspend fun unfollow(currentUser: IndividualUser, userToUnfollow: IndividualUser) {
+suspend fun unfriend(currentUser: IndividualUser, userToUnfriend: IndividualUser):Boolean {
+    TODO()
+}
+/**
+ *Will allow a user to accept or deny a friend request
+ *
+ * @param currentUser the user who is logged in
+ * @param otherUser user whose request they want to accept or deny
+ *
+ * @return true if unfollow was successful false if not
+ */
+suspend fun acceptDenyFriendRequest(currentUser: IndividualUser, otherUser: IndividualUser,accept: Boolean): Boolean{
+    TODO()
+}
 
+/**
+ * Will allow us to fetch a list of incoming or outgoing friend requests
+ *
+ * @param user the user we would like to get the list of requests for
+ * @return a list of users that this user is trying to friend request o has outgoing requests to
+ */
+suspend fun getPendingIncomingRequests(user: IndividualUser):List<IndividualUser>?{
+    TODO()
 }

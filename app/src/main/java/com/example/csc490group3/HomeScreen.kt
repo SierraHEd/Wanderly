@@ -37,8 +37,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getCategories
+import com.example.csc490group3.supabase.DatabaseManagement.userSearch
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -55,7 +57,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     val isRegistered = remember { mutableStateOf(false) }
     val isCheckingRegistration = remember { mutableStateOf(false) } // To track if registration is being checked
-     val coroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     // Check if the user is registered for the event when an event is selected
     selectedEvent.value?.let { event ->
@@ -123,14 +125,14 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         )
                     }
                 }
-                /*Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Button(onClick = {
                    coroutineScope.launch {
-                        println(UserSession.currentUser?.id?.let { getCategories(it, "user_categories") })
+                       userSearch("test")
                     }
                 }) {
                     Text("TEST")
-                }*/
+                }
                 //Spacer(modifier = Modifier.height(4.dp))
             }
             // Scrollable content area using LazyColumn
