@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     kotlin("plugin.serialization") version "2.1.10"
 }
 android {
@@ -64,6 +65,11 @@ android {
         }
     }
 }
+// For Location
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.properties"
+}
 
 dependencies {
 
@@ -85,6 +91,8 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.transportation.consumer)
+    implementation(libs.places)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -111,4 +119,13 @@ dependencies {
     //Date and time
     implementation("androidx.compose.material3:material3:1.4.0-alpha07")
     implementation ("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
+    //Location
+    val mapsComposeVersion = "4.4.1"
+    implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
+    // Google Maps Compose utility library
+    implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
+    // Google Maps Compose widgets library
+    implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+
 }

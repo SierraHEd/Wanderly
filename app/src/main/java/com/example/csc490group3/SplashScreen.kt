@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import kotlinx.coroutines.delay
 
@@ -35,7 +36,7 @@ fun SplashScreen(navController : NavController) {
     }
     Column (modifier = Modifier
         .fillMaxSize()
-        .background(PurpleStart)
+        .background(PurpleBKG)
         .wrapContentSize(Alignment.Center)){
         Image(
             painter = painterResource(id = R.drawable.app_logo),
