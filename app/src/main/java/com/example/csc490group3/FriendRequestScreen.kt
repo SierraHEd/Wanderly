@@ -1,6 +1,4 @@
 package com.example.csc490group3
-
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +19,6 @@ import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.ui.components.FriendRequestCard
 import com.example.csc490group3.ui.theme.PurpleBKG
-
 import com.example.csc490group3.viewModels.FriendRequestScreenViewModel
 
 
@@ -30,7 +27,6 @@ fun FriendRequestScreen(
     navController: NavController,
     viewModel: FriendRequestScreenViewModel = viewModel()
 ) {
-
     val incomingRequests by viewModel.incomingRequests.collectAsState()
     val outgoingRequests by viewModel.outgoingRequests.collectAsState()
 
@@ -50,7 +46,7 @@ fun FriendRequestScreen(
                 modifier = Modifier.padding(16.dp)
             )
 
-            incomingRequests.forEach {
+            incomingRequests?.forEach {
                 FriendRequestCard(
                     user = it,
                     isIncoming = true,
@@ -67,7 +63,7 @@ fun FriendRequestScreen(
                 modifier = Modifier.padding(16.dp)
             )
 
-            outgoingRequests.forEach {
+            outgoingRequests?.forEach {
                 FriendRequestCard(
                     user = it,
                     isIncoming = false,

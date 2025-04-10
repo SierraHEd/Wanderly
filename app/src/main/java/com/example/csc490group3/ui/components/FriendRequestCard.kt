@@ -14,12 +14,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.rememberAsyncImagePainter
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 
 
 @Composable
 fun FriendRequestCard(
-    user: User,
+    user: IndividualUser,
     isIncoming: Boolean,
     onAccept: (() -> Unit)? = null,
     onDeclineOrCancel: () -> Unit
@@ -46,12 +49,28 @@ fun FriendRequestCard(
                         .background(Color.Gray.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile Picture",
-                        tint = Color.DarkGray,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    //CHECK HERE TO TEST FOR PROFILE
+                    if (user.profile_picture_url != null && user.profile_picture_url!!.isNotEmpty()) {
+
+                        androidx.compose.foundation.Image(//display photo blah blah blah
+                            painter = rememberAsyncImagePainter(user.profile_picture_url),
+                            contentDescription = "Event Photo",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .clip(RoundedCornerShape(28.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        // placeholder if no photo URL is available
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile Picture",
+                            tint = Color.DarkGray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -67,13 +86,22 @@ fun FriendRequestCard(
                     IconButton(onClick = { onAccept?.invoke() }) {
                         Icon(Icons.Default.Check, contentDescription = "Accept")
                     }
+                    IconButton(onClick = { onDeclineOrCancel() }) {
+                        Icon(
+                            Icons.Default.Clear, //else Icons.Default.Cancel,
+                            contentDescription = "Decline"
+                        )
+                    }
                 }
-                IconButton(onClick = { onDeclineOrCancel() }) {
-                    Icon(
-                        imageVector = if (isIncoming) Icons.Default.Clear else Icons.Default.Cancel,
-                        contentDescription = "Decline or Cancel"
-                    )
+                else{
+                    IconButton(onClick = { onDeclineOrCancel() }) {
+                        Icon(
+                            Icons.Default.Cancel,
+                            contentDescription = "Cancel"
+                        )
+                    }
                 }
+
             }
         }
     }

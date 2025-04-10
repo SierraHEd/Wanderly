@@ -11,7 +11,6 @@ import androidx.navigation.compose.rememberNavController
 fun Navigation(context: Context) {
     val navController = rememberNavController()
 
-
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
             SplashScreen(navController)

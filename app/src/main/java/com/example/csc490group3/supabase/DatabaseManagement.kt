@@ -438,12 +438,26 @@ suspend fun getFriends(userID: Int): List<IndividualUser>? {
 *Will allow a user to send a friend request to another user
 *
 * @param currentUser the user who is logged in
-* @param the user they want to follow
+* @param userToFriend user they want to follow
 *
 * @return true if follow was successful false if not
  */
-suspend fun friendRequest(currentUser: IndividualUser, userToFriend: IndividualUser): Boolean {
-    TODO()
+suspend fun friendRequest(currentUser: Int, userToFriend: Int): String? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user_a", currentUser)
+                put("user_b", userToFriend)
+            }
+
+            val result = postgrest.rpc("friend_request", params).decodeSingle<String>()
+            result
+
+        }catch(e: Exception) {
+            println("Error sending friend request: ${e.localizedMessage}")
+            null
+        }
+    }
 }
 /**
 *Will allow a user to unfriend another user
@@ -453,8 +467,22 @@ suspend fun friendRequest(currentUser: IndividualUser, userToFriend: IndividualU
 *
 * @return true if unfollow was successful false if not
  */
-suspend fun unfriend(currentUser: IndividualUser, userToUnfriend: IndividualUser):Boolean {
-    TODO()
+suspend fun unfriend(currentUser: Int, userToUnfriend: Int):String? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user_a", currentUser)
+                put("user_b", userToUnfriend)
+            }
+
+            val result = postgrest.rpc("unfriend", params).decodeSingle<String>()
+            result
+
+        }catch(e: Exception) {
+            println("Error unfriending: ${e.localizedMessage}")
+            null
+        }
+    }
 }
 /**
  *Will allow a user to accept or deny a friend request
@@ -464,16 +492,71 @@ suspend fun unfriend(currentUser: IndividualUser, userToUnfriend: IndividualUser
  *
  * @return true if unfollow was successful false if not
  */
-suspend fun acceptDenyFriendRequest(currentUser: IndividualUser, otherUser: IndividualUser,accept: Boolean): Boolean{
-    TODO()
+suspend fun acceptDenyFriendRequest(currentUser: Int, otherUser: Int, accept: Boolean): Boolean?{
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user_a", currentUser)
+                put("user_b", otherUser)
+                put("accept", accept)
+            }
+
+            val result = postgrest.rpc("respond_friend_request", params).decodeSingle<Boolean>()
+            result
+
+        }catch(e: Exception) {
+            println("Error responding to friend request: ${e.localizedMessage}")
+            null
+        }
+    }
 }
 
 /**
  * Will allow us to fetch a list of incoming or outgoing friend requests
  *
  * @param user the user we would like to get the list of requests for
+ * @param incoming boolean to describe which list we want to retrieve, true for incoming requests, false for outgoing
  * @return a list of users that this user is trying to friend request o has outgoing requests to
  */
-suspend fun getPendingIncomingRequests(user: IndividualUser):List<IndividualUser>?{
-    TODO()
+suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<IndividualUser>?{
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user_id", user)
+                put("incoming", incoming)
+            }
+
+            val result = postgrest.rpc("get_friend_requests", params).decodeList<IndividualUser>()
+            result
+
+        }catch(e: Exception) {
+            println("Error responding to friend request: ${e.localizedMessage}")
+            null
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
