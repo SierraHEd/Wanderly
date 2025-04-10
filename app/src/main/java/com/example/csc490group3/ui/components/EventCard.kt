@@ -234,13 +234,32 @@ fun EventDetailDialog(
                         .fillMaxWidth()
                         .height(100.dp) // Adjust size as needed
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.app_logo),
-                        contentDescription = "Event Image",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(8.dp))
-                    )
+                    if (!event.photoUrl.isNullOrEmpty()) {
+
+                        Image(//display photo blah blah blah
+                            painter = rememberAsyncImagePainter(event.photoUrl),
+                            contentDescription = "Event Photo",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        // placeholder if no photo URL is available
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .background(Color.Gray, shape = RoundedCornerShape(12.dp))
+                        ) {
+                            Text(
+                                text = "Event Image",
+                                color = Color.White,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
