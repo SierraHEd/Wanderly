@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -58,6 +59,7 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
 
 // TODO: Make a check here to set 'isFollowing' to whether or not CurrentUser is following this user. Change accordingly
     var isFollowing by remember { mutableStateOf(false) }
+    var isPendingRequest by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -81,7 +83,7 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
             horizontalAlignment = Alignment.End
         ) {
 
-            Text( text = if (isFollowing) "Unfollow" else "Follow", fontSize = 20.sp,
+            Text( text = if (isFollowing) "Remove Friend" else if (isPendingRequest) "Request Pending" else "Add Friend", fontSize = 20.sp,
                 color = Color.Black,)
 
             Row(
@@ -93,7 +95,12 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                 onClick = { /* TODO: Add follow logic here */
                         //if is following, add logic to unfollow
                     //if is not following, add logic to follow.
-                        isFollowing = !isFollowing
+                        if (isFollowing) {
+                            isFollowing = false
+                        }
+                    if (!isFollowing){
+                        isPendingRequest = true
+                    }
 
                     },
                 modifier = Modifier
@@ -103,8 +110,8 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                     .border(2.dp, White, CircleShape)
             ) {
                 Icon(
-                    imageVector = if (isFollowing) Icons.Default.Remove else Icons.Default.Add,
-                    contentDescription = if (isFollowing) "Unfollow" else "Follow",
+                    imageVector = if (isFollowing) Icons.Default.Remove else if (isPendingRequest) Icons.Default.QuestionMark else Icons.Default.Add,
+                    contentDescription = if (isFollowing) "Remove Friend" else if (isPendingRequest) "Request Pending" else "Friend",
                     tint = White,
                     modifier = Modifier.size(50.dp)
                 )
