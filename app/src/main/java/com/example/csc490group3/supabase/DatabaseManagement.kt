@@ -194,6 +194,20 @@ object DatabaseManagement {
             }
         }
     }
+    suspend fun getPrivateUser(id: Int): IndividualUser? {
+        return withContext(Dispatchers.IO) {
+            try{
+                postgrest.from("private_users").select {
+                    filter {
+                        eq("id", id)
+                    }
+                }.decodeSingle<IndividualUser>()
+            }catch(e: Exception) {
+                println("Error fetching user record: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
     /**
     *Fetches a list of all events that a certain user created
     *

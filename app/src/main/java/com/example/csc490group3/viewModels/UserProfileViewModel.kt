@@ -7,6 +7,7 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.supabase.DatabaseManagement.getUserCreatedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
@@ -20,6 +21,10 @@ class UserProfileViewModel: ViewModel() {
         private set
     var createdEvents = mutableStateOf<List<Event>>(emptyList())
         private set
+    var userRegisteredEvents = mutableStateOf<List<Event>>(emptyList())
+        private set
+    var userCreatedEvents = mutableStateOf<List<Event>>(emptyList())
+        private set
     var isLoading = mutableStateOf(true)
         private set
     var errorMessage = mutableStateOf<String?>(null)
@@ -27,6 +32,10 @@ class UserProfileViewModel: ViewModel() {
 
     init {
         fetchEvents()
+    }
+
+    fun loadOtherUserEvents(id: Int) {
+        fetchOtherUserEvents(id)
     }
 
     private fun fetchEvents() {
@@ -50,6 +59,32 @@ class UserProfileViewModel: ViewModel() {
             }
         }
     }
+
+    private fun fetchOtherUserEvents(id: Int) {
+        viewModelScope.launch {
+            try {
+                val currentUser = getPrivateUser(id)
+
+                val result1 = currentUser?.id?.let { getUserEvents(it) }
+                if(result1 != null) {
+                    userRegisteredEvents.value = result1
+                }
+
+                val result2 = currentUser?.id?.let { getUserCreatedEvents(it) }
+                if(result2 != null) {
+                    userCreatedEvents.value = result2
+                }
+            }catch(e: Exception) {
+                errorMessage.value = "Error: ${e.localizedMessage}"
+            }finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+
+
+
     fun unregisterForEvent(event: Event, user: User?) {
         if (user == null) return
 

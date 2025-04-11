@@ -162,7 +162,8 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
             EventDetailDialog(event = event,
                 onDismiss = { selectedEvent.value = null },
                 showRegisterButton = true,
-                onRegister = { isRegistered.value = true}
+                onRegister = { isRegistered.value = true},
+                navController = navController
             )
         }
     }
