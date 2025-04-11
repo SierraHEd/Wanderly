@@ -12,7 +12,6 @@ import androidx.navigation.compose.rememberNavController
 fun Navigation(context: Context) {
     val navController = rememberNavController()
 
-
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
             SplashScreen(navController)
@@ -43,6 +42,10 @@ fun Navigation(context: Context) {
         }
         composable("profile_screen") {
             UserProfileScreen(navController)
+        }
+
+        composable("friend_requests_screen") {
+            FriendRequestScreen(navController)
         }
         composable("friends_profile_screen/{friendEmail}") { backStackEntry ->
             val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
