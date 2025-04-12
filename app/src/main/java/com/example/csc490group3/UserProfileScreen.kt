@@ -93,69 +93,6 @@ fun UserProfileScreen(navController: NavController) {
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var isRegistered = remember { mutableStateOf(false) }
 
-    /*
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .padding(16.dp)
-
-    ) {
-
-        Row(Modifier.background(PurpleBKG))
-
-        {
-            // Profile Picture
-            Image(
-                painter = painterResource(id = R.drawable.app_icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .clickable { navController.navigate("Home_Screen") }
-                    .border(0.dp, Color.Transparent, CircleShape)
-                    .padding(5.dp),
-                contentScale = ContentScale.Crop
-            )
-
-
-
-            Text(
-                text = "Welcome back, " + (currentUserEmail.toString().substringBefore("@")),
-                modifier = Modifier.padding(10.dp),
-                fontSize = 24.sp,
-                color = Color.Black,
-
-                )
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            }
-            // Settings Button (Only for current user)
-
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.Right) {
-                    Button(
-                        modifier = Modifier,
-                        onClick = { showSettings = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(20.dp),
-                            tint = PurpleDarkBKG
-                        )
-                    }
-                }
-            }
-
-             */
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { paddingValues ->
