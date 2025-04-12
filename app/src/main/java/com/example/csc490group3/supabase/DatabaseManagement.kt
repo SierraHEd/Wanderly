@@ -550,6 +550,33 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
     }
 }
 
+/**
+ * Will check what teh friendship status between two users is
+ *
+ * @param currentUser the user that is logged in
+ * @param otherUser user you wan tot see if current user is friends with
+ *
+ * @returns the friendship status of two users as "accepted", "pending", "declined"
+ */
+suspend fun checkFriendStatus(currentUser: Int, otherUser: Int): String?{
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user_a", currentUser)
+                put("user_b", otherUser)
+            }
+
+            val result = postgrest.rpc("get_friend_status", params).decodeSingle<String>()
+            result
+
+        }catch(e: Exception) {
+            println("Error unfriending: ${e.localizedMessage}")
+            null
+        }
+    }
+
+}
+
 
 
 
