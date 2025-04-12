@@ -82,9 +82,6 @@ class UserProfileViewModel: ViewModel() {
         }
     }
 
-
-
-
     fun unregisterForEvent(event: Event, user: User?) {
         if (user == null) return
 

@@ -7,6 +7,7 @@ import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -464,8 +465,8 @@ suspend fun friendRequest(currentUser: Int, userToFriend: Int): String? {
                 put("user_b", userToFriend)
             }
 
-            val result = postgrest.rpc("friend_request", params).decodeSingle<String>()
-            result
+            val result = postgrest.rpc("friend_request", params).decodeList<String>()
+            result[0]
 
         }catch(e: Exception) {
             println("Error sending friend request: ${e.localizedMessage}")
@@ -489,8 +490,8 @@ suspend fun unfriend(currentUser: Int, userToUnfriend: Int):String? {
                 put("user_b", userToUnfriend)
             }
 
-            val result = postgrest.rpc("unfriend", params).decodeSingle<String>()
-            result
+            val result = postgrest.rpc("unfriend", params).decodeList<String>()
+            result[0]
 
         }catch(e: Exception) {
             println("Error unfriending: ${e.localizedMessage}")
@@ -566,11 +567,12 @@ suspend fun checkFriendStatus(currentUser: Int, otherUser: Int): String?{
                 put("user_b", otherUser)
             }
 
-            val result = postgrest.rpc("get_friend_status", params).decodeSingle<String>()
-            result
+            // Get the raw JSON response as a string.
+            val result = postgrest.rpc("get_friend_status", params).decodeList<String>()
+            result[0]
 
         }catch(e: Exception) {
-            println("Error unfriending: ${e.localizedMessage}")
+            println("Error getting status: ${e.localizedMessage}")
             null
         }
     }
