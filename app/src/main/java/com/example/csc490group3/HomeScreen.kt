@@ -65,7 +65,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
         if (currentUser != null) {
             val userID = currentUser.id
 
-            // Use a single LaunchedEffect to check both registration and waitlist status
             LaunchedEffect(userID, event.id) {
                 isCheckingRegistration.value = true
                 isCheckingWaitlist.value = true
@@ -76,20 +75,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         userID,
                         event.id
                     )
-                Log.d("HomeScreen", "isRegistered value after check: ${isRegistered.value}")
-
                 // Check if user is on the waiting list for the event
                 isOnWaitlist.value =
                     (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
                         userID,
                         event.id
                     )
-                Log.d("HomeScreen", "isOnWaitlist value after check: ${isOnWaitlist.value}")
-
                 isCheckingRegistration.value = false
                 isCheckingWaitlist.value = false
                 showDialog.value = true
-
             }
         }
     }
@@ -251,12 +245,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     onRegister = {
                         // When the user clicks the register button, we manually trigger the registration
                         isRegistered.value = true // Mark the user as registered
-                        viewModel.registerForEvent(
-                            event,
-                            UserSession.currentUser
-                        ) // Perform registration
-                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
-                            .show()
+                        viewModel.registerForEvent(event,UserSession.currentUser) // Perform registration
+                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
                     },
                     showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
                     onJoinWaitlist = {
