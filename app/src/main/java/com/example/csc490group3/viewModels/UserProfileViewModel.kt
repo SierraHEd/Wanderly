@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement
@@ -13,6 +14,8 @@ import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
 import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
 import com.example.csc490group3.supabase.StorageManagement
+import com.example.csc490group3.supabase.getPendingIncomingRequests
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -29,9 +32,20 @@ class UserProfileViewModel: ViewModel() {
         private set
     var errorMessage = mutableStateOf<String?>(null)
         private set
+    var incomingRequests = mutableStateOf<List<IndividualUser>?>(emptyList())
+        private set
 
     init {
         fetchEvents()
+        loadFriendRequests()
+    }
+
+    private fun loadFriendRequests() {
+        viewModelScope.launch {
+            UserSession.currentUser?.id?.let { userId ->
+                incomingRequests.value = getPendingIncomingRequests(userId, true)
+            }
+        }
     }
 
     fun loadOtherUserEvents(id: Int) {
