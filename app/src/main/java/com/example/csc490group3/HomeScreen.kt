@@ -141,14 +141,6 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
-                Button(onClick = {
-                   coroutineScope.launch {
-                       userSearch("test")
-                    }
-                }) {
-                    Text("TEST")
-                }
-                //Spacer(modifier = Modifier.height(4.dp))
             }
             // Scrollable content area using LazyColumn
             LazyColumn(

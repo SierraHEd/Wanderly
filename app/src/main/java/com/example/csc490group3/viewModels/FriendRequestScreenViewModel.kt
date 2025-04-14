@@ -6,9 +6,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.acceptDenyFriendRequest
-import com.example.csc490group3.supabase.getPendingIncomingRequests
-import com.example.csc490group3.supabase.unfriend
+import com.example.csc490group3.supabase.DatabaseManagement.acceptDenyFriendRequest
+import com.example.csc490group3.supabase.DatabaseManagement.getPendingIncomingRequests
+import com.example.csc490group3.supabase.DatabaseManagement.unfriend
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
