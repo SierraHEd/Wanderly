@@ -6,12 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -83,7 +85,7 @@ import java.io.File
 import java.util.UUID
 
 @Composable
-fun UserProfileScreen(navController: NavController) {
+fun UserProfileScreen(navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
     var showSettings by remember { mutableStateOf(false) }
     var showFriends by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
@@ -121,11 +123,22 @@ fun UserProfileScreen(navController: NavController) {
                         Icon(imageVector = Icons.Default.People, contentDescription = "Friends")
                     }
                     if (isCurrentUser) {
-                        IconButton(onClick = {navController.navigate("friend_requests_screen")}) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = "Friend Requests"
-                            )
+                        Box {
+                            IconButton(onClick = { navController.navigate("friend_requests_screen") }) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonAdd,
+                                    contentDescription = "Friend Requests"
+                                )
+                            }
+                            if (viewModel.incomingRequests.value?.isNotEmpty() == true) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color.Red, shape = CircleShape)
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
+                                )
+                            }
                         }
                         IconButton(onClick = { showSettings = true }) {
                             Icon(
