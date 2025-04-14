@@ -1,7 +1,6 @@
 package com.example.csc490group3
 
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,8 +34,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getCategories
+import com.example.csc490group3.supabase.DatabaseManagement.userSearch
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -139,14 +140,14 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         )
                     }
                 }
-                /*Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Button(onClick = {
                    coroutineScope.launch {
-                        println(UserSession.currentUser?.id?.let { getCategories(it, "user_categories") })
+                       userSearch("test")
                     }
                 }) {
                     Text("TEST")
-                }*/
+                }
                 //Spacer(modifier = Modifier.height(4.dp))
             }
             // Scrollable content area using LazyColumn

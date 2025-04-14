@@ -12,8 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -36,28 +35,41 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.supabase.checkFriendStatus
+import com.example.csc490group3.supabase.friendRequest
+import com.example.csc490group3.supabase.unfriend
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.viewModels.UserProfileViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun FriendProfileScreen(navController: NavController, friendEmail: String) {
     var showSettings by remember { mutableStateOf(false) }
     var friend by remember { mutableStateOf<IndividualUser?>(null) }
     val scrollState = rememberScrollState()
-
-    // 🔁 Fetch the user info once when the screen loads
-    LaunchedEffect(friendEmail) {
-        friend = getPrivateUser(friendEmail)
-    }
-
     val firstName = friend?.firstName
     val lastName = friend?.lastName
     val profilePictureUrl = friend?.profile_picture_url
 
 // TODO: Make a check here to set 'isFollowing' to whether or not CurrentUser is following this user. Change accordingly
-    var isFollowing by remember { mutableStateOf(false) }
+    var isFriends by remember { mutableStateOf(false) }
+    var isPendingRequest by remember { mutableStateOf(false) }
+    // 🔁 Fetch the user info once when the screen loads
+    LaunchedEffect(friendEmail) {
+        friend = getPrivateUser(friendEmail)
+        val status = UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
+            checkFriendStatus(it,
+                it1
+            )
+        } }
+        print("Status: " + status)
+        isFriends = (status == "accepted")
+        isPendingRequest = (status == "pending")
+    }
+    val coroutineScope = rememberCoroutineScope()
+
 
     Column(
         modifier = Modifier
@@ -81,7 +93,7 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
             horizontalAlignment = Alignment.End
         ) {
 
-            Text( text = if (isFollowing) "Unfollow" else "Follow", fontSize = 20.sp,
+            Text( text = if (isFriends) "Remove Friend" else if (isPendingRequest) "Request Pending" else "Add Friend", fontSize = 20.sp,
                 color = Color.Black,)
 
             Row(
@@ -91,11 +103,37 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
 
             IconButton(
                 onClick = { /* TODO: Add follow logic here */
-                        //if is following, add logic to unfollow
-                    //if is not following, add logic to follow.
-                        isFollowing = !isFollowing
+                    coroutineScope.launch {
+                        if(isFriends){
+                            UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
+                                unfriend(it,
+                                    it1
+                                )
+                            } }
+                            isFriends = false
+                            isPendingRequest = false
+                        }
+                        if(isPendingRequest){
+                            UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
+                                unfriend(it,
+                                    it1
+                                )
+                            } }
+                            isPendingRequest = false
+                        }
+                        else {
+                            UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
+                                friendRequest(it,
+                                    it1
+                                )
+                            } }
+                            isPendingRequest = true
 
-                    },
+                        }
+                    }
+
+
+                },
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
@@ -103,15 +141,14 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                     .border(2.dp, White, CircleShape)
             ) {
                 Icon(
-                    imageVector = if (isFollowing) Icons.Default.Remove else Icons.Default.Add,
-                    contentDescription = if (isFollowing) "Unfollow" else "Follow",
+                    imageVector = if (isFriends) Icons.Default.Remove else if (isPendingRequest) Icons.Default.QuestionMark else Icons.Default.Add,
+                    contentDescription = if (isFriends) "Remove Friend" else if (isPendingRequest) "Request Pending" else "Friend",
                     tint = White,
                     modifier = Modifier.size(50.dp)
                 )
             }
         }
     }
-
 
         Column(
             modifier = Modifier.fillMaxWidth(),

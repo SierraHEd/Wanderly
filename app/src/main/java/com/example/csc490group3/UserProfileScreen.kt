@@ -6,12 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -69,7 +72,7 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+import com.example.csc490group3.supabase.getFriends
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
@@ -82,7 +85,7 @@ import java.io.File
 import java.util.UUID
 
 @Composable
-fun UserProfileScreen(navController: NavController) {
+fun UserProfileScreen(navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
     var showSettings by remember { mutableStateOf(false) }
     var showFriends by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
@@ -92,69 +95,6 @@ fun UserProfileScreen(navController: NavController) {
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var isRegistered = remember { mutableStateOf(false) }
 
-    /*
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PurpleBKG)
-            .padding(16.dp)
-
-    ) {
-
-        Row(Modifier.background(PurpleBKG))
-
-        {
-            // Profile Picture
-            Image(
-                painter = painterResource(id = R.drawable.app_icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .clickable { navController.navigate("Home_Screen") }
-                    .border(0.dp, Color.Transparent, CircleShape)
-                    .padding(5.dp),
-                contentScale = ContentScale.Crop
-            )
-
-
-
-            Text(
-                text = "Welcome back, " + (currentUserEmail.toString().substringBefore("@")),
-                modifier = Modifier.padding(10.dp),
-                fontSize = 24.sp,
-                color = Color.Black,
-
-                )
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            }
-            // Settings Button (Only for current user)
-
-            if (isCurrentUser) {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.Right) {
-                    Button(
-                        modifier = Modifier,
-                        onClick = { showSettings = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(20.dp),
-                            tint = PurpleDarkBKG
-                        )
-                    }
-                }
-            }
-
-             */
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { paddingValues ->
@@ -183,11 +123,29 @@ fun UserProfileScreen(navController: NavController) {
                         Icon(imageVector = Icons.Default.People, contentDescription = "Friends")
                     }
                     if (isCurrentUser) {
+                        Box {
+                            IconButton(onClick = { navController.navigate("friend_requests_screen") }) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonAdd,
+                                    contentDescription = "Friend Requests"
+                                )
+                            }
+                            if (viewModel.incomingRequests.value?.isNotEmpty() == true) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color.Red, shape = CircleShape)
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
+                                )
+                            }
+                        }
                         IconButton(onClick = { showSettings = true }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings"
                             )
+
                         }
                     }
                 }
