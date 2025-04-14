@@ -4,14 +4,15 @@ import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
+import com.example.csc490group3.model.WaitList
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.slf4j.MDC.put
 
 object DatabaseManagement {
 
@@ -97,14 +98,6 @@ object DatabaseManagement {
             }
         }
     }
-
-
-
-
-
-
-
-
 
     /**
      * Deletes an event from the "events" table based on the provided event ID.
@@ -212,6 +205,7 @@ object DatabaseManagement {
             }
         }
     }
+
     suspend fun unregisterEvent(event: Event, user: User): Boolean{
         return withContext(Dispatchers.IO) {
             val userID = user.id
@@ -225,6 +219,9 @@ object DatabaseManagement {
                     }
                 }
                 println("Successfully unregistered from event: ${event.eventName}")
+
+                // Attempt to promote someone from the waitlist
+                promoteFirstUserFromWaitlist(eventID!!)
                 true
 
             }catch(e: Exception) {
@@ -380,7 +377,6 @@ object DatabaseManagement {
             }
         }
     }
-}
 
 suspend fun getAllSuggestedEvents(userID:Int): List<Event>?{
     return withContext(Dispatchers.IO) {
@@ -390,9 +386,81 @@ suspend fun getAllSuggestedEvents(userID:Int): List<Event>?{
             val result = postgrest.rpc("all_suggested_events", userID).decodeList<Event>()
             println("Suggested events fetched successfully")
             result
-        }catch(e: Exception) {
+        } catch (e: Exception) {
             println("Error fetching suggested events: ${e.localizedMessage}")
             null
+        }
+     }
+    }
+
+    suspend fun addUserToWaitingList(userId: Int, eventId: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                postgrest.from("user_waitingList").insert(
+                    mapOf(
+                        "user_id" to userId,
+                        "event_id" to eventId
+                    )
+                )
+                println("Added to waiting list successfully.")
+                true
+            } catch (e: Exception) {
+                println("Error inserting into waiting list: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
+    suspend fun isUserOnWaitingList(userID: Int, eventID: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = postgrest.from("user_waitingList").select {
+                    filter {
+                        eq("user_id", userID)
+                        eq("event_id", eventID)
+                    }
+                    limit(1)
+                }.decodeList<WaitList>()
+
+                return@withContext result.isNotEmpty()
+            } catch (e: Exception) {
+                println("Error checking waiting list: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
+    private suspend fun promoteFirstUserFromWaitlist(eventId: Int) {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = postgrest.from("user_waitingList").select {
+                    filter { eq("event_id", eventId) }
+                    order("created_at", Order.ASCENDING)
+                    limit(1)
+                }.decodeList<WaitList>() // Decode directly into a list of WaitList objects
+
+                if (result.isNotEmpty()) {
+                    val userId = result.first().user_id // Access user_id from the first WaitList object
+                    // Insert the user into user_events table
+                    postgrest.from("user_events").insert(
+                        mapOf("user_id" to userId, "event_id" to eventId)
+                    )
+
+                    // Remove the user from the waitlist
+                    postgrest.from("user_waitingList").delete {
+                        filter {
+                            eq("user_id", userId)
+                            eq("event_id", eventId)
+                        }
+                    }
+
+                    println("User $userId promoted from waitlist to registered.")
+                } else {
+                    println("No users on the waitlist to promote.")
+                }
+            } catch (e: Exception) {
+                println("Error promoting user from waitlist: ${e.localizedMessage}")
+            }
         }
     }
 }

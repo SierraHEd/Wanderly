@@ -1,6 +1,5 @@
 package com.example.csc490group3.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,7 +46,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.DatabaseManagement.getFriends
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 
 @Composable
@@ -194,45 +192,43 @@ fun EventCard(
     }
 }
 
-//Shows all event details in a popup
 @Composable
-
 fun EventDetailDialog(
     event: Event,
-    onDismiss: () -> Unit, // Close button action
-    onRegister: (Event) -> Unit, // Click Register button actions
-    showRegisterButton: Boolean, // Pass this flag to conditionally show the button
-    isUserRegistered: Boolean = false, //Check user events table for match
-    alreadyRegisteredText: String? = null, // New parameter for showing registered text
+    onDismiss: () -> Unit,
+    isUserRegistered: Boolean = false,
+    alreadyRegisteredText: String? = null, // parameter for showing registered text
+    showRegisterButton: Boolean,
+    onRegister: (Event) -> Unit,
+    isUserOnWaitList: Boolean = false,
+    alreadyOnWaitListText: String? = null, // parameter for showing already on waitlist text
+    showWaitListButton: Boolean,
+    onJoinWaitlist: (Event) -> Unit,
     navController: NavController
-
-
 ) {
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var navToUser by remember { mutableStateOf(false) }
+    var userEmail by remember { mutableStateOf("") }
 
-        var firstName by remember { mutableStateOf("") }
-        var lastName by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var navToUser by remember { mutableStateOf(false) }
-        var userEmail by remember { mutableStateOf("") }
+    LaunchedEffect(event.createdBy) {
+        val user = getPrivateUser(event.createdBy)
+        firstName = user?.firstName ?: ""
+        lastName = user?.lastName ?: ""
+        email = user?.email ?: ""
+        userEmail = UserSession.currentUser?.email ?: ""
+    }
 
-
-        LaunchedEffect(event.createdBy) {
-            val user = getPrivateUser(event.createdBy)
-            firstName = user?.firstName ?: ""
-            lastName = user?.lastName ?: ""
-            email = user?.email ?: ""
-            userEmail = UserSession.currentUser?.email ?: ""
-        }
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = event.eventName) },
         text = {
             Column {
-                // Image at the top of the details popup
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp) // Adjust size as needed
+                        .height(100.dp)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.app_logo),
@@ -257,77 +253,115 @@ fun EventDetailDialog(
                 Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
                 Text(text = "Price: $${event.price ?: 0.0}")
 
-
                 Text(
                     text = "Created by: $firstName $lastName",
-                    modifier = Modifier.clickable { navToUser = true
-                        if(email.compareTo(userEmail) == 0){
+                    modifier = Modifier.clickable {
+                        navToUser = true
+                        if (email == userEmail) {
                             navController.navigate("profile_screen")
+                        } else {
+                            navController.navigate("friends_profile_screen/$email")
                         }
-                        else {
-                            navController.navigate("friends_profile_screen/${email}")
-                        }
-                        // Handle click here (e.g., navigate to user profile, open dialog, etc.)
-                    })
+                    }
+                )
 
+                // Show if user is not the creator and show relevant buttons
+                if (email.compareTo(userEmail) == 0) {
+                } else {
 
-
-
-
-
-
-                if(email.compareTo(userEmail) == 0) {
-                }
-                else{
-                // Display "Already Registered" text if user is registered
-                if (alreadyRegisteredText != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = alreadyRegisteredText,
-                        color = Color.Magenta,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Check if the user is already registered or if the button should be shown
-                if (isUserRegistered) {
-                    // Show "Already Registered" message at the bottom
-                    Text(
-                        text = alreadyRegisteredText ?: "You are already registered for this event!",
-                        color = Color.Green,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                } else if (showRegisterButton) {
-                    // Register Button - Only show if the user is not registered
-                    if ((event.numAttendees ?: 0) < event.maxAttendees) {
-                        Button(
-                            onClick = { onRegister(event) },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = (event.numAttendees ?: 0) < event.maxAttendees,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) // Blue color
-                        ) {
-                            Text(
-                                "Register for Event",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    } else {
+                    // Display "Already Registered" text if user is registered
+                    if (alreadyRegisteredText != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Registration Full",
-                            color = Color.Red,
+                            text = alreadyRegisteredText,
+                            color = Color.Magenta,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                     }
+
+                    // Display "Already on Waitlist" text if user is on the waitlist
+                    if (alreadyOnWaitListText != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = alreadyOnWaitListText,
+                            color = Color.Magenta,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Check if the user is already registered or if the button should be shown
+                    if (isUserRegistered) {
+                        // Show "Already Registered" message at the bottom
+                        Text(
+                            text = alreadyRegisteredText?: "You are already registered for this event!",
+                            color = Color.Blue,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    } else if (showRegisterButton) {
+                        // Register Button - Only show if the user is not registered
+                        if ((event.numAttendees ?: 0) < event.maxAttendees) {
+                            Button(
+                                onClick = { onRegister(event) },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = (event.numAttendees ?: 0) < event.maxAttendees,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF1976D2
+                                    )
+                                ) // Blue color
+                            ) {
+                                Text(
+                                    "Register for Event",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Text(
+                                "Registration Full",
+                                color = Color.Red,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                            // Show "You're already on the waiting list" message if applicable
+                            if (isUserOnWaitList) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "You're already on the waiting list.",
+                                    color = Color.Magenta,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else if (showWaitListButton) {
+                                // Show "Join Waiting List" button if the user isn't on the list
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = { onJoinWaitlist(event) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFF388E3C
+                                        )
+                                    )
+                                ) {
+                                    Text(
+                                        "Join Waiting List",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
             }
         },
         confirmButton = {

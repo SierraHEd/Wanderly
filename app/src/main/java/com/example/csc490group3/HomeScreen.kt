@@ -1,6 +1,7 @@
 package com.example.csc490group3
 
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,23 +52,47 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     val isRegistered = remember { mutableStateOf(false) }
-    val isCheckingRegistration = remember { mutableStateOf(false) } // To track if registration is being checked
-     val coroutineScope = rememberCoroutineScope()
+    val isCheckingRegistration =
+        remember { mutableStateOf(false) } // To track if registration is being checked
+    val isOnWaitlist = remember { mutableStateOf(false) }
+    val isCheckingWaitlist = remember { mutableStateOf(false) }
+    val showDialog = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
-    // Check if the user is registered for the event when an event is selected
+    // Check if the user is registered or on the waitlist for the event when an event is selected
     selectedEvent.value?.let { event ->
         val currentUser = UserSession.currentUser
         if (currentUser != null) {
             val userID = currentUser.id
-            // Use LaunchedEffect to perform the check asynchronously
+
+            // Use a single LaunchedEffect to check both registration and waitlist status
             LaunchedEffect(userID, event.id) {
                 isCheckingRegistration.value = true
-                isRegistered.value = (userID != null && event.id != null) &&
-                        viewModel.isUserRegisteredForEvent(userID, event.id)
+                isCheckingWaitlist.value = true
+
+                // Check if user is registered for the event
+                isRegistered.value =
+                    (userID != null && event.id != null) && viewModel.isUserRegisteredForEvent(
+                        userID,
+                        event.id
+                    )
+                Log.d("HomeScreen", "isRegistered value after check: ${isRegistered.value}")
+
+                // Check if user is on the waiting list for the event
+                isOnWaitlist.value =
+                    (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
+                        userID,
+                        event.id
+                    )
+                Log.d("HomeScreen", "isOnWaitlist value after check: ${isOnWaitlist.value}")
+
                 isCheckingRegistration.value = false
+                isCheckingWaitlist.value = false
+                showDialog.value = true
+
             }
         }
-    }   
+    }
 
     Scaffold(
         containerColor = PurpleBKG,
@@ -138,7 +163,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     .padding(horizontal = 16.dp)
             ) {
 
-                if(suggestedEvents.isNotEmpty()){
+                if (suggestedEvents.isNotEmpty()) {
                     item {
                         Text(
                             text = "Suggested Events",
@@ -157,7 +182,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                     onBottomButtonClick = {},
                                     onEditEvent = {},
                                     isHorizontal = true,
-                                    onClick = {selectedEvent.value = event}
+                                    onClick = { selectedEvent.value = event }
                                 )
                             }
                         }
@@ -175,6 +200,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             )
                         }
                     }
+
                     errorMessage != null -> {
                         item {
                             Text(
@@ -184,25 +210,27 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             )
                         }
                     }
+
                     else -> {
-                            items(events) { event ->
-                                EventCard(
-                                    onClick = {
-                                        if (selectedEvent.value != event) {
-                                            selectedEvent.value = event
-                                        }
-                                    },
-                                    event = event,
-                                    onBottomButtonClick = { selectedEvent ->
-                                        viewModel.registerForEvent(
-                                            selectedEvent,
-                                            UserSession.currentUser
-                                        )
-                                        Toast.makeText(context,"REGISTERED!",Toast.LENGTH_SHORT).show()
-                                    },
-                                    onEditEvent = {}
-                                )
-                            }
+                        items(events) { event ->
+                            EventCard(
+                                onClick = {
+                                    if (selectedEvent.value != event) {
+                                        selectedEvent.value = event
+                                    }
+                                },
+                                event = event,
+                                onBottomButtonClick = { selectedEvent ->
+                                    viewModel.registerForEvent(
+                                        selectedEvent,
+                                        UserSession.currentUser
+                                    )
+                                    Toast.makeText(context, "REGISTERED!", Toast.LENGTH_SHORT)
+                                        .show()
+                                },
+                                onEditEvent = {}
+                            )
+                        }
                     }
                 }
             }
@@ -210,23 +238,39 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
 
         // Show event detail popup when an event is selected
         selectedEvent.value?.let { event ->
-            EventDetailDialog(
-                event = event,
-                onDismiss = { selectedEvent.value = null },
-                showRegisterButton = if (isRegistered.value || isCheckingRegistration.value) false else true, // Hide if checking or already registered
-                onRegister = {
-                    // When the user clicks the register button, we manually trigger the registration
-                    isRegistered.value = true // Mark the user as registered
-                    viewModel.registerForEvent(
-                        event,
-                        UserSession.currentUser
-                    ) // Perform registration
-                    Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
-                },
-                alreadyRegisteredText = if (isRegistered.value) "Already Registered" else null,
-
-                navController = navController
-            )
+            if (showDialog.value && selectedEvent.value != null) {
+                EventDetailDialog(
+                    event = event,
+                    onDismiss = {
+                        selectedEvent.value = null
+                        showDialog.value = false
+                    },
+                    isUserRegistered = isRegistered.value,   // Pass isUserRegistered
+                    isUserOnWaitList = isOnWaitlist.value,   // Pass isUserOnWaitList
+                    showRegisterButton = !isRegistered.value && !isCheckingRegistration.value,  // Show register button only if not registered
+                    onRegister = {
+                        // When the user clicks the register button, we manually trigger the registration
+                        isRegistered.value = true // Mark the user as registered
+                        viewModel.registerForEvent(
+                            event,
+                            UserSession.currentUser
+                        ) // Perform registration
+                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
+                            .show()
+                    },
+                    showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
+                    onJoinWaitlist = {
+                        isOnWaitlist.value = true
+                        viewModel.addToWaitingList(UserSession.currentUser, event)
+                        Toast.makeText(
+                            context,
+                            "You've been added to the waiting list.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    navController = navController
+                )
+            }
         }
     }
 }

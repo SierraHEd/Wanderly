@@ -282,6 +282,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         EventDetailDialog(event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            showWaitListButton = false,
+            onJoinWaitlist = {},
             onRegister = { isRegistered.value = true },
             navController = navController
         )
@@ -350,6 +352,8 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
         EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
             navController = navController,
+            showWaitListButton = false,
+            onJoinWaitlist = {},
             onRegister = { isRegistered.value = true })
 
     }
