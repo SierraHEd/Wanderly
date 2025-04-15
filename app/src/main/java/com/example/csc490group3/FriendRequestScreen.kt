@@ -51,7 +51,8 @@ fun FriendRequestScreen(
                     user = it,
                     isIncoming = true,
                     onAccept = { it.id?.let { it1 -> viewModel.acceptFriend(it1) } },
-                    onDeclineOrCancel = { it.id?.let { it1 -> viewModel.declineFriend(it1) } }
+                    onDeclineOrCancel = { it.id?.let { it1 -> viewModel.declineFriend(it1) } },
+                    navController = navController
                 )
             }
 
@@ -67,7 +68,8 @@ fun FriendRequestScreen(
                 FriendRequestCard(
                     user = it,
                     isIncoming = false,
-                    onDeclineOrCancel = { it.id?.let { it1 -> viewModel.cancelRequest(it1) } }
+                    onDeclineOrCancel = { it.id?.let { it1 -> viewModel.cancelRequest(it1) } },
+                    navController = navController
                 )
             }
         }
