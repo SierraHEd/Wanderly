@@ -197,7 +197,9 @@ fun EventSearchTab(navController: NavHostController, viewModel: SearchScreenView
                 event = event,
                 onDismiss = { selectedEvent.value = null },
                 showRegisterButton = true,
-                onRegister = { isRegistered.value = true },
+                showWaitListButton = false,
+                onJoinWaitlist = {},
+                onRegister = { isRegistered.value = true},
                 navController = navController
             )
         }

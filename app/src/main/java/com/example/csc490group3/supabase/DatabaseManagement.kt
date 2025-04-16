@@ -7,10 +7,16 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
+
+import com.example.csc490group3.model.WaitList
+import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
+import io.github.jan.supabase.postgrest.query.Order
+
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -18,6 +24,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.slf4j.MDC.put
 
 
 
@@ -150,6 +157,9 @@ object DatabaseManagement {
                     }
                 }
                 println("Successfully unregistered from event: ${event.eventName}")
+
+                // Attempt to promote someone from the waitlist
+                promoteFirstUserFromWaitlist(eventID!!)
                 true
 
             }catch(e: Exception) {
@@ -538,6 +548,7 @@ object DatabaseManagement {
 
 }
 
+
 ///////////////////
 //FRIEND FUNCTIONS
 //////////////////
@@ -562,6 +573,7 @@ suspend fun getFriends(userID: Int): List<IndividualUser>? {
         }
     }
 }
+
 /**
 *Will allow a user to send a friend request to another user
 *
@@ -664,61 +676,103 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
     }
 }
 
-/**
- * Will check what teh friendship status between two users is
- *
- * @param currentUser the user that is logged in
- * @param otherUser user you wan tot see if current user is friends with
- *
- * @returns the friendship status of two users as "accepted", "pending", "declined"
- */
-suspend fun checkFriendStatus(currentUser: Int, otherUser: Int): String?{
-    return withContext(Dispatchers.IO) {
-        try {
-            val params = buildJsonObject {
-                put("user_a", currentUser)
-                put("user_b", otherUser)
+    /**
+     * Will check what teh friendship status between two users is
+     *
+     * @param currentUser the user that is logged in
+     * @param otherUser user you wan tot see if current user is friends with
+     *
+     * @returns the friendship status of two users as "accepted", "pending", "declined"
+     */
+    suspend fun checkFriendStatus(currentUser: Int, otherUser: Int): String?{
+        return withContext(Dispatchers.IO) {
+            try {
+                val params = buildJsonObject {
+                    put("user_a", currentUser)
+                    put("user_b", otherUser)
+                }
+
+                // Get the raw JSON response as a string.
+                val result = postgrest.rpc("get_friend_status", params).decodeList<String>()
+                result[0]
+
+            }catch(e: Exception) {
+                println("Error getting status: ${e.localizedMessage}")
+                null
             }
+        }
 
-            // Get the raw JSON response as a string.
-            val result = postgrest.rpc("get_friend_status", params).decodeList<String>()
-            result[0]
+    }
 
-        }catch(e: Exception) {
-            println("Error getting status: ${e.localizedMessage}")
-            null
+    suspend fun addUserToWaitingList(userId: Int, eventId: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                postgrest.from("user_waitingList").insert(
+                    mapOf(
+                        "user_id" to userId,
+                        "event_id" to eventId
+                    )
+                )
+                println("Added to waiting list successfully.")
+                true
+            } catch (e: Exception) {
+                println("Error inserting into waiting list: ${e.localizedMessage}")
+                false
+            }
         }
     }
 
+    suspend fun isUserOnWaitingList(userID: Int, eventID: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = postgrest.from("user_waitingList").select {
+                    filter {
+                        eq("user_id", userID)
+                        eq("event_id", eventID)
+                    }
+                    limit(1)
+                }.decodeList<WaitList>()
 
+                return@withContext result.isNotEmpty()
+            } catch (e: Exception) {
+                println("Error checking waiting list: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
+    private suspend fun promoteFirstUserFromWaitlist(eventId: Int) {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = postgrest.from("user_waitingList").select {
+                    filter { eq("event_id", eventId) }
+                    order("created_at", Order.ASCENDING)
+                    limit(1)
+                }.decodeList<WaitList>() // Decode directly into a list of WaitList objects
+
+                if (result.isNotEmpty()) {
+                    val userId = result.first().user_id // Access user_id from the first WaitList object
+                    // Insert the user into user_events table
+                    postgrest.from("user_events").insert(
+                        mapOf("user_id" to userId, "event_id" to eventId)
+                    )
+
+                    // Remove the user from the waitlist
+                    postgrest.from("user_waitingList").delete {
+                        filter {
+                            eq("user_id", userId)
+                            eq("event_id", eventId)
+                        }
+                    }
+
+                    println("User $userId promoted from waitlist to registered.")
+                } else {
+                    println("No users on the waitlist to promote.")
+                }
+            } catch (e: Exception) {
+                println("Error promoting user from waitlist: ${e.localizedMessage}")
+            }
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

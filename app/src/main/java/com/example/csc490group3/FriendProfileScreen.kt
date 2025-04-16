@@ -35,9 +35,9 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
-import com.example.csc490group3.supabase.checkFriendStatus
-import com.example.csc490group3.supabase.friendRequest
-import com.example.csc490group3.supabase.unfriend
+import com.example.csc490group3.supabase.DatabaseManagement.checkFriendStatus
+import com.example.csc490group3.supabase.DatabaseManagement.friendRequest
+import com.example.csc490group3.supabase.DatabaseManagement.unfriend
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
@@ -230,6 +230,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         EventDetailDialog(event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            showWaitListButton = true,
+            onJoinWaitlist = {},
             onRegister = { isRegistered.value = true },
             navController = navController
         )
@@ -309,6 +311,8 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     selectedEvent.value?.let { event ->
         EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            showWaitListButton = false,
+            onJoinWaitlist = {},
             navController = navController,
             onRegister = { isRegistered.value = true })
 

@@ -73,9 +73,13 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
+
+import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.supabase.getFriends
 import com.example.csc490group3.supabase.unfriend
+
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
@@ -251,6 +255,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         EventDetailDialog(event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
+            showWaitListButton = false,
+            onJoinWaitlist = {},
             onRegister = { isRegistered.value = true },
             navController = navController
         )
@@ -319,6 +325,8 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
         EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
             navController = navController,
+            showWaitListButton = false,
+            onJoinWaitlist = {},
             onRegister = { isRegistered.value = true })
 
     }
