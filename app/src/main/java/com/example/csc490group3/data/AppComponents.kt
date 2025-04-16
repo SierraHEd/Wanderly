@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -125,6 +126,13 @@ fun BottomNavBar(navController: NavController) {
             onClick = { navController.navigate("profile_screen") },
             icon = { Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = "Profile") },
             label = { Text("Profile") },
+            alwaysShowLabel = true
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("location_screen") },
+            icon = { Icon(imageVector = Icons.Filled.Map, contentDescription = "Map") },
+            label = { Text("Map") },
             alwaysShowLabel = true
         )
     }

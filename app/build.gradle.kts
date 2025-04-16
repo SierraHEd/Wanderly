@@ -7,6 +7,8 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     kotlin("plugin.serialization") version "2.1.10"
+    kotlin("kapt")
+    id("dagger.hilt.android.plugin")
 }
 android {
     namespace = "com.example.csc490group3"
@@ -131,5 +133,12 @@ dependencies {
     implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
     // Google Maps Compose widgets library
     implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+
+    //Hilt
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+
+    // For ViewModel integration
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
 }
