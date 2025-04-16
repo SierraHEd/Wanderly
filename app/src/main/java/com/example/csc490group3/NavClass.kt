@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
+import com.example.csc490group3.ui.admin.AdminScreen
 
 @Composable
 fun Navigation(context: Context) {
@@ -50,6 +51,9 @@ fun Navigation(context: Context) {
         composable("friends_profile_screen/{friendEmail}") { backStackEntry ->
             val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
             FriendProfileScreen(navController = navController, friendEmail = friendEmail)
+        }
+        composable("Admin_Screen") {
+            AdminScreen(navController)
         }
     }
 }
