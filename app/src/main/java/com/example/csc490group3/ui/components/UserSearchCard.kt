@@ -1,5 +1,6 @@
 package com.example.csc490group3.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,29 +18,36 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 
+
+fun onUserClick(user: User,
+
+                navController: NavController) {
+    if(user == UserSession.currentUser){
+        navController.navigate("profile_screen")
+    }
+    else {
+        navController.navigate("friends_profile_screen/${user.email}")
+    }
+}
+
 @Composable
-fun FriendRequestCard(
-    user: IndividualUser,
-    isIncoming: Boolean,
-    onAccept: (() -> Unit)? = null,
-    onDeclineOrCancel: () -> Unit,
+fun UserSearchCard(
+    user: User,
     navController: NavController
 ) {
-
     Card(
         modifier = Modifier
-            .fillMaxWidth() .clickable { onUserClick(
-            user = user,
-            navController = navController
-        ) } // <- Click support here
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onUserClick(
+                user = user,
+                navController = navController
+            ) }, // ← Clickable behavior here
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -58,20 +66,16 @@ fun FriendRequestCard(
                         .background(Color.Gray.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    //CHECK HERE TO TEST FOR PROFILE
-                    if (user.profile_picture_url != null && user.profile_picture_url!!.isNotEmpty()) {
-
-                        androidx.compose.foundation.Image(//display photo blah blah blah
+                    if (!user.profile_picture_url.isNullOrEmpty()) {
+                        Image(
                             painter = rememberAsyncImagePainter(user.profile_picture_url),
-                            contentDescription = "Event Photo",
+                            contentDescription = "Profile Picture",
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                                .clip(RoundedCornerShape(28.dp)),
+                                .size(48.dp) // fixed size inside Box
+                                .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
-                        // placeholder if no photo URL is available
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile Picture",
@@ -79,38 +83,17 @@ fun FriendRequestCard(
                             modifier = Modifier.size(28.dp)
                         )
                     }
-
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column {
-                    //Text(text = UserSession.currentUser., fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text(text = user.email, fontSize = 14.sp, color = Color.Gray)
+                    Text(
+                        text = user.email,
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
                 }
-            }
-
-            Row {
-                if (isIncoming) {
-                    IconButton(onClick = { onAccept?.invoke() }) {
-                        Icon(Icons.Default.Check, contentDescription = "Accept")
-                    }
-                    IconButton(onClick = { onDeclineOrCancel() }) {
-                        Icon(
-                            Icons.Default.Clear, //else Icons.Default.Cancel,
-                            contentDescription = "Decline"
-                        )
-                    }
-                }
-                else{
-                    IconButton(onClick = { onDeclineOrCancel() }) {
-                        Icon(
-                            Icons.Default.Cancel,
-                            contentDescription = "Cancel"
-                        )
-                    }
-                }
-
             }
         }
     }
