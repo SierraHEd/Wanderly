@@ -13,18 +13,18 @@ import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.p
 import io.github.jan.supabase.postgrest.query.Order
 
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
+
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
+
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
+
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.slf4j.MDC.put
+
 
 
 
@@ -774,5 +774,5 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
             }
         }
     }
-}
+
 

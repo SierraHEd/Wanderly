@@ -61,7 +61,6 @@ import androidx.compose.runtime.LaunchedEffect
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.components.UserSearchCard
-import com.example.csc490group3.ui.components.navToUser
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.viewModels.UserSeachViewModel

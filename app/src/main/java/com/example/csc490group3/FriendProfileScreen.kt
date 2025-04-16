@@ -35,9 +35,9 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
-import com.example.csc490group3.supabase.DatabaseManagement.checkFriendStatus
-import com.example.csc490group3.supabase.DatabaseManagement.friendRequest
-import com.example.csc490group3.supabase.DatabaseManagement.unfriend
+import com.example.csc490group3.supabase.checkFriendStatus
+import com.example.csc490group3.supabase.friendRequest
+import com.example.csc490group3.supabase.unfriend
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleDarkBKG

@@ -14,7 +14,8 @@ import com.example.csc490group3.supabase.DatabaseManagement.getUserEvents
 import com.example.csc490group3.supabase.DatabaseManagement.removeEvent
 import com.example.csc490group3.supabase.DatabaseManagement.unregisterEvent
 import com.example.csc490group3.supabase.StorageManagement
-import com.example.csc490group3.supabase.DatabaseManagement.getPendingIncomingRequests
+
+import com.example.csc490group3.supabase.getPendingIncomingRequests
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.File

@@ -10,6 +10,8 @@ import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
+import com.example.csc490group3.supabase.addUserToWaitingList
+import com.example.csc490group3.supabase.isUserOnWaitingList
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {
@@ -104,7 +106,7 @@ fun registerForEvent(event: Event, user: User?) {
 
     suspend fun isUserWaitingForEvent(userID: Int, eventID: Int): Boolean {
         return try {
-            val isWaiting = DatabaseManagement.isUserOnWaitingList(userID, eventID)
+            val isWaiting = isUserOnWaitingList(userID, eventID)
             return isWaiting
         } catch (e: Exception) {
             errorMessage.value = "Error checking waiting list: ${e.localizedMessage}"
@@ -120,7 +122,7 @@ fun registerForEvent(event: Event, user: User?) {
                 return@launch
             }
 
-            val success = user.id?.let { DatabaseManagement.addUserToWaitingList(it, event.id) }
+            val success = user.id?.let {addUserToWaitingList(it, event.id) }
             if (success == true) {
                 isUserOnWaitlist.value = true
             } else {
