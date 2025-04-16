@@ -24,12 +24,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +45,9 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import kotlinx.coroutines.launch
 
 @Composable
 fun EventCard(
@@ -69,11 +73,9 @@ fun EventCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            //if available, else show a placeholder
+            // Display event image if available, else show a placeholder
             if (event.photoUrl != null && event.photoUrl.isNotEmpty()) {
-
-                Image(//display photo blah blah blah
+                Image(
                     painter = rememberAsyncImagePainter(event.photoUrl),
                     contentDescription = "Event Photo",
                     modifier = Modifier
@@ -83,7 +85,6 @@ fun EventCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // placeholder if no photo URL is available
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +109,7 @@ fun EventCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // location and address
+            // Location and address
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray)
                 Spacer(modifier = Modifier.width(4.dp))
@@ -120,7 +121,7 @@ fun EventCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // attendees & Price
+            // Attendees & Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -129,17 +130,17 @@ fun EventCard(
                     Icon(Icons.Default.People, contentDescription = "Attendees", tint = Color.Gray)
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    // Handle nullable numAttendees
                     val numAttendees = event.numAttendees
                     val maxAttendees = event.maxAttendees
 
-                    // Check if numAttendees is null and handle accordingly
                     if (numAttendees == null) {
-                        // Handle the case when numAttendees is null (e.g., show a placeholder)
                         Text(text = "Attendees data unavailable", color = Color.Gray)
                     } else {
                         Text(
-                            text = if (numAttendees < maxAttendees) "$numAttendees Out Of $maxAttendees" else "Max Attendees Reached!",
+                            text = if (numAttendees < maxAttendees)
+                                "$numAttendees Out Of $maxAttendees"
+                            else
+                                "Max Attendees Reached!",
                             color = if (numAttendees >= maxAttendees) Color.Red else Color.Black
                         )
                     }
@@ -152,22 +153,19 @@ fun EventCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            //Hides register button if needed
-           if (showUnregisterButton) {
+            // Display unregister or options buttons if required
+            if (showUnregisterButton) {
                 Button(
                     onClick = { onBottomButtonClick(event) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)) // Yellow color
-        
-      
                 ) {
                     Text("Unregister", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             } else if (showOptionsButton) {
-
                 Row(
                     modifier = Modifier.fillMaxWidth()
-                ) {            
+                ) {
                     Button(
                         onClick = { onBottomButtonClick(event) },
                         modifier = Modifier.weight(1f),
@@ -189,9 +187,7 @@ fun EventCard(
     }
 }
 
-//Shows all event details in a popup
 @Composable
-
 fun EventDetailDialog(
     event: Event,
     onDismiss: () -> Unit, // Close button action
@@ -200,24 +196,24 @@ fun EventDetailDialog(
     isUserRegistered: Boolean = false, //Check user events table for match
     alreadyRegisteredText: String? = null, // New parameter for showing registered text
     navController: NavController
-
-
 ) {
 
-        var firstName by remember { mutableStateOf("") }
-        var lastName by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var navToUser by remember { mutableStateOf(false) }
-        var userEmail by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var userEmail by remember { mutableStateOf("") }
+    var showReportDialog by remember { mutableStateOf(false) }
+    var hasReported by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
+    LaunchedEffect(event.createdBy) {
+        val user = getPrivateUser(event.createdBy)
+        firstName = user?.firstName ?: ""
+        lastName = user?.lastName ?: ""
+        email = user?.email ?: ""
+        userEmail = UserSession.currentUser?.email ?: ""
+    }
 
-        LaunchedEffect(event.createdBy) {
-            val user = getPrivateUser(event.createdBy)
-            firstName = user?.firstName ?: ""
-            lastName = user?.lastName ?: ""
-            email = user?.email ?: ""
-            userEmail = UserSession.currentUser?.email ?: ""
-        }
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = event.eventName) },
@@ -227,17 +223,13 @@ fun EventDetailDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp) // Adjust size as needed
+                        .height(180.dp)
                 ) {
                     if (!event.photoUrl.isNullOrEmpty()) {
-
-                        Image(//display photo blah blah blah
+                        Image(
                             painter = rememberAsyncImagePainter(event.photoUrl),
                             contentDescription = "Event Photo",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                                .clip(RoundedCornerShape(12.dp)),
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -259,6 +251,7 @@ fun EventDetailDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Event details text
                 Text(text = "Date: ${event.eventDate}")
                 Text(text = "Venue: ${event.venue}")
                 Text(text = "Location: ${event.address}, ${event.city}, ${event.state}, ${event.zipcode}")
@@ -271,96 +264,85 @@ fun EventDetailDialog(
                 Text(text = "Family Friendly: ${if (event.isFamilyFriendly) "Yes" else "No"}")
                 Text(text = "Price: $${event.price ?: 0.0}")
 
-
                 Text(
                     text = "Created by: $firstName $lastName",
-                    modifier = Modifier.clickable { navToUser = true
-                        if(email.compareTo(userEmail) == 0){
-                            navController.navigate("profile_screen")
-                        }
-                        else {
-                            navController.navigate("friends_profile_screen/${email}")
-                        }
-                        // Handle click here (e.g., navigate to user profile, open dialog, etc.)
-                    })
-
-
-
-
-
-
-
-                if(email.compareTo(userEmail) == 0) {
-                }
-                else{
-                // Display "Already Registered" text if user is registered
-                if (alreadyRegisteredText != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = alreadyRegisteredText,
-                        color = Color.Magenta,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Check if the user is already registered or if the button should be shown
-                if (isUserRegistered) {
-                    // Show "Already Registered" message at the bottom
-                    Text(
-                        text = alreadyRegisteredText ?: "You are already registered for this event!",
-                        color = Color.Green,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                } else if (showRegisterButton) {
-                    // Register Button - Only show if the user is not registered
-                    if ((event.numAttendees ?: 0) < event.maxAttendees) {
-                        Button(
-                            onClick = { onRegister(event) },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = (event.numAttendees ?: 0) < event.maxAttendees,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) // Blue color
-                        ) {
-                            Text(
-                                "Register for Event",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    } else {
-                        Text(
-                            "Registration Full",
-                            color = Color.Red,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
+                    modifier = Modifier.clickable {
+                        if(email == userEmail) navController.navigate("profile_screen")
+                        else navController.navigate("friends_profile_screen/${email}")
                     }
-                }
-            }
+                )
             }
         },
         confirmButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("Close")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { showReportDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = if(hasReported) Color.Gray else Color.Red),
+                    enabled = !hasReported
+                ) {
+                    Text(if(hasReported) "Reported" else "Report", color = Color.White)
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Button(onClick = { onDismiss() }) {
+                    Text("Close")
+                }
             }
         }
     )
 
-    if (navToUser) {
-        navToUser(
-            onDismiss = { navToUser = false },
-        //    navController = NavController
+    if (showReportDialog) {
+        ReportEventDialog(
+            onDismiss = { showReportDialog = false },
+            onSubmit = { reason ->
+                coroutineScope.launch {
+                    val success = DatabaseManagement.reportEvent(event, reason)
+                    if (success) hasReported = true
+                    showReportDialog = false
+                }
+            }
         )
     }
 }
 
-fun navToUser (onDismiss: () -> Unit, //navController: NavController //
+// Dialog for reporting an event
+@Composable
+fun ReportEventDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit
 ) {
-    
-}
+    var selectedReason by remember { mutableStateOf("Fake Event") }
 
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Report Event") },
+        text = {
+            Column {
+                listOf("Fake Event", "Dangerous Event", "Spam event").forEach { reason ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedReason = reason },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = selectedReason == reason, onClick = { selectedReason = reason })
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(reason)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSubmit(selectedReason) }) {
+                Text("Submit Report")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
