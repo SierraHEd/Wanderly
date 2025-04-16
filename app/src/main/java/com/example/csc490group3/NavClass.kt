@@ -58,7 +58,6 @@ fun Navigation(context: Context) {
             FriendProfileScreen(navController = navController, friendEmail = friendEmail)
         }
         composable("location_screen") {
-            val viewModel: LocationViewModel = viewModel()
             val viewState = viewModel.mountainsScreenViewState.collectAsState().value
             val eventFlow = viewModel.eventFlow
 
@@ -66,14 +65,12 @@ fun Navigation(context: Context) {
             // For now, let's assume zero padding if you don’t have access to it here.
             val padding = PaddingValues(0.dp)
 
-            if (viewState is LocationScreenViewState.MountainList) {
                 LocationMap(
                     navController = navController,
                     paddingValues = padding,
                     viewState = viewState,
                     eventFlow = eventFlow
                 )
-            }
         }
     }
 }

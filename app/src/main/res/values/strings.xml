@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">CSC490Group3</string>
+
+    <string name="in_feet">%1$,.0f feet</string>
+    <string name="in_miles">%1$,.1f miles</string>
+    <string name="in_meters">%1$,.0f meters</string>
+    <string name="in_kilometers">%1$,.1f kilometers</string>
+
+    <string name="basic_markers_label">Basic markers</string>
+    <string name="advanced_markers_label">Advanced markers</string>
+    <string name="clustered_markers_label">Clustered markers</string>
+
+    <string name="zoom_all">Zoom all</string>
+    <string name="show_all">Show all</string>
 </resources>
