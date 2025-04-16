@@ -47,6 +47,8 @@ class SearchScreenViewModel: ViewModel() {
             }
         }
     }
+
+
 }
 
 

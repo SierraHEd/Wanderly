@@ -50,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,13 @@ import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
+
 import com.example.csc490group3.supabase.DatabaseManagement.getFriends
+
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.supabase.getFriends
+import com.example.csc490group3.supabase.unfriend
+
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
@@ -81,6 +88,7 @@ import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.UserProfileViewModel
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
 
@@ -90,6 +98,14 @@ fun UserProfileScreen(navController: NavController, viewModel: UserProfileViewMo
     var showFriends by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
     val profilePictureUrl = UserSession.currentUser?.profile_picture_url
+    var user by remember { mutableStateOf<IndividualUser?>(null) }
+
+   LaunchedEffect(UserSession.currentUserEmail) {
+       user= UserSession.currentUserEmail?.let { getPrivateUser(it) }
+    }
+    val firstName = user?.firstName
+
+
     // val CurrentUser = UserSession.currentUser?.email.?
     var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
@@ -169,8 +185,7 @@ fun UserProfileScreen(navController: NavController, viewModel: UserProfileViewMo
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Welcome back, " + (UserSession.currentUserEmail.toString()
-                            .substringBefore("@")),
+                        text = "Welcome back, $firstName",
                         fontSize = 24.sp,
                         color = Color.Black
                     )
@@ -486,24 +501,9 @@ fun FriendsDialog(onDismiss: () -> Unit, navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                OutlinedTextField(
-                    value = searchQuery.value,
-                    onValueChange = { searchQuery.value = it },
-                    placeholder = { Text("Search for a user...") },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon"
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    singleLine = true
-                )
 
                 Text("Followed Users", fontSize = 18.sp)
-
+                val coroutineScope = rememberCoroutineScope()
                 friendsList.value?.forEach { friend ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -519,6 +519,13 @@ fun FriendsDialog(onDismiss: () -> Unit, navController: NavController) {
                         )
                         if (isCurrentUser) {
                             IconButton(onClick = {
+                                coroutineScope.launch {
+                                UserSession.currentUser?.id?.let { friend.id?.let { it1 ->
+                                    unfriend(it,
+                                        it1
+                                    )
+                                } }}
+
                                 /* Unfriend logic */
                             }) {
                                 Icon(Icons.Filled.Remove, "Unfollow")

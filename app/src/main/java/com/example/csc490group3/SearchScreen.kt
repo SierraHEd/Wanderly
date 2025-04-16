@@ -55,111 +55,146 @@ import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.SearchScreenViewModel
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.runtime.LaunchedEffect
+import com.example.csc490group3.model.User
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.ui.components.UserSearchCard
+import com.example.csc490group3.ui.components.navToUser
+import com.example.csc490group3.ui.theme.Purple40
+import com.example.csc490group3.ui.theme.PurpleDarkBKG
+import com.example.csc490group3.viewModels.UserSeachViewModel
+
 
 @Composable
-fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewModel = viewModel()) {
-    val scrollState = rememberScrollState()
+fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewModel = viewModel(), viewModel2: UserSeachViewModel = viewModel()) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabTitles = listOf("Search Events", "Search Users")
+
+    Scaffold(
+        bottomBar = { BottomNavBar(navController) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(PurpleBKG)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Search", style = MaterialTheme.typography.titleLarge)
+            }
+
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = Purple40,
+                contentColor = PurpleDarkBKG
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) }
+                    )
+                }
+            }
+
+            when (selectedTabIndex) {
+                0 -> EventSearchTab(navController, viewModel)
+                1 -> UserSearchTab(navController, viewModel2)
+            }
+        }
+    }
+}
+
+@Composable
+fun EventSearchTab(navController: NavHostController, viewModel: SearchScreenViewModel) {
     var searchTerm by rememberSaveable { mutableStateOf("") }
     val events by viewModel.events
     val errorMessage by viewModel.errorMessage
     val isLoading by viewModel.isLoading
     val keyboardController = LocalSoftwareKeyboardController.current
-    var context = LocalContext.current
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
-    var isRegistered = remember { mutableStateOf(false) }
+    val isRegistered = remember { mutableStateOf(false) }
 
-
-    Scaffold(
-    bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
-        Surface(
-            modifier = Modifier.fillMaxSize()
-                .background(PurpleStart)
-                .padding(paddingValues)
-        ) {
-          Column(
-                  modifier = Modifier
-                    .fillMaxSize()
-                    .background(PurpleBKG),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            )
-            {
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = {navController.popBackStack()}) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
-                    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+    ) {
+        TextField(
+            value = searchTerm,
+            onValueChange = { searchTerm = it },
+            label = { Text("Search Events") },
+            singleLine = true,
+            trailingIcon = {
+                IconButton(onClick = { viewModel.search(searchTerm) }) {
+                    Icon(Icons.Filled.Search, contentDescription = "Search")
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                TextField(
-                    value = searchTerm,
-                    onValueChange = { searchTerm = it },
-                    label = { Text("Search") },
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { viewModel.search(searchTerm) }) {
-                            Icon(
-                                imageVector = (Icons.Filled.Search),
-                                contentDescription = "Search"
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = {
+                viewModel.search(searchTerm)
+                keyboardController?.hide()
+            }),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when {
+            isLoading -> {
+                Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+            }
+            errorMessage != null -> {
+                Text(
+                    errorMessage!!,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Red
+                )
+            }
+            else -> {
+                LazyColumn {
+                    if (events.isNotEmpty()){
+                        items(events) { event ->
+                            EventCard(
+                                event = event,
+                                onClick = { selectedEvent.value = event },
+                                onBottomButtonClick = {
+                                    viewModel.registerForEvent(it, UserSession.currentUser)
+                                },
+                                onEditEvent = {}
                             )
                         }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Search
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            viewModel.search(searchTerm)
-                            keyboardController?.hide()
-                        }
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                )
-                when {
-                    isLoading -> {
-                        Text("No Results", style = MaterialTheme.typography.bodyMedium)
-                    }
-                    errorMessage != null -> {
-                        Text(
-                            errorMessage!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Red
-                        )
-                    }
-                    else -> {
-                        LazyColumn {
-                            items(events) { event ->
-                                EventCard(
-                                    onClick = { selectedEvent.value = event} ,
-                                    event = event, onBottomButtonClick = { selectedEvent ->
-                                        viewModel.registerForEvent(
-                                            selectedEvent,
-                                            UserSession.currentUser
-                                        )
-                                    },
-                                    onEditEvent = {},
-                                )
-                            }
+                }else{
+                        item {
+                            ShowText2()
                         }
                     }
                 }
             }
         }
-        // Show event detail popup when an event is selected
+
         selectedEvent.value?.let { event ->
-            EventDetailDialog(event = event,
+            EventDetailDialog(
+                event = event,
                 onDismiss = { selectedEvent.value = null },
                 showRegisterButton = true,
                 showWaitListButton = false,
@@ -170,3 +205,107 @@ fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewMo
         }
     }
 }
+
+@Composable
+fun UserSearchTab(navController: NavHostController, viewModel: UserSeachViewModel) {
+    var searchTerm by rememberSaveable { mutableStateOf("") }
+    val users by viewModel.users
+    val errorMessage by viewModel.errorMessage
+    val isLoading by viewModel.isLoading
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val selectedEvent = remember { mutableStateOf<Event?>(null) }
+    val isRegistered = remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+    ) {
+        TextField(
+            value = searchTerm,
+            onValueChange = { searchTerm = it },
+            label = { Text("Search Users") },
+            singleLine = true,
+            trailingIcon = {
+                IconButton(onClick = {
+
+
+                    viewModel.search(searchTerm)
+
+
+                }) {
+                    Icon(Icons.Filled.Search, contentDescription = "Search Users")
+                }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = {
+
+
+                viewModel.search(searchTerm)
+
+
+
+                keyboardController?.hide()
+            }),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when {
+            isLoading -> {
+                Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            errorMessage != null -> {
+                Text(
+                    errorMessage!!,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Red
+                )
+            }
+
+            else -> {
+                LazyColumn {
+                    if (users.isNotEmpty()) {
+                        items(users) { user ->
+                            UserSearchCard(
+                                user = user,
+                                navController = navController
+                            )
+                        }
+                    } else {
+                        item {
+                            ShowText()
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+
+        // Placeholder content
+
+    }
+}
+
+@Composable
+fun ShowText() {
+    Text("No users found!", style = MaterialTheme.typography.bodyMedium)
+}
+
+@Composable
+fun ShowText2() {
+    Text("No events found!", style = MaterialTheme.typography.bodyMedium)
+}
+
+

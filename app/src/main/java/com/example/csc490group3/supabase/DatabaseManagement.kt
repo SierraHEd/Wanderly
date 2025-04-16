@@ -1,12 +1,22 @@
 package com.example.csc490group3.supabase
 
+import android.util.Log
+import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
+
 import com.example.csc490group3.model.WaitList
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.postgrest.query.Order
+
+import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -15,6 +25,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.MDC.put
+
+
+
+
+
+import java.lang.Exception
 
 object DatabaseManagement {
 
@@ -430,6 +446,109 @@ object DatabaseManagement {
         }
     }
 
+    suspend fun reportEvent(event: Event, reason: String): Boolean {
+        val reportType = when (reason) {
+            "Fake Event" -> 1
+            "Dangerous Event" -> 2
+            "Spam event" -> 3
+            else -> return false
+        }
+
+        val report = Report(
+            reported_By = UserSession.currentUser?.email ?: return false,
+            reported_Event = event.eventName ?: return false,
+            report_type = reportType
+        )
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val inserted = SupabaseManagement.supabase
+                    .from("reported_events")
+                    .insert(report)
+                    .decodeSingle<Report>() // Uses kotlinx.serialization!
+
+                inserted != null
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
+
+    suspend fun getReportedEventsWithNames(): List<Pair<Report, String>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val reports = SupabaseManagement.supabase
+                    .from("reported_events")
+                    .select()
+                    .decodeList<Report>()
+
+                val events = SupabaseManagement.supabase
+                    .from("events")
+                    .select()
+                    .decodeList<Event>()
+
+                reports.mapNotNull { report ->
+                    val eventName = events.find { it.eventName == report.reported_Event}?.eventName
+                    eventName?.let { Pair(report, it) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
+
+    suspend fun deleteEvent(eventId: Int) {
+        withContext(Dispatchers.IO) {
+            try {
+                SupabaseManagement.supabase
+                    .from("events")
+                    .delete {
+                        filter { eq("id", eventId) }
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    suspend fun dismissReport(reportId: Int) {
+        withContext(Dispatchers.IO) {
+            try {
+                SupabaseManagement.supabase
+                    .from("reported_events")
+                    .delete {
+                        filter { eq("report_id", reportId) }
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    suspend fun isAdmin(email: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = SupabaseManagement.supabase
+                    .from("admin")
+                    .select {
+                        filter {  eq("admin_email", email) }
+
+                    }
+                    .decodeList<Admin>()
+
+                result.isNotEmpty()
+            } catch (e: Exception) {
+                Log.e("isAdmin", "Admin check failed: ${e.message}")
+                false
+            }
+        }
+    }
+
+}
+
+
 ///////////////////
 //FRIEND FUNCTIONS
 //////////////////
@@ -656,3 +775,4 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
         }
     }
 }
+
