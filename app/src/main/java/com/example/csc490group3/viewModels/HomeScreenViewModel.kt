@@ -133,11 +133,23 @@ class HomeScreenViewModel: ViewModel() {
     }
 
 // Remove user from waitingList
-    fun removeFromWaitingList(user: User?, event: Event) {
-        viewModelScope.launch {
-            user?.id?.let { userId ->
-                removeUserFromWaitingList(userId, event.id!!)
+fun removeFromWaitingList(user: User?, event: Event) {
+    viewModelScope.launch {
+        if (user == null || event.id == null) {
+            errorMessage.value = "User or event is missing ID."
+            return@launch
+        }
+
+        try {
+            val success = removeUserFromWaitingList(user.id!!, event.id)
+            if (success) {
+                isUserOnWaitlist.value = false
+            } else {
+                errorMessage.value = "Error removing from waiting list."
             }
+        } catch (e: Exception) {
+            errorMessage.value = "Exception: ${e.localizedMessage}"
         }
     }
+ }
 }
