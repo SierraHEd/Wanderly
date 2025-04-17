@@ -13,9 +13,12 @@ import com.example.csc490group3.ui.admin.AdminScreen
 fun Navigation(context: Context) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "splash_screen") {
+    NavHost(navController = navController, startDestination = "map_screen") {
         composable("splash_screen") {
             SplashScreen(navController)
+        }
+        composable("map_screen") {
+            MapScreenWithLocation()
         }
         composable("start_up_screen") {
             StartUpScreen(navController)
