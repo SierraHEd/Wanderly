@@ -703,7 +703,19 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
         }
 
     }
+///////////////////
+//WAITLIST FUNCTIONS
+//////////////////
 
+/**
+ *Adds a user and event to the user_waitingList table.
+ *
+ * @param userId is the user signing up for the waitlist.
+ * @param eventId is the event the user wants to be on the waitlist for.
+ *
+ * @return Returns true if the record was inserted successfully, false if an error occurred.
+ *
+ */
     suspend fun addUserToWaitingList(userId: Int, eventId: Int): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -722,6 +734,15 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
         }
     }
 
+/**
+ * Query's the database user_waitingList table to check if userId and eventId are in the table.
+ *
+ * @param userId is the user signing up for the waitlist.
+ * @param eventId is the event the user wants to be on the waitlist for.
+ *
+ * @return Returns true if user is on the waitingList for specific event, false if user is not on the waitList for specified event.
+ *
+ */
     suspend fun isUserOnWaitingList(userID: Int, eventID: Int): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -741,6 +762,14 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
         }
     }
 
+/**
+ * Check the user_waitList table for the oldest entry of a user for a specific event.
+ * Adds user to user_events table for specific event.
+ * Removes user from user_waitList table for specific event.
+ *
+ * @param eventId is Id passed when active user selects an event.
+ *
+ */
     private suspend fun promoteFirstUserFromWaitlist(eventId: Int) {
         return withContext(Dispatchers.IO) {
             try {
@@ -774,5 +803,29 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
             }
         }
     }
-
-
+/**
+ * Delete record the user_waitList table for user and event.
+ *
+ * Removes user from user_waitList table for specific event.
+ *
+ * @param userId is the user that will be removed from table.
+ * @param eventId is Id passed when active user selects an event.
+ *
+ */
+suspend fun removeUserFromWaitingList(userId: Int, eventId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_waitingList").delete {
+                filter {
+                    eq("user_id", userId)
+                    eq("event_id", eventId)
+                }
+            }
+            println("Removed from waiting list successfully.")
+            true
+        } catch (e: Exception) {
+            println("Error removing from waiting list: ${e.localizedMessage}")
+            false
+        }
+    }
+}

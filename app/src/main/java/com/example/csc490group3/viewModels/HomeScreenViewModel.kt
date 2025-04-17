@@ -12,6 +12,7 @@ import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvent
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import com.example.csc490group3.supabase.addUserToWaitingList
 import com.example.csc490group3.supabase.isUserOnWaitingList
+import com.example.csc490group3.supabase.removeUserFromWaitingList
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {
@@ -67,31 +68,31 @@ class HomeScreenViewModel: ViewModel() {
         }
     }
 
-// Register for an event
-fun registerForEvent(event: Event, user: User?) {
-    if (user == null) return
-    viewModelScope.launch {
-        try {
-            // Check if both user and event IDs are non-null before proceeding
-            val userId = user.id
-            val eventId = event.id
+    // Register for an event
+    fun registerForEvent(event: Event, user: User?) {
+        if (user == null) return
+        viewModelScope.launch {
+            try {
+                // Check if both user and event IDs are non-null before proceeding
+                val userId = user.id
+                val eventId = event.id
 
-            if (userId == null || eventId == null) {
-                errorMessage.value = "User or event is missing ID."
-                return@launch
-            }
+                if (userId == null || eventId == null) {
+                    errorMessage.value = "User or event is missing ID."
+                    return@launch
+                }
 
-            val isRegistered = isUserRegisteredForEvent(userId, eventId)
-            if (isRegistered) {
-                errorMessage.value = "You are already registered for this event."
-                return@launch
+                val isRegistered = isUserRegisteredForEvent(userId, eventId)
+                if (isRegistered) {
+                    errorMessage.value = "You are already registered for this event."
+                    return@launch
+                }
+                registerEvent(event, user) // Register the user
+            } catch (e: Exception) {
+                errorMessage.value = "Registration failed: ${e.localizedMessage}"
             }
-            registerEvent(event, user) // Register the user
-        } catch (e: Exception) {
-            errorMessage.value = "Registration failed: ${e.localizedMessage}"
         }
     }
-}
 
     suspend fun isUserRegisteredForEvent(userID: Int, eventID: Int): Boolean {
         return try {
@@ -122,7 +123,7 @@ fun registerForEvent(event: Event, user: User?) {
                 return@launch
             }
 
-            val success = user.id?.let {addUserToWaitingList(it, event.id) }
+            val success = user.id?.let { addUserToWaitingList(it, event.id) }
             if (success == true) {
                 isUserOnWaitlist.value = true
             } else {
@@ -131,4 +132,12 @@ fun registerForEvent(event: Event, user: User?) {
         }
     }
 
+// Remove user from waitingList
+    fun removeFromWaitingList(user: User?, event: Event) {
+        viewModelScope.launch {
+            user?.id?.let { userId ->
+                removeUserFromWaitingList(userId, event.id!!)
+            }
+        }
+    }
 }

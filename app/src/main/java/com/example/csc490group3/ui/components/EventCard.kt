@@ -283,6 +283,13 @@ fun EventDetailDialog(
 
                 // Show if user is not the creator and show relevant buttons
                 if (email.compareTo(userEmail) == 0) {
+                    Text(
+                        text = "You created this event!",
+                        color = Color.Blue,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
                 } else {
 
                     // Display "Already Registered" text if user is registered
@@ -356,6 +363,19 @@ fun EventDetailDialog(
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 )
+                                Button(
+                                    onClick = { onJoinWaitlist(event) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFF388E3C
+                                        )
+                                    )
+                                ){Text("Unjoin Waitlist",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                )
+                                }
                             } else if (showWaitListButton) {
                                 // Show "Join Waiting List" button if the user isn't on the list
                                 Spacer(modifier = Modifier.height(8.dp))
