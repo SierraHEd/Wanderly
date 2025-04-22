@@ -219,7 +219,8 @@ fun CalendarScreen(
                         currentDate.dayOfMonth else -1,
                     onDateClick = { day -> //saves day user clicks and compares to current events
                         selectedDay.value = day
-                        eventsForSelectedDay.value = events.filter { it.eventDate.dayOfMonth == day }
+                        val clickedDate = LocalDate(selectedYear.value, selectedMonth.value, day)
+                        eventsForSelectedDay.value = events.filter { it.eventDate == clickedDate }
                         //If more than one event on a given day show popup list of events
                         if (eventsForSelectedDay.value.size > 1) {
                             showEventsPopup.value = true
