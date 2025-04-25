@@ -35,6 +35,7 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.supabase.DatabaseManagement.isUserPublicById
 import com.example.csc490group3.supabase.checkFriendStatus
 import com.example.csc490group3.supabase.friendRequest
 import com.example.csc490group3.supabase.unfriend
@@ -53,12 +54,18 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
     val lastName = friend?.lastName
     val profilePictureUrl = friend?.profile_picture_url
 
+    var isPublic by remember { mutableStateOf(false) }
+
 // TODO: Make a check here to set 'isFollowing' to whether or not CurrentUser is following this user. Change accordingly
     var isFriends by remember { mutableStateOf(false) }
     var isPendingRequest by remember { mutableStateOf(false) }
     // 🔁 Fetch the user info once when the screen loads
     LaunchedEffect(friendEmail) {
         friend = getPrivateUser(friendEmail)
+        friend!!.id?.let {
+            isPublic = isUserPublicById(it)
+        }
+
         val status = UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
             checkFriendStatus(it,
                 it1
@@ -67,6 +74,7 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
         print("Status: " + status)
         isFriends = (status == "accepted")
         isPendingRequest = (status == "pending")
+
     }
     val coroutineScope = rememberCoroutineScope()
 
@@ -175,21 +183,33 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
+        if(!isFriends && !isPublic){
+            Text("This user is Private.", fontSize = 20.sp,
+                color = Color.Black,)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Section1(
             title = "$firstName's Saved Events", fontSize = 20.sp,
             friendEmail = friendEmail,
-            navController = navController
+            navController = navController,
+            isFriends = isFriends,
+            isPublic = isPublic
         )
         Section2(
             title = "$firstName's Hosted Events", fontSize = 20.sp,
             navController = navController,
-            friendEmail = friendEmail
+            friendEmail = friendEmail,
+            isFriends = isFriends,
+            isPublic = isPublic
         )
     }
 }
 
 @Composable
-fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit, navController: NavController, friendEmail: String) {
+fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit, navController: NavController, friendEmail: String, isFriends: Boolean, isPublic: Boolean) {
     val events by viewModel.userRegisteredEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var isRegistered = remember { mutableStateOf(false) }
@@ -206,16 +226,18 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
         }
     }
 
+    if (isFriends || isPublic){
     Row() {
         Text(
             text = title,
         )
     }
+
     LazyRow {
 
         items(events) { event ->
             EventCard(event = event,
-                onClick = { selectedEvent.value = event} ,
+                onClick = { selectedEvent.value = event },
                 onBottomButtonClick = { selectedEvent ->
                     viewModel.unregisterForEvent(selectedEvent, UserSession.currentUser)
                 },
@@ -227,7 +249,8 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     }
     // Show event detail popup when an event is selected
     selectedEvent.value?.let { event ->
-        EventDetailDialog(event = event,
+        EventDetailDialog(
+            event = event,
             onDismiss = { selectedEvent.value = null },
             showRegisterButton = false,
             showWaitListButton = true,
@@ -236,11 +259,13 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
             navController = navController
         )
     }
+
+}
+
 }
 
 @Composable
-fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit, navController: NavController, friendEmail: String) {
-
+fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit, navController: NavController, friendEmail: String, isFriends: Boolean, isPublic: Boolean) {
 
 
     val events by viewModel.userCreatedEvents
@@ -259,25 +284,27 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
             viewModel.loadOtherUserEvents(id)
         }
     }
-
+    if (isFriends || isPublic ) {
     Row() {
         Text(
             text = title,
         )
     }
+
+
     LazyRow {
 
         items(events) { event ->
             EventCard(
                 event = event,
-                onBottomButtonClick = {selectedEvent ->
+                onBottomButtonClick = { selectedEvent ->
                     eventToDelete = event
                     showDeleteDialog = true
                 },
-                onEditEvent = {selectedEvent ->
+                onEditEvent = { selectedEvent ->
                     viewModel.editEvent(selectedEvent)
                 },
-                onClick = {selectedEvent.value = event},
+                onClick = { selectedEvent.value = event },
                 isHorizontal = true,
                 showOptionsButton = true,
             )
@@ -317,4 +344,5 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
             onRegister = { isRegistered.value = true })
 
     }
+}
 }
