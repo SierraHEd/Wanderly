@@ -15,8 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -102,11 +107,31 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
         ) {
             // Header section (non-scrollable content at the top)
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Home Page",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White  // Adjust if needed
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Home Page",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White
+                    )
+                    IconButton(
+                        onClick = {
+                            // Handle message icon click here, e.g. navigate to messages screen
+                            navController.navigate("messages_screen")
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Message, // You can use other icons if preferred
+                            contentDescription = "Messages",
+                            tint = Color.White
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
