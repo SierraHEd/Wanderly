@@ -4,6 +4,7 @@ package com.example.csc490group3
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,21 +12,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -58,8 +68,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val isOnWaitlist = remember { mutableStateOf(false) }
     val isCheckingWaitlist = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
+    val showNotificationsDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    //Icon change for notifications
+    LaunchedEffect(Unit) {
+        UserSession.currentUser?.id?.let { userId ->
+            viewModel.loadUnreadNotifications(userId)
+        }
+    }
     // Check if the user is registered or on the waitlist for the event when an event is selected
     selectedEvent.value?.let { event ->
         val currentUser = UserSession.currentUser
@@ -102,11 +119,39 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
         ) {
             // Header section (non-scrollable content at the top)
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Home Page",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White  // Adjust if needed
-                )
+                Row {
+                    Text(
+                        text = "Home Page",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Box(
+                    )
+                    {
+                        // Notification Icon
+                        IconButton(onClick = {
+                            UserSession.currentUser?.id?.let { userId ->
+                                viewModel.loadAllNotifications(userId)
+                                showNotificationsDialog.value = true
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.White
+                            )
+                        }
+                        // Red dot if there are unread notifications
+                        if (viewModel.hasUnreadNotifications.value) {
+                            Box(
+                                modifier = Modifier.size(8.dp)
+                                    .background(Color.Red, shape = CircleShape)
+                                    .align(Alignment.TopEnd)  // This will position the dot in the top-right corner of the icon
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
@@ -239,6 +284,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         // When the user clicks the register button, we manually trigger the registration
                         isRegistered.value = true // Mark the user as registered
                         viewModel.registerForEvent(event,UserSession.currentUser) // Perform registration
+
+                        // Trigger notification for registration
+                        viewModel.addNotificationForRegistration(event)
+
                         Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
                     },
                     showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
@@ -254,6 +303,30 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     navController = navController
                 )
             }
+        }
+
+        if (showNotificationsDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showNotificationsDialog.value = false },
+                confirmButton = {
+                    TextButton(onClick = { showNotificationsDialog.value = false }) {
+                        Text("Close")
+                    }
+                },
+                title = { Text("Notifications") },
+                text = {
+                    val notifications = viewModel.allNotifications.value
+                    if (notifications.isEmpty()) {
+                        Text("No notifications.")
+                    } else {
+                        Column {
+                            notifications.forEach { notification ->
+                                Text("• ${notification.message}", modifier = Modifier.padding(4.dp))
+                            }
+                        }
+                    }
+                }
+            )
         }
     }
 }

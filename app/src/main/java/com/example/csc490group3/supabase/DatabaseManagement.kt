@@ -5,30 +5,21 @@ import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.Notification
 import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
-
 import com.example.csc490group3.model.WaitList
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.postgrest.query.Order
-
 import com.example.csc490group3.model.UserSession
-
+import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.postgrest.from
-
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-
-
-
-
-
 
 import java.lang.Exception
 
@@ -144,6 +135,7 @@ object DatabaseManagement {
             }
         }
     }
+
     suspend fun unregisterEvent(event: Event, user: User): Boolean{
         return withContext(Dispatchers.IO) {
             val userID = user.id
@@ -168,6 +160,7 @@ object DatabaseManagement {
             }
         }
     }
+
     /**
      * Fetches a list of all events a particular user is registered for
      *
@@ -411,6 +404,7 @@ object DatabaseManagement {
     //////////////////
     //MEDIA FUNCTIONS
     /////////////////
+
     suspend fun updateEventPhoto(eventId: Int, photoUrl: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -704,6 +698,10 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
 
     }
 
+///////////////////
+//WAITLIST FUNCTIONS
+//////////////////
+
     suspend fun addUserToWaitingList(userId: Int, eventId: Int): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -776,3 +774,116 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
     }
 
 
+///////////////////
+//NOTIFICATION FUNCTIONS
+//////////////////
+
+suspend fun getUnreadNotifications(userId: Int): List<Notification> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val result = postgrest.from("user_notifications").select {
+                filter {
+                    eq("user_id", userId)
+                    eq("is_read", false)
+                }
+                order("created_at", Order.DESCENDING)  // Sorting by the latest notifications
+            }.decodeList<Notification>()
+
+            // Check if the result is valid
+            if (result.isNotEmpty()) {
+                return@withContext result
+            } else {
+                println("No unread notifications found for user $userId")
+                return@withContext emptyList()
+            }
+        } catch (e: Exception) {
+            println("Error fetching unread notifications: ${e.localizedMessage}")
+            return@withContext emptyList()  // Returning an empty list in case of failure
+        }
+    }
+}
+suspend fun getAllNotifications(userId: Int): List<Notification> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val result = postgrest.from("user_notifications").select {
+                filter {
+                eq("user_id", userId)
+            }
+                order("created_at", Order.DESCENDING) // Sorting notifications by creation date
+            }.decodeList<Notification>()
+            return@withContext result
+        } catch (e: Exception) {
+            println("Error fetching all notifications: ${e.localizedMessage}")
+            emptyList() // Return an empty list if an error occurs
+        }
+    }
+}
+
+suspend fun markNotificationAsRead(notificationId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications").update(
+                mapOf("is_read" to true)
+            ) {
+                filter {
+                    eq("id", notificationId)
+                }
+            }
+            println("Notification $notificationId marked as read.")
+            true
+        } catch (e: Exception) {
+            println("Error marking notification as read: ${e.localizedMessage}")
+            false
+        }
+    }
+}
+
+suspend fun markAllNotificationsAsRead(userId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications").update(
+                mapOf("is_read" to true)
+            ) {
+                filter {
+                    eq("user_id", userId)
+                    eq("is_read", false)
+                }
+            }
+            println("All notifications marked as read for user $userId.")
+            true
+        } catch (e: Exception) {
+            println("Error marking all notifications as read: ${e.localizedMessage}")
+            false
+        }
+    }
+}
+
+suspend fun insertNotification(notification: Notification) {
+    return withContext(Dispatchers.IO) {
+        try {
+            val userID = notification.user_id
+            val message = notification.message
+            val is_read = notification.is_read
+
+            println("Inserting basic notification - UserID: $userID, Message: $message, IsRead: $is_read")
+
+            // Simplified insert
+            val simpleNotification = mapOf(
+                "user_id" to 35,  // example user ID
+                "message" to "Test notification"
+            )
+
+            val result = postgrest.from("user_notifications").insert(simpleNotification)
+//
+//            val result = postgrest.from("user_notifications").insert(mapOf(
+//                "user_id" to userID,
+//                "message" to message,
+//                "is_read" to is_read
+//            ))
+            println("AFTER INSERT"+ result.decodeList<Notification>())
+            println("Simplified notification inserted for user ${notification.user_id}: ${notification.message}")
+        } catch (e: AuthRestException) {
+            println("Error inserting notification: ${e.localizedMessage}")
+        }
+    }
+}
