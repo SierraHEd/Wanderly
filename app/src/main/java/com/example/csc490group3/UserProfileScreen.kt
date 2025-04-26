@@ -77,6 +77,8 @@ import com.example.csc490group3.model.UserSession
 
 
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.supabase.DatabaseManagement.isUserPublicById
+import com.example.csc490group3.supabase.DatabaseManagement.setUserPrivacy
 import com.example.csc490group3.supabase.getFriends
 import com.example.csc490group3.supabase.unfriend
 
@@ -355,7 +357,12 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
     var showEventPrefs by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
     var selectedCategories by remember { mutableStateOf(UserSession.currentUserCategory) }
-
+    val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(UserSession.currentUser?.id) {
+        UserSession.currentUser?.id?.let {
+            isPublic = isUserPublicById(it)
+        }
+    }
     AlertDialog(
 
         onDismissRequest = onDismiss,
@@ -367,9 +374,22 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
 
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Private Account")
+                    Text("Public Account")
                     Spacer(Modifier.weight(1f))
-                    Switch(checked = isPublic, onCheckedChange = {isPublic = it }
+                    Switch(checked = isPublic, onCheckedChange = {
+
+                        coroutineScope.launch {
+                            UserSession.currentUser?.id?.let { it1 -> setUserPrivacy(
+                                it1,
+                                isPublic
+                            )}
+                        }
+
+
+
+
+
+                        isPublic = it }
                         //Make it so that account will remember change
                     )
                 }
