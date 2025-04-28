@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +33,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.supabase.getFriends
 import com.example.csc490group3.supabase.unfriend
 import com.example.csc490group3.ui.components.UserChatCard
@@ -43,28 +46,22 @@ import com.example.csc490group3.ui.components.UserSearchCard
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleStart
+import com.example.csc490group3.viewModels.HomeScreenViewModel
+import com.example.csc490group3.viewModels.MessageScreenViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun MessagesScreen(navController: NavController) {
+fun MessagesScreen(navController: NavController, viewModel: MessageScreenViewModel = viewModel()) {
 
 
-    val chatList = remember { mutableStateOf<List<IndividualUser>?>(null) }
+    val conversations by viewModel.conversations.collectAsState()
+
     var showFriends by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-
-        //TODO: Replace chat list with list of actual conversations instead of list of friends.
-        //It is currently just the friends list.
-        chatList.value = getFriends(UserSession.currentUser?.id ?: return@LaunchedEffect)
+        UserSession.currentUser?.id?.let {
+            viewModel.loadConversations(it)
+        }
     }
-
-
-
-
-
-
-
-
     Scaffold(
         containerColor = PurpleBKG,
         bottomBar = { BottomNavBar(navController) }
@@ -98,12 +95,7 @@ fun MessagesScreen(navController: NavController) {
                     IconButton(
 
                     onClick = {
-
                         showFriends = true
-
-
-
-
                     }
                 ) {
                     Icon(
@@ -116,23 +108,19 @@ fun MessagesScreen(navController: NavController) {
 
             // Scrollable chat list
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
-                chatList.value?.let { users ->
-                    items(users) { user ->
-                        UserChatCard(
-                            user = user,
-                            navController = navController
-                        )
-                    }
+                items(conversations) { conversation ->
+                    UserChatCard(
+                        conversation = conversation,
+                        navController = navController
+                    )
                 }
             }
         }
+
         if (showFriends) {
-            NewConvoDialogue(onDismiss = { showFriends = false },
-                navController
-            )
+            NewConvoDialogue(onDismiss = { showFriends = false }, navController = navController)
         }
     }
 }

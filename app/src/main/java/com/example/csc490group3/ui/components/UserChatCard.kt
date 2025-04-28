@@ -36,42 +36,17 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 
 
-fun onChatClick(user: User, navController: NavController) {
-    // Navigate to the conversation screen by passing the user's email (or ID)
-    navController.navigate("conversation_screen/${user.email}")
-}
-
-
-
-
 @Composable
 fun UserChatCard(
-    user: User,
-    navController: NavController,
+    conversation: ConversationPreview,
+    navController: NavController
 ) {
-    var friend by remember { mutableStateOf<IndividualUser?>(null) }
-    val firstName = friend?.firstName ?: ""
-    val lastName = friend?.lastName ?: ""
-
-    var conversationPreview by remember { mutableStateOf<ConversationPreview?>(null) }
-
-    LaunchedEffect(user.email) {
-        friend = getPrivateUser(user.email)
-        conversationPreview = getConversationPreview(user)
-    }
-
-    val latestMessage = conversationPreview?.lastMessage ?: ""
-    val messageTime = conversationPreview?.lastMessageTime?.let {
-        // Format LocalDateTime however you'd like — this is just an example:
-        "${it.hour}:${it.minute.toString().padStart(2, '0')}"
-    } ?: ""
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable {
-                onChatClick(user = user, navController = navController)
+                navController.navigate("conversation_screen/${conversation.otherUserID}")
             },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -83,66 +58,27 @@ fun UserChatCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (!user.profile_picture_url.isNullOrEmpty()) {
-                        Image(
-                            painter = rememberAsyncImagePainter(user.profile_picture_url),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile Picture",
-                            tint = Color.DarkGray,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = "$firstName $lastName",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = latestMessage,
-                        fontSize = 12.sp,
-                        color = Color.DarkGray,
-                        maxLines = 1
-                    )
-                }
+            Column {
+                Text(
+                    text = "User ID: ${conversation.otherUserID}", // later replace with name
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = conversation.lastMessage,
+                    fontSize = 12.sp,
+                    color = Color.DarkGray,
+                    maxLines = 1
+                )
             }
 
             Text(
-                text = messageTime,
+                text = conversation.lastMessageTime.toString(), // format it prettier later
                 fontSize = 12.sp,
                 color = Color.Gray
             )
         }
     }
-}
-
-suspend fun getConversationPreview(user: User): ConversationPreview {
-    // TODO: Replace this with actual logic to fetch the latest conversation
-    return ConversationPreview(
-        otherUserID = user.id ?: -1,
-        lastMessage = "Hey there! Just checking in.",
-        lastMessageTime = LocalDateTime(2025, 4, 23, 2, 30, 0) // Sample time
-    )
 }

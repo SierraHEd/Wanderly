@@ -3,6 +3,7 @@ package com.example.csc490group3.supabase
 import android.util.Log
 import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.Category
+import com.example.csc490group3.model.ConversationPreview
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.Report
@@ -816,5 +817,24 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
             }
         }
     }
+///////////////////////
+//MESSAGING  FUNCTIONS
+//////////////////////
+
+suspend fun getConversations(userID: Int): List<ConversationPreview>? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val userID = JsonObject(mapOf("user_id" to JsonPrimitive(userID)))
+
+            val result = postgrest.rpc("get_conversations_for_user", userID).decodeList<ConversationPreview>()
+            println(result)
+            result
+        }catch(e: Exception) {
+            println("Error fetching conversations: ${e.localizedMessage}")
+            null
+        }
+    }
+}
+
 
 

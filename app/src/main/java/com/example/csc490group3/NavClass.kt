@@ -10,11 +10,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.admin.AdminScreen
+import com.example.csc490group3.viewModels.MessageScreenViewModel
 import kotlinx.serialization.json.Json
 
 @Composable
@@ -66,16 +68,17 @@ fun Navigation(context: Context) {
         composable("messages_screen") {
             MessagesScreen(navController)
         }
-        composable("conversation_screen/{userEmail}") { backStackEntry ->
-            val userEmail = backStackEntry.arguments?.getString("userEmail") ?: ""
+        composable("conversation_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
             var user by remember { mutableStateOf<IndividualUser?>(null) }
-            // Fetch the User based on the email or ID from your local storage/repository
-            LaunchedEffect(userEmail) {
-                user = getPrivateUser(userEmail)
+
+            LaunchedEffect(userId) {
+                if (userId != -1) {
+                    user = getPrivateUser(userId) // <-- new function to fetch by ID
+                }
             }
 
             user?.let { ConversationScreen(otherUser = it, navController = navController) }
-
         }
         composable("new_conversation_screen/{friendEmail}") { backStackEntry ->
             val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
