@@ -6,7 +6,12 @@ import kotlinx.serialization.Serializable
 data class Notification(
     val id: Int? = null,
     val user_id: Int? = null,
-    val message: String? = null,
+    val message: String,
     val is_read: Boolean? = null,
-    val created_at: String? = null // or `LocalDateTime` if you're using Java time
+    val type: NotificationType,
 )
+
+enum class NotificationType {
+    EVENT,
+    FRIEND_ACTION
+}

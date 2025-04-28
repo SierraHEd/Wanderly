@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.Notification
+import com.example.csc490group3.model.NotificationType
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement
@@ -16,6 +17,7 @@ import com.example.csc490group3.supabase.getAllNotifications
 import com.example.csc490group3.supabase.getUnreadNotifications
 import com.example.csc490group3.supabase.insertNotification
 import com.example.csc490group3.supabase.isUserOnWaitingList
+import com.example.csc490group3.supabase.updateNotificationAsReadInDatabase
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {
@@ -149,6 +151,33 @@ class HomeScreenViewModel: ViewModel() {
         }
     }
 
+    fun markNotificationAsReadInViewModel(notification: Notification) {
+        viewModelScope.launch {
+            try {
+                if (notification.is_read != true) {
+                    // Safely unwrap notification.id and call the database update
+                    notification.id?.let { notificationId ->
+                        val success = updateNotificationAsReadInDatabase(notificationId)
+                        if (success) {
+                            // If successful, refresh the notification lists
+                            UserSession.currentUser?.id?.let { userId ->
+                                loadAllNotifications(userId)
+                                loadUnreadNotifications(userId)
+                            }
+                        } else {
+                            errorMessage.value = "Failed to update notification."
+                        }
+                    } ?: run {
+                        // Handle the case when notification.id is null
+                        errorMessage.value = "Notification ID is null, cannot mark as read."
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage.value = "Error marking notification as read: ${e.localizedMessage}"
+            }
+        }
+    }
+
     //load all unread notifications
     fun loadUnreadNotifications(userId: Int) {
         viewModelScope.launch {
@@ -161,31 +190,22 @@ class HomeScreenViewModel: ViewModel() {
     // load all notifications
     fun loadAllNotifications(userId: Int) {
         viewModelScope.launch {
-            println("HOMESCREENVIEWMODEL(loadALL) -> Load All notifications...")
-
             val notifications = getAllNotifications(userId)
             allNotifications.value = notifications
         }
     }
 
+    //Add registration to notification table
     fun addNotificationForRegistration(event: Event) {
         viewModelScope.launch {
             try {
-                println("HOMESCREENVIEWMODEL(add) -> Starting notification add for user...")
-
                 val userId = UserSession.currentUser?.id
                 if (userId != null) {
-                    val notification = Notification(
-                        user_id = userId,  // The user's ID
-                        message = "You have successfully registered for the event: ${event.eventName}",
-                        is_read = false,  // Initially mark it as unread
-                    )
-                    println("HOMESCREENVIEWMODEL(print Notification) ->" +notification)
-
-                    // Insert notification into the database
+                    val message =
+                        "You have successfully registered for the event: ${event.eventName}"
+                    val notification =
+                        Notification(user_id = userId, message = message, is_read = false, type = NotificationType.EVENT)
                     insertNotification(notification)
-
-                    // load unread notifications after inserting
                     loadUnreadNotifications(userId)
                 }
             } catch (e: Exception) {

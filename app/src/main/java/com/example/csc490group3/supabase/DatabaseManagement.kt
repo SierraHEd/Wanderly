@@ -6,13 +6,14 @@ import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.Notification
+import com.example.csc490group3.model.NotificationType
 import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
 import com.example.csc490group3.model.WaitList
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.postgrest.query.Order
 import com.example.csc490group3.model.UserSession
-import io.github.jan.supabase.auth.exception.AuthRestException
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -224,7 +225,6 @@ object DatabaseManagement {
             }
         }
     }
-
 
     suspend fun isUserPublicById(userId: Int): Boolean {
         return withContext(Dispatchers.IO) {
@@ -581,10 +581,6 @@ object DatabaseManagement {
 
 }
 
-
-
-
-
 ///////////////////
 //FRIEND FUNCTIONS
 //////////////////
@@ -818,7 +814,7 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
 
 ///////////////////
 //NOTIFICATION FUNCTIONS
-//////////////////
+/////////////////
 
 suspend fun getUnreadNotifications(userId: Int): List<Notification> {
     return withContext(Dispatchers.IO) {
@@ -861,7 +857,7 @@ suspend fun getAllNotifications(userId: Int): List<Notification> {
     }
 }
 
-suspend fun markNotificationAsRead(notificationId: Int): Boolean {
+suspend fun updateNotificationAsReadInDatabase(notificationId: Int): Boolean {
     return withContext(Dispatchers.IO) {
         try {
             postgrest.from("user_notifications").update(
@@ -903,29 +899,60 @@ suspend fun markAllNotificationsAsRead(userId: Int): Boolean {
 suspend fun insertNotification(notification: Notification) {
     return withContext(Dispatchers.IO) {
         try {
-            val userID = notification.user_id
-            val message = notification.message
-            val is_read = notification.is_read
+            println("Inserting notification: $notification")
 
-            println("Inserting basic notification - UserID: $userID, Message: $message, IsRead: $is_read")
+            val result = postgrest.from("user_notifications")
+                .insert(notification)
 
-            // Simplified insert
-            val simpleNotification = mapOf(
-                "user_id" to 35,  // example user ID
-                "message" to "Test notification"
-            )
-
-            val result = postgrest.from("user_notifications").insert(simpleNotification)
-//
-//            val result = postgrest.from("user_notifications").insert(mapOf(
-//                "user_id" to userID,
-//                "message" to message,
-//                "is_read" to is_read
-//            ))
-            println("AFTER INSERT"+ result.decodeList<Notification>())
-            println("Simplified notification inserted for user ${notification.user_id}: ${notification.message}")
-        } catch (e: AuthRestException) {
-            println("Error inserting notification: ${e.localizedMessage}")
+            println("Insert result: $result")
+        } catch (e: Exception) {
+            println("General error occurred while inserting notification: ${e.localizedMessage}")
         }
+    }
+}
+
+suspend fun sendFriendNotification(currentUser: Int, userToFriend: Int, action: String) {
+
+    val currentUserInfo = getPrivateUser(currentUser)
+    val friendInfo = getPrivateUser(userToFriend)
+
+    val currentName = "${currentUserInfo?.firstName} ${currentUserInfo?.lastName}"
+    val friendName = "${friendInfo?.firstName} ${friendInfo?.lastName}"
+
+    val messageForCurrentUser = when (action) {
+        "accepted" -> "You and user $userToFriend: $friendName are now friends."
+        "declined" -> "You declined the friend request from user $friendName."
+        "canceled" -> "You canceled your friend request to user $friendName."
+        "unfriended" -> "You have removed user $friendName from your friends list."
+        "requested" -> "You sent a friend request to user $friendName."
+        else -> "Unknown friend action"
+    }
+
+    val messageForFriend = when (action) {
+        "accepted" -> "You and user $currentName. are now friends."
+        "requested" -> "User $currentName has sent you a friend request."
+        else -> null
+    }
+
+    // Always notify current user
+    insertNotification(
+        Notification(
+            user_id = currentUser,
+            message = messageForCurrentUser,
+            is_read = false,
+            type = NotificationType.FRIEND_ACTION
+        )
+    )
+
+    // Notify friend only if needed
+    if (messageForFriend != null) {
+        insertNotification(
+            Notification(
+                user_id = userToFriend,
+                message = messageForFriend,
+                is_read = false,
+                type = NotificationType.FRIEND_ACTION
+            )
+        )
     }
 }

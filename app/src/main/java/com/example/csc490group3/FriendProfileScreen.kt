@@ -38,6 +38,7 @@ import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.supabase.DatabaseManagement.isUserPublicById
 import com.example.csc490group3.supabase.checkFriendStatus
 import com.example.csc490group3.supabase.friendRequest
+import com.example.csc490group3.supabase.sendFriendNotification
 import com.example.csc490group3.supabase.unfriend
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
@@ -120,6 +121,11 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                             } }
                             isFriends = false
                             isPendingRequest = false
+
+                            UserSession.currentUser?.id?.let { currentUserId -> friend?.id?.let { friendId ->
+                                // Send current user notification for removing a friend
+                                sendFriendNotification(currentUserId, friendId, "unfriended")
+                            } }
                         }
                         if(isPendingRequest){
                             UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
@@ -128,6 +134,10 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                                 )
                             } }
                             isPendingRequest = false
+                            UserSession.currentUser?.id?.let { currentUserId -> friend?.id?.let { friendId ->
+                                // Send current user notification for canceling a friend request
+                                sendFriendNotification(currentUserId, friendId, "canceled")
+                            } }
                         }
                         else {
                             UserSession.currentUser?.id?.let { friend?.id?.let { it1 ->
@@ -136,10 +146,12 @@ fun FriendProfileScreen(navController: NavController, friendEmail: String) {
                                 )
                             } }
                             isPendingRequest = true
-
+                            UserSession.currentUser?.id?.let { currentUserId -> friend?.id?.let { friendId ->
+                                // Send current user notification for canceling a friend request
+                                sendFriendNotification(currentUserId, friendId, "requested")
+                            } }
                         }
                     }
-
 
                 },
                 modifier = Modifier
