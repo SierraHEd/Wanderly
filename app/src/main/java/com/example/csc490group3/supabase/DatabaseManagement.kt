@@ -912,29 +912,27 @@ suspend fun insertNotification(notification: Notification) {
 }
 
 suspend fun sendFriendNotification(currentUser: Int, userToFriend: Int, action: String) {
-
     val currentUserInfo = getPrivateUser(currentUser)
     val friendInfo = getPrivateUser(userToFriend)
 
-    val currentName = "${currentUserInfo?.firstName} ${currentUserInfo?.lastName}"
-    val friendName = "${friendInfo?.firstName} ${friendInfo?.lastName}"
+    val currentName = "${currentUserInfo?.firstName ?: "Unknown"} ${currentUserInfo?.lastName ?: "User"}"
+    val friendName = "${friendInfo?.firstName ?: "Unknown"} ${friendInfo?.lastName ?: "User"}"
 
     val messageForCurrentUser = when (action) {
-        "accepted" -> "You and user $userToFriend: $friendName are now friends."
-        "declined" -> "You declined the friend request from user $friendName."
-        "canceled" -> "You canceled your friend request to user $friendName."
-        "unfriended" -> "You have removed user $friendName from your friends list."
-        "requested" -> "You sent a friend request to user $friendName."
+        "accepted" -> "You and $friendName are now friends."
+        "declined" -> "You declined the friend request from $friendName."
+        "canceled" -> "You canceled your friend request to $friendName."
+        "unfriended" -> "You have removed $friendName from your friends list."
+        "requested" -> "You sent a friend request to $friendName."
         else -> "Unknown friend action"
     }
 
     val messageForFriend = when (action) {
-        "accepted" -> "You and user $currentName. are now friends."
-        "requested" -> "User $currentName has sent you a friend request."
+        "accepted" -> "You and $currentName are now friends."
+        "requested" -> "$currentName has sent you a friend request."
         else -> null
     }
 
-    // Always notify current user
     insertNotification(
         Notification(
             user_id = currentUser,
@@ -944,7 +942,6 @@ suspend fun sendFriendNotification(currentUser: Int, userToFriend: Int, action: 
         )
     )
 
-    // Notify friend only if needed
     if (messageForFriend != null) {
         insertNotification(
             Notification(
