@@ -6,6 +6,7 @@ import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.ConversationPreview
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.Message
 import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
 
@@ -14,6 +15,7 @@ import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.p
 import io.github.jan.supabase.postgrest.query.Order
 
 import com.example.csc490group3.model.UserSession
+import com.example.csc490group3.model.UserSession.currentUser
 
 import io.github.jan.supabase.postgrest.from
 
@@ -832,6 +834,42 @@ suspend fun getConversations(userID: Int): List<ConversationPreview>? {
         }catch(e: Exception) {
             println("Error fetching conversations: ${e.localizedMessage}")
             null
+        }
+    }
+}
+
+suspend fun getConversationWithUser(otherUserID:Int): List<Message>{
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("user1", currentUser?.id)
+                put("user2", otherUserID)
+            }
+
+            // Get the raw JSON response as a string.
+            val result = postgrest.rpc("get_conversation_between_users", params).decodeList<Message>()
+            result
+
+        }catch(e: Exception) {
+            println("Error retrieving messages: ${e.localizedMessage}")
+            listOf<Message>()
+        }
+    }
+}
+suspend fun sendChatMessage(messageText: String, otherUserID: Int){
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("sender_id", currentUser?.id)
+                put("receiver_id", otherUserID)
+                put("content", messageText)
+            }
+
+            // Get the raw JSON response as a string.
+            val result = postgrest.rpc("send_message", params)
+
+        }catch(e: Exception) {
+            println("Error sending message: ${e.localizedMessage}")
         }
     }
 }

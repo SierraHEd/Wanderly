@@ -70,15 +70,11 @@ fun Navigation(context: Context) {
         }
         composable("conversation_screen/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
-            var user by remember { mutableStateOf<IndividualUser?>(null) }
 
-            LaunchedEffect(userId) {
-                if (userId != -1) {
-                    user = getPrivateUser(userId) // <-- new function to fetch by ID
-                }
-            }
-
-            user?.let { ConversationScreen(otherUser = it, navController = navController) }
+            ConversationScreen(
+                otherUser = userId,
+                navController = navController
+            )
         }
         composable("new_conversation_screen/{friendEmail}") { backStackEntry ->
             val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""

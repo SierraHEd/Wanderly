@@ -33,11 +33,14 @@ import java.util.UUID
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.viewModels.ConversationScreenViewModel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -48,22 +51,21 @@ import kotlin.time.DurationUnit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationScreen(
-    otherUser: IndividualUser,
-    navController: NavController
+    otherUser: Int,
+    navController: NavController,
+    viewModel: ConversationScreenViewModel = viewModel()
 ) {
     val currentUserId = UserSession.currentUser?.id ?: return
-    val messagesState = remember { mutableStateOf<List<Message>>(emptyList()) }
-    val messageText = remember { mutableStateOf("") }
-    var friend by remember { mutableStateOf<IndividualUser?>(null) }
+    val messages by viewModel.messages.collectAsState()
+    val messageText by viewModel.messageText.collectAsState()
+    val friend by viewModel.otherUser.collectAsState()
     val firstName = friend?.firstName ?: ""
     val lastName = friend?.lastName ?: ""
-    LaunchedEffect(otherUser.email) {
-        friend = getPrivateUser(otherUser.email)
-    }
+
 
     // Fetch messages when the screen is launched
-    LaunchedEffect(otherUser.id) {
-        messagesState.value = getConversationWithUser(otherUser)
+    LaunchedEffect(otherUser) {
+        viewModel.loadConversation(otherUser)
     }
 
     Column(
@@ -99,9 +101,9 @@ fun ConversationScreen(
                     .background(Color.Gray.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (!otherUser.profile_picture_url.isNullOrEmpty()) {
+                if (!friend?.profile_picture_url.isNullOrEmpty()) {
                     Image(
-                        painter = rememberAsyncImagePainter(otherUser.profile_picture_url),
+                        painter = rememberAsyncImagePainter(friend?.profile_picture_url),
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(48.dp)
@@ -135,11 +137,9 @@ fun ConversationScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            reverseLayout = true
+            reverseLayout = false
         ) {
-            val messages = messagesState.value
-            val reversedMessages = messages.reversed()  // Reverse the messages manually
-            items(reversedMessages) { message ->
+            items(messages) { message ->
                 if (message.senderID == currentUserId) {
                     OutgoingMessageBubble(message)
                 } else {
@@ -155,8 +155,8 @@ fun ConversationScreen(
                 .padding(vertical = 8.dp)
         ) {
             TextField(
-                value = messageText.value,
-                onValueChange = { messageText.value = it },
+                value = messageText,
+                onValueChange = { viewModel.messageText.value = it },
                 placeholder = { Text("Type a message...") },
                 modifier = Modifier
                     .weight(1f)
@@ -166,8 +166,7 @@ fun ConversationScreen(
             IconButton(
                 onClick = {
                     // Handle sending the message (add the logic here)
-                    otherUser.id?.let { sendMessage(messageText.value, currentUserId, it) }
-                    messageText.value = ""  // Clear the input after sending
+                    viewModel.sendMessage(currentUserId)
                 },
                 modifier = Modifier
                     .align(Alignment.CenterVertically)

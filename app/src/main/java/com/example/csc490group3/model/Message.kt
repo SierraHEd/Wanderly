@@ -1,5 +1,6 @@
 package com.example.csc490group3.model
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,7 +14,7 @@ data class Message (
     val receiverID: Int,
     val content: String,
     @SerialName("sent_at")
-    val timeSent: LocalDateTime,
+    val timeSent: Instant,
     @SerialName("is_read")
     val isRead: Boolean
 )
