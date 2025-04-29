@@ -15,4 +15,6 @@ data class ConversationPreview (
 
     @SerialName("last_message_time")
     val lastMessageTime: LocalDateTime
+
+
 )

@@ -4,16 +4,20 @@ package com.example.csc490group3
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Message
@@ -51,6 +55,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = viewModel()) {
+    val hasMessages by viewModel.hasMessages
     val events by viewModel.events
     val suggestedEvents by viewModel.suggestedEvents
     val isLoading by viewModel.isLoading
@@ -119,18 +124,30 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
                     )
-                    IconButton(
-                        onClick = {
-                            // Handle message icon click here, e.g. navigate to messages screen
-                            navController.navigate("messages_screen")
+                    Box {
+                        IconButton(
+                            onClick = {
+                                // Handle message icon click here, e.g. navigate to messages screen
+                                navController.navigate("messages_screen")
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Message, // You can use other icons if preferred
+                                contentDescription = "Messages",
+                                tint = Color.White
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Message, // You can use other icons if preferred
-                            contentDescription = "Messages",
-                            tint = Color.White
-                        )
+                        if (hasMessages) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(Color.Red, shape = CircleShape)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
+                            )
+                        }
                     }
+
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(

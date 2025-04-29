@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
@@ -54,7 +55,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun MessagesScreen(navController: NavController, viewModel: MessageScreenViewModel = viewModel()) {
 
-
     val conversations by viewModel.conversations.collectAsState()
 
     var showFriends by remember { mutableStateOf(false) }
@@ -92,19 +92,22 @@ fun MessagesScreen(navController: NavController, viewModel: MessageScreenViewMod
                 LaunchedEffect(Unit) {
                     friendsList.value = getFriends(UserSession.currentUser?.id ?: return@LaunchedEffect)
                 }
-              //  val searchQuery = remember { mutableStateOf("")
+                Box {
+                    //  val searchQuery = remember { mutableStateOf("")
                     IconButton(
 
-                    onClick = {
-                        showFriends = true
+                        onClick = {
+                            showFriends = true
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddCircleOutline,
+                            contentDescription = "New Conversation",
+                            tint = Color.White
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AddCircleOutline,
-                        contentDescription = "New Conversation",
-                        tint = Color.White
-                    )
                 }
+
             }
 
             // Scrollable chat list

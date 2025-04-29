@@ -1,6 +1,7 @@
 package com.example.csc490group3.supabase
 
 import android.util.Log
+import androidx.annotation.IntegerRes
 import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.ConversationPreview
@@ -8,6 +9,7 @@ import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.Message
 import com.example.csc490group3.model.Report
+import com.example.csc490group3.model.UnreadCount
 import com.example.csc490group3.model.User
 
 import com.example.csc490group3.model.WaitList
@@ -22,6 +24,7 @@ import io.github.jan.supabase.postgrest.from
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.descriptors.PrimitiveKind
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -874,5 +877,56 @@ suspend fun sendChatMessage(messageText: String, otherUserID: Int){
     }
 }
 
+suspend fun markRead(receiverId: Int, senderId: Int) {
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("p_receiver_id", receiverId)
+                put("p_sender_id", senderId)
+            }
+
+            // Get the raw JSON response as a string.
+            val result = postgrest.rpc("mark_conversation_as_read", params)
+
+        }catch(e: Exception) {
+            println("Error marking as read: ${e.localizedMessage}")
+        }
+    }
+}
+
+suspend fun getTotalUnread(userId: Int): Int = withContext(Dispatchers.IO) {
+    try {
+        val params = buildJsonObject { put("user_id", userId) }
+
+        // RPC now returns an array of { "count": Int }
+        val results: List<UnreadCount> = postgrest
+            .rpc("count_unread_messages", params)
+            .decodeList<UnreadCount>()
+
+        // Take the first element’s count, or 0 if none
+        results.firstOrNull()?.count ?: 0
+
+    } catch (e: Exception) {
+        println("Error fetching unread count: ${e.localizedMessage}")
+        0
+    }
+}
+suspend fun getUnreadCountBetween(receiverId: Int,   senderId: Int): Int {
+    return withContext(Dispatchers.IO) {
+        try {
+            val params = buildJsonObject {
+                put("p_receiver_id", receiverId)
+                put("p_sender_id", senderId)
+            }
+            val rows: List<UnreadCount> = postgrest
+                .rpc("count_unread_between", params)
+                .decodeList<UnreadCount>()
+            rows.firstOrNull()?.count ?: 0
+        } catch (e: Exception) {
+            println("Error fetching unread‐between count: ${e.localizedMessage}")
+            0
+        }
+    }
+}
 
 
