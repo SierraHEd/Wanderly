@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
@@ -99,7 +100,7 @@ fun MessagesScreen(navController: NavController, viewModel: MessageScreenViewMod
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
+                        imageVector = Icons.Default.AddCircleOutline,
                         contentDescription = "New Conversation",
                         tint = Color.White
                     )
@@ -168,7 +169,7 @@ fun NewConvoDialogue(onDismiss: () -> Unit, navController: NavController) {
                             text = "${friend.firstName} ${friend.lastName}",
                             fontSize = 16.sp,
                             modifier = Modifier.clickable {
-                               navController.navigate("new_conversation_screen/${friend.email}")
+                               navController.navigate("conversation_screen/${friend.id}")
                                 //NAV TO NEW CHAT HERE.
                             }
                         )
