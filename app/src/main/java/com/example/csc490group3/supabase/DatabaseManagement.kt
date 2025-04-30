@@ -496,17 +496,21 @@ object DatabaseManagement {
     }
 
     suspend fun reportEvent(event: Event, reason: String): Boolean {
-        val reportType = when (reason) {
+        val reportType: Int = when (reason) {
             "Fake Event" -> 1
             "Dangerous Event" -> 2
             "Spam event" -> 3
-            else -> return false
+            else -> {
+                println("Invalid report reason: $reason")
+                return false
+            }
         }
 
         val report = Report(
             reported_By = UserSession.currentUser?.email ?: return false,
-            reported_Event = event.eventName ?: return false,
-            report_type = reportType
+            reported_event_id = event.id?: return false,
+            report_type = reportType,
+            reported_Event = event.eventName?: return false
         )
 
         return withContext(Dispatchers.IO) {
@@ -514,7 +518,7 @@ object DatabaseManagement {
                 val inserted = SupabaseManagement.supabase
                     .from("reported_events")
                     .insert(report)
-                    .decodeSingle<Report>() // Uses kotlinx.serialization!
+                    .decodeSingle<Report>()
 
                 inserted != null
             } catch (e: Exception) {
@@ -523,6 +527,7 @@ object DatabaseManagement {
             }
         }
     }
+
 
     suspend fun getReportedEventsWithNames(): List<Pair<Report, String>> {
         return withContext(Dispatchers.IO) {
@@ -538,8 +543,12 @@ object DatabaseManagement {
                     .decodeList<Event>()
 
                 reports.mapNotNull { report ->
-                    val eventName = events.find { it.eventName == report.reported_Event}?.eventName
-                    eventName?.let { Pair(report, it) }
+                    val eventName = report.reported_Event // fallback directly from report
+                    if (eventName.isNotEmpty()) {
+                        Pair(report, eventName)
+                    } else {
+                        null
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
