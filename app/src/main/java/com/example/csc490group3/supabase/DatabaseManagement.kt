@@ -231,6 +231,45 @@ object DatabaseManagement {
             }
         }
     }
+
+
+    suspend fun isUserPublicById(userId: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val user = postgrest.from("private_users").select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }.decodeSingle<IndividualUser>()
+
+                user.public
+            } catch (e: Exception) {
+                println("Error checking user privacy by ID: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
+    suspend fun setUserPrivacy(userId: Int, isPublic: Boolean): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = postgrest.from("private_users")
+                    .update(
+                        mapOf("public" to isPublic)
+                    ) {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }
+
+                 true // Returns true if the update succeeded
+            } catch (e: Exception) {
+                println("Error updating user privacy: ${e.localizedMessage}")
+                false
+            }
+        }
+    }
+
     /**
     *Fetches a list of all events that a certain user created
     *
@@ -547,6 +586,9 @@ object DatabaseManagement {
     }
 
 }
+
+
+
 
 
 ///////////////////
