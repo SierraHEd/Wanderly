@@ -2,7 +2,6 @@ package com.example.csc490group3
 
 import UserProfileScreen
 import android.content.Context
-import android.util.Log
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable

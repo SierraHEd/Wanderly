@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.AuthManagement.accountValidation
 import com.example.csc490group3.supabase.AuthManagement.getActiveUser
@@ -121,10 +122,12 @@ fun UserLoginScreen(navController: NavController) {
                         onClick = {
                             coroutineScope.launch {
                                 val validAccount = accountValidation(email, password)
-                                val isAdmin = DatabaseManagement.isAdmin(email)
+
                                 if(validAccount) {
+                                    val isAdmin = DatabaseManagement.isAdmin(email)
+
                                     if (isAdmin) {
-                                        navController.navigate("admin_report_page")
+                                        navController.navigate("Admin_Screen")
                                     } else {
                                         UserSession.currentUser = getPrivateUser(email)
                                         val categories =
