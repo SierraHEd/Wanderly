@@ -8,6 +8,7 @@ data class Notification(
     val user_id: Int? = null,
     val message: String,
     val is_read: Boolean? = null,
+    val created_at: String? = null,
     val type: NotificationType,
 )
 
