@@ -166,7 +166,7 @@ fun ConversationScreen(
             IconButton(
                 onClick = {
                     // Handle sending the message (add the logic here)
-                    viewModel.sendMessage(currentUserId)
+                    viewModel.sendMessage()
                 },
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
