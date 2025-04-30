@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Admin(
     val id: Int,
-    val adminEmail: String
+    val admin_email: String
 )
