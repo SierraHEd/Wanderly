@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -97,35 +96,35 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
 @Composable
 fun BottomNavBar(navController: NavController) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primaryContainer, // Background color
-        contentColor = MaterialTheme.colorScheme.onSurface // Text and icon color
+        containerColor = PurpleContainer, // Background color
+        contentColor = Color.White // Text and icon color
     ) {
         NavigationBarItem(
             selected = false,
             onClick = {navController.navigate("Home_Screen")},
-            icon = { Icon(imageVector = Icons.Filled.Home, contentDescription = "Home", tint = MaterialTheme.colorScheme.onSurface) }, // Icon as a composable
-            label = { Text("Home", color = MaterialTheme.colorScheme.onSurface) }, // Label as a composable
+            icon = { Icon(imageVector = Icons.Filled.Home, contentDescription = "Home") }, // Icon as a composable
+            label = { Text("Home") }, // Label as a composable
             alwaysShowLabel = true // Ensure label is always shown
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("search_screen") },
-            icon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurface) },
-            label = { Text("Search", color = MaterialTheme.colorScheme.onSurface) },
+            icon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search") },
+            label = { Text("Search") },
             alwaysShowLabel = true
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("calendar_screen") },
-            icon = { Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = "Calendar", tint = MaterialTheme.colorScheme.onSurface) },
-            label = { Text("Calendar", color = MaterialTheme.colorScheme.onSurface) },
+            icon = { Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = "Calendar") },
+            label = { Text("Calendar") },
             alwaysShowLabel = true
         )
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("profile_screen") },
-            icon = { Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = "Profile", tint = MaterialTheme.colorScheme.onSurface) },
-            label = { Text("Profile", color = MaterialTheme.colorScheme.onSurface) },
+            icon = { Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = "Profile") },
+            label = { Text("Profile") },
             alwaysShowLabel = true
         )
     }

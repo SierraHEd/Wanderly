@@ -15,6 +15,3 @@ val PurpleBKG = Color(0xFFA59DFA)
 val PurpleStart = Color(0xFFB3A3D7)
 
 val PurpleContainer = Color(0xFFE3BEFC)
-val PurpleDarkContainer = Color(0xFF4A047A)
-
-val PurpleDarkPopUp = Color(0xFF6650a4)
