@@ -76,9 +76,5 @@ fun Navigation(context: Context) {
                 navController = navController
             )
         }
-        composable("new_conversation_screen/{friendEmail}") { backStackEntry ->
-            val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
-            NewConversationScreen(navController = navController, friendEmail = friendEmail)
-        }
     }
 }
