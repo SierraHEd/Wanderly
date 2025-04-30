@@ -8,6 +8,7 @@ import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.acceptDenyFriendRequest
 import com.example.csc490group3.supabase.getPendingIncomingRequests
+import com.example.csc490group3.supabase.sendFriendNotification
 import com.example.csc490group3.supabase.unfriend
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ class FriendRequestScreenViewModel: ViewModel() {
         viewModelScope.launch {
             UserSession.currentUser?.id?.let {
                 acceptDenyFriendRequest(it, otherUser, true)
+                sendFriendNotification(it, otherUser, "accepted")
                 refreshRequests()
             }
         }
@@ -43,6 +45,7 @@ class FriendRequestScreenViewModel: ViewModel() {
         viewModelScope.launch {
             UserSession.currentUser?.id?.let {
                 acceptDenyFriendRequest(it, otherUser, false)
+                sendFriendNotification(it, otherUser, "declined")
                 refreshRequests()
             }
         }
@@ -52,8 +55,10 @@ class FriendRequestScreenViewModel: ViewModel() {
         viewModelScope.launch {
             UserSession.currentUser?.id?.let {
                 unfriend(it, toUserId)
+                sendFriendNotification(it, toUserId, "canceled")
                 refreshRequests()
             }
+
         }
     }
 
