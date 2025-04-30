@@ -57,11 +57,7 @@ import com.example.csc490group3.ui.theme.PurpleStart
 import com.example.csc490group3.viewModels.SearchScreenViewModel
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.components.UserSearchCard
@@ -71,57 +67,50 @@ import com.example.csc490group3.viewModels.UserSeachViewModel
 
 
 @Composable
-fun SearchScreen(navController: NavHostController, appStorage: AppStorage,
-                 viewModel: SearchScreenViewModel = viewModel(), viewModel2: UserSeachViewModel = viewModel()) {
+fun SearchScreen(navController: NavHostController, viewModel: SearchScreenViewModel = viewModel(), viewModel2: UserSeachViewModel = viewModel()) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val tabTitles = listOf("Search Events", "Search Users")
-    val isDarkMode by appStorage.isDarkMode.collectAsState(initial = false)
 
-    MaterialTheme(
-        colorScheme = if (isDarkMode) lightColorScheme() else darkColorScheme()
-    ) {
-
-        Scaffold(
-            bottomBar = { BottomNavBar(navController) }
-        ) { paddingValues ->
-            Column(
+    Scaffold(
+        bottomBar = { BottomNavBar(navController) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(PurpleBKG)
+        ) {
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back", tint = MaterialTheme.colorScheme.onSecondary)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Search", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSecondary)
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go Back")
                 }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Search", style = MaterialTheme.typography.titleLarge)
+            }
 
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ) {
-                    tabTitles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(title) }
-                        )
-                    }
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = Purple40,
+                contentColor = PurpleDarkBKG
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) }
+                    )
                 }
+            }
 
-                when (selectedTabIndex) {
-                    0 -> EventSearchTab(navController, viewModel)
-                    1 -> UserSearchTab(navController, viewModel2)
-                }
+            when (selectedTabIndex) {
+                0 -> EventSearchTab(navController, viewModel)
+                1 -> UserSearchTab(navController, viewModel2)
             }
         }
     }
@@ -171,7 +160,7 @@ fun EventSearchTab(navController: NavHostController, viewModel: SearchScreenView
 
         when {
             isLoading -> {
-                Text("Loading...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondary)
+                Text("Loading...", style = MaterialTheme.typography.bodyMedium)
             }
             errorMessage != null -> {
                 Text(
