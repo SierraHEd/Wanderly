@@ -178,6 +178,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                                     .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
                             )
                         }
+
+                    }
+                    Box {
                         IconButton(onClick = {
                             UserSession.currentUser?.id?.let { userId ->
                                 viewModel.loadAllNotifications(userId)

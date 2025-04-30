@@ -78,14 +78,18 @@ class ConversationScreenViewModel: ViewModel() {
             )
         messageFlowJob = viewModelScope.launch {
             flow.collect { incomingList ->
+                val currentIds = _messages.value.map { it.id }.toSet()
                 val newFromPartner = incomingList
                     .filter { it.senderID == otherUser.value?.id ?: 0 }
+                    .filterNot {currentIds.contains(it.id)}
 
                 if (newFromPartner.isNotEmpty()) {
                     _messages.update { old ->
                         old + newFromPartner.sortedBy { it.timeSent }
                     }
                 }
+                _otherUser.value?.id?.let { UserSession.currentUser?.id?.let { it1 -> markRead(it1, it) } }
+
             }
         }
 
