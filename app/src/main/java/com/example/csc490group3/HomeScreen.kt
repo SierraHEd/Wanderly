@@ -2,8 +2,11 @@ package com.example.csc490group3
 
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,35 +14,60 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.Notification
+import com.example.csc490group3.model.NotificationType
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement.getCategories
 import com.example.csc490group3.supabase.DatabaseManagement.userSearch
+import com.example.csc490group3.supabase.updateNotificationAsReadInDatabase
+
 import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
+import com.example.csc490group3.ui.components.onUserClick
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.viewModels.HomeScreenViewModel
 import kotlinx.coroutines.launch
@@ -58,8 +86,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val isOnWaitlist = remember { mutableStateOf(false) }
     val isCheckingWaitlist = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
+    val showNotificationsDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    //Icon change for notifications
+    LaunchedEffect(Unit) {
+        UserSession.currentUser?.id?.let { userId ->
+            viewModel.loadUnreadNotifications(userId)
+        }
+    }
     // Check if the user is registered or on the waitlist for the event when an event is selected
     selectedEvent.value?.let { event ->
         val currentUser = UserSession.currentUser
@@ -102,11 +137,39 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
         ) {
             // Header section (non-scrollable content at the top)
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Home Page",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White  // Adjust if needed
-                )
+                Row {
+                    Text(
+                        text = "Home Page",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Box(
+                    )
+                    {
+                        // Notification Icon
+                        IconButton(onClick = {
+                            UserSession.currentUser?.id?.let { userId ->
+                                viewModel.loadAllNotifications(userId)
+                                showNotificationsDialog.value = true
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.White
+                            )
+                        }
+                        // Red dot if there are unread notifications
+                        if (viewModel.hasUnreadNotifications.value) {
+                            Box(
+                                modifier = Modifier.size(8.dp)
+                                    .background(Color.Red, shape = CircleShape)
+                                    .align(Alignment.TopEnd)  // This will position the dot in the top-right corner of the icon
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
@@ -238,8 +301,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     onRegister = {
                         // When the user clicks the register button, we manually trigger the registration
                         isRegistered.value = true // Mark the user as registered
-                        viewModel.registerForEvent(event,UserSession.currentUser) // Perform registration
-                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT).show()
+                        viewModel.registerForEvent(
+                            event,
+                            UserSession.currentUser
+                        ) // Perform registration
+                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
+                            .show()
                     },
                     showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
                     onJoinWaitlist = {
@@ -255,5 +322,99 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                 )
             }
         }
+
+        if (showNotificationsDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showNotificationsDialog.value = false },
+                confirmButton = {
+                    TextButton(onClick = { showNotificationsDialog.value = false }) {
+                        Text("Close")
+                    }
+                },
+                title = { Text("Notifications") },
+                text = {
+                    val notifications = viewModel.allNotifications.value
+                    if (notifications.isEmpty()) {
+                        Text("No notifications.")
+                    } else {
+                        Column {
+                            notifications.take(5).forEach { notification ->
+                                when (notification.type) {
+                                    NotificationType.EVENT -> {
+                                        NotificationCard(
+                                            notification = notification,
+                                            onClick = {
+                                                viewModel.markNotificationAsReadInViewModel(notification)
+                                            }
+                                        )
+                                    }
+                                    NotificationType.FRIEND_ACTION -> {
+                                        NotificationCard(
+                                            notification = notification,
+                                            onClick = {
+                                                viewModel.markNotificationAsReadInViewModel(notification)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
     }
 }
+
+@Composable
+fun NotificationCard(
+    notification: Notification,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Notification type handling
+            when (notification.type) {
+                NotificationType.EVENT -> {
+                    // Display event-related notifications
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Event, contentDescription = "Event Notification", tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = notification.message,  // Event-related message
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                NotificationType.FRIEND_ACTION -> {
+                    // Display friend action-related notifications
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = "Friend Action Notification", tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = notification.message,  // Friend action-related message
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Optionally, display read/unread state
+            if (notification.is_read == false) {
+                Text(
+                    text = "New notification",
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Red)
+                )
+            }
+        }
+    }
+}
+    

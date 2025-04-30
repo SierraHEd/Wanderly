@@ -5,30 +5,22 @@ import com.example.csc490group3.model.Admin
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.Notification
+import com.example.csc490group3.model.NotificationType
 import com.example.csc490group3.model.Report
 import com.example.csc490group3.model.User
-
 import com.example.csc490group3.model.WaitList
 import com.example.csc490group3.supabase.SupabaseManagement.DatabaseManagement.postgrest
 import io.github.jan.supabase.postgrest.query.Order
-
 import com.example.csc490group3.model.UserSession
-
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import io.github.jan.supabase.postgrest.from
-
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-
-
-
-
-
 
 import java.lang.Exception
 
@@ -144,6 +136,7 @@ object DatabaseManagement {
             }
         }
     }
+
     suspend fun unregisterEvent(event: Event, user: User): Boolean{
         return withContext(Dispatchers.IO) {
             val userID = user.id
@@ -168,6 +161,7 @@ object DatabaseManagement {
             }
         }
     }
+
     /**
      * Fetches a list of all events a particular user is registered for
      *
@@ -231,7 +225,6 @@ object DatabaseManagement {
             }
         }
     }
-
 
     suspend fun isUserPublicById(userId: Int): Boolean {
         return withContext(Dispatchers.IO) {
@@ -450,6 +443,7 @@ object DatabaseManagement {
     //////////////////
     //MEDIA FUNCTIONS
     /////////////////
+
     suspend fun updateEventPhoto(eventId: Int, photoUrl: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -586,10 +580,6 @@ object DatabaseManagement {
     }
 
 }
-
-
-
-
 
 ///////////////////
 //FRIEND FUNCTIONS
@@ -746,6 +736,10 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
 
     }
 
+///////////////////
+//WAITLIST FUNCTIONS
+//////////////////
+
     suspend fun addUserToWaitingList(userId: Int, eventId: Int): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -818,3 +812,144 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
     }
 
 
+///////////////////
+//NOTIFICATION FUNCTIONS
+/////////////////
+
+suspend fun getUnreadNotifications(userId: Int): List<Notification> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val result = postgrest.from("user_notifications").select {
+                filter {
+                    eq("user_id", userId)
+                    eq("is_read", false)
+                }
+                order("created_at", Order.DESCENDING)  // Sorting by the latest notifications
+            }.decodeList<Notification>()
+
+            // Check if the result is valid
+            if (result.isNotEmpty()) {
+                return@withContext result
+            } else {
+                println("No unread notifications found for user $userId")
+                return@withContext emptyList()
+            }
+        } catch (e: Exception) {
+            println("Error fetching unread notifications: ${e.localizedMessage}")
+            return@withContext emptyList()  // Returning an empty list in case of failure
+        }
+    }
+}
+suspend fun getAllNotifications(userId: Int): List<Notification> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val result = postgrest.from("user_notifications").select {
+                filter {
+                eq("user_id", userId)
+            }
+                order("created_at", Order.DESCENDING) // Sorting notifications by creation date
+            }.decodeList<Notification>()
+            return@withContext result
+        } catch (e: Exception) {
+            println("Error fetching all notifications: ${e.localizedMessage}")
+            emptyList() // Return an empty list if an error occurs
+        }
+    }
+}
+
+suspend fun updateNotificationAsReadInDatabase(notificationId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications").update(
+                mapOf("is_read" to true)
+            ) {
+                filter {
+                    eq("id", notificationId)
+                }
+            }
+            println("Notification $notificationId marked as read.")
+            true
+        } catch (e: Exception) {
+            println("Error marking notification as read: ${e.localizedMessage}")
+            false
+        }
+    }
+}
+
+suspend fun markAllNotificationsAsRead(userId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications").update(
+                mapOf("is_read" to true)
+            ) {
+                filter {
+                    eq("user_id", userId)
+                    eq("is_read", false)
+                }
+            }
+            println("All notifications marked as read for user $userId.")
+            true
+        } catch (e: Exception) {
+            println("Error marking all notifications as read: ${e.localizedMessage}")
+            false
+        }
+    }
+}
+
+suspend fun insertNotification(notification: Notification) {
+    return withContext(Dispatchers.IO) {
+        try {
+            println("Inserting notification: $notification")
+
+            val result = postgrest.from("user_notifications")
+                .insert(notification)
+
+            println("Insert result: $result")
+        } catch (e: Exception) {
+            println("General error occurred while inserting notification: ${e.localizedMessage}")
+        }
+    }
+}
+
+suspend fun sendFriendNotification(currentUser: Int, userToFriend: Int, action: String) {
+    val currentUserInfo = getPrivateUser(currentUser)
+    val friendInfo = getPrivateUser(userToFriend)
+
+    val currentName = "${currentUserInfo?.firstName ?: "Unknown"} ${currentUserInfo?.lastName ?: "User"}"
+    val friendName = "${friendInfo?.firstName ?: "Unknown"} ${friendInfo?.lastName ?: "User"}"
+
+    val messageForCurrentUser = when (action) {
+        "accepted" -> "You and $friendName are now friends."
+        "declined" -> "You declined the friend request from $friendName."
+        "canceled" -> "You canceled your friend request to $friendName."
+        "unfriended" -> "You have removed $friendName from your friends list."
+        "requested" -> "You sent a friend request to $friendName."
+        else -> "Unknown friend action"
+    }
+
+    val messageForFriend = when (action) {
+        "accepted" -> "You and $currentName are now friends."
+        "requested" -> "$currentName has sent you a friend request."
+        else -> null
+    }
+
+    insertNotification(
+        Notification(
+            user_id = currentUser,
+            message = messageForCurrentUser,
+            is_read = false,
+            type = NotificationType.FRIEND_ACTION
+        )
+    )
+
+    if (messageForFriend != null) {
+        insertNotification(
+            Notification(
+                user_id = userToFriend,
+                message = messageForFriend,
+                is_read = false,
+                type = NotificationType.FRIEND_ACTION
+            )
+        )
+    }
+}
