@@ -132,4 +132,8 @@ dependencies {
     // Google Maps Compose widgets library
     implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
 
+    //DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+
 }

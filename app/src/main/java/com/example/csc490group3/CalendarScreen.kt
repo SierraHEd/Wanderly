@@ -21,11 +21,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.ui.theme.PurpleBKG
@@ -56,6 +61,7 @@ import com.example.csc490group3.ui.components.EventDetailDialog
 @Composable
 fun CalendarScreen(
     navController: NavController,
+    appStorage: AppStorage,
     viewModel: CalendarScreenViewModel = viewModel() // Correctly instantiates the ViewModel
 ) {
     // Get the current date using Clock.System.now() and convert it to LocalDate
@@ -82,175 +88,222 @@ fun CalendarScreen(
         .filter { it.eventDate >= currentDate }  // Filter out events that have passed
         .sortedBy { it.eventDate }  // Sort events by their eventDate
 
+    val isDarkMode by appStorage.isDarkMode.collectAsState(initial = false)
+
+    MaterialTheme(
+        colorScheme = if (isDarkMode) darkColorScheme() else lightColorScheme() //Sets color based on mode
+    ) {
+
 ////////////////
 // Launched Effects
 ///////////////
 
-    // LaunchedEffect only when the month or year changes update events
-    LaunchedEffect(selectedMonth.value, selectedYear.value) {
-        viewModel.fetchUserEvents() // Fetch events only when month or year changes
-    }
+        // LaunchedEffect only when the month or year changes update events
+        LaunchedEffect(selectedMonth.value, selectedYear.value) {
+            viewModel.fetchUserEvents() // Fetch events only when month or year changes
+        }
 
 ////////////////
 // Main UI
 ///////////////
 
-    Scaffold(
-        bottomBar = { BottomNavBar(navController) } // Adding BottomNavBar
-    ) { paddingValues ->
-        Surface(
-            modifier = Modifier
-                .background(PurpleBKG)
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Column(
+        Scaffold(
+            bottomBar = { BottomNavBar(navController) } // Adding BottomNavBar
+        ) { paddingValues ->
+            Surface(
                 modifier = Modifier
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(paddingValues)
             ) {
-
-                //Spacer for clearance from front facing camera
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Month navigation buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .background(MaterialTheme.colorScheme.onSecondary),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
-                    //Button to move month backward by 1
-                    Button(
-                        onClick = {
-                            if (selectedMonth.value == 1) {
-                                selectedMonth.value = 12
-                                selectedYear.value -= 1
-                            } else {
-                                selectedMonth.value -= 1
-                            }
-                            selectedDay.value = 0
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6650a4),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("<")
-                    }
+                    //Spacer for clearance from front facing camera
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    // Month and Year display
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "${
-                                Month.of(selectedMonth.value).name.lowercase()
-                                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-                            } - ${selectedYear.value}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        //Button to redirect calendar to today's date
+                    // Month navigation buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        //Button to move month backward by 1
                         Button(
                             onClick = {
-                                val today =
-                                    Clock.System.now()
-                                        .toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                selectedYear.value = today.year
-                                selectedMonth.value = today.monthNumber
-                                selectedDay.value = today.dayOfMonth
+                                if (selectedMonth.value == 1) {
+                                    selectedMonth.value = 12
+                                    selectedYear.value -= 1
+                                } else {
+                                    selectedMonth.value -= 1
+                                }
+                                selectedDay.value = 0
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF6650a4),
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         ) {
-                            Text("Today")
+                            Text("<")
                         }
-                    }
-                    //Button to move month forward by 1
-                    Button(
-                        onClick = {
-                            if (selectedMonth.value == 12) {
-                                selectedMonth.value = 1
-                                selectedYear.value += 1
-                            } else {
-                                selectedMonth.value += 1
+
+                        // Month and Year display
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${
+                                    Month.of(selectedMonth.value).name.lowercase()
+                                        .replaceFirstChar {
+                                            if (it.isLowerCase()) it.titlecase(
+                                                Locale.ROOT
+                                            ) else it.toString()
+                                        }
+                                } - ${selectedYear.value}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                            //Button to redirect calendar to today's date
+                            Button(
+                                onClick = {
+                                    val today =
+                                        Clock.System.now()
+                                            .toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                    selectedYear.value = today.year
+                                    selectedMonth.value = today.monthNumber
+                                    selectedDay.value = today.dayOfMonth
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                )
+                            ) {
+                                Text("Today")
                             }
-                            selectedDay.value = 0
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6650a4),
-                            contentColor = Color.White
+                        }
+                        //Button to move month forward by 1
+                        Button(
+                            onClick = {
+                                if (selectedMonth.value == 12) {
+                                    selectedMonth.value = 1
+                                    selectedYear.value += 1
+                                } else {
+                                    selectedMonth.value += 1
+                                }
+                                selectedDay.value = 0
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        ) {
+                            Text(">")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Show a loading spinner when events are being fetched
+                    if (isLoading) {
+                        Text(text = "Loading...", color = MaterialTheme.colorScheme.onSurface)
+                        return@Surface
+                    }
+
+                    // Show error message if there's any issue fetching events
+                    if (!errorMessage.isNullOrEmpty()) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            color = Color.Red,
+                            modifier = Modifier.padding(16.dp)
                         )
-                    ) {
-                        Text(">")
+                        return@Surface
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Show a loading spinner when events are being fetched
-                if (isLoading) {
-                    Text(text = "Loading...", color = Color.Gray)
-                    return@Surface
-                }
-
-                // Show error message if there's any issue fetching events
-                if (!errorMessage.isNullOrEmpty()) {
-                    Text(
-                        text = "Error: $errorMessage",
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                    return@Surface
-                }
-
-                // Calendar view
-                CalendarView(
-                    year = selectedYear.value,
-                    month = selectedMonth.value,
-                    eventDates = events.map { it.eventDate },
-                    selectedDay = selectedDay.value,
-                    currentDay = if (selectedYear.value == currentDate.year &&
-                        selectedMonth.value == currentDate.monthNumber
-                    )
-                        currentDate.dayOfMonth else -1,
-                    onDateClick = { day -> //saves day user clicks and compares to current events
-                        selectedDay.value = day
-                        eventsForSelectedDay.value = events.filter { it.eventDate.dayOfMonth == day }
-                        //If more than one event on a given day show popup list of events
-                        if (eventsForSelectedDay.value.size > 1) {
-                            showEventsPopup.value = true
+                    // Calendar view
+                    CalendarView(
+                        year = selectedYear.value,
+                        month = selectedMonth.value,
+                        eventDates = events.map { it.eventDate },
+                        selectedDay = selectedDay.value,
+                        currentDay = if (selectedYear.value == currentDate.year &&
+                            selectedMonth.value == currentDate.monthNumber
+                        )
+                            currentDate.dayOfMonth else -1,
+                        onDateClick = { day -> //saves day user clicks and compares to current events
+                            selectedDay.value = day
+                            eventsForSelectedDay.value =
+                                events.filter { it.eventDate.dayOfMonth == day }
+                            //If more than one event on a given day show popup list of events
+                            if (eventsForSelectedDay.value.size > 1) {
+                                showEventsPopup.value = true
+                            }
+                            //If event then show all details
+                            else if (eventsForSelectedDay.value.isNotEmpty()) {
+                                selectedEvent.value = eventsForSelectedDay.value.first()
+                            }
                         }
-                        //If event then show all details
-                        else if (eventsForSelectedDay.value.isNotEmpty()) {
-                            selectedEvent.value = eventsForSelectedDay.value.first()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Selected Date Details Title
+                    if (eventsForSelectedDay.value.isNotEmpty()) {
+                        Text(
+                            text = "Selected Date Details",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                        )
+
+                        // Show the list of events for the selected day
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            items(eventsForSelectedDay.value) { event -> // Using eventsForSelectedDay.value
+                                // Display each event as a clickable item
+                                CalendarEventCard(
+                                    event = event,
+                                    onClick = {
+                                        selectedEvent.value = event // Show event details dialog
+                                    }
+                                )
+                            }
                         }
+                    } else if (selectedDay.value > 0) {
+                        Text(
+                            text = "No events recorded for this date",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Selected Date Details Title
-                if (eventsForSelectedDay.value.isNotEmpty()) {
+                    // Upcoming Events Title
                     Text(
-                        text = "Selected Date Details",
+                        text = "Upcoming Events",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
                     )
 
-                    // Show the list of events for the selected day
+                    // Display Event cards for all upcoming events
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
                     ) {
-                        items(eventsForSelectedDay.value) { event -> // Using eventsForSelectedDay.value
-                            // Display each event as a clickable item
+                        items(upcomingEvents) { event ->
+                            // Display event card
                             CalendarEventCard(
                                 event = event,
                                 onClick = {
@@ -259,85 +312,51 @@ fun CalendarScreen(
                             )
                         }
                     }
-                } else if (selectedDay.value > 0) {
-                    Text(
-                        text = "No events recorded for this date",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray
+                }
+
+                // Show event detail popup when an event is selected
+                selectedEvent.value?.let { event ->
+                    EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
+                        showRegisterButton = false,
+                        showWaitListButton = false,
+                        onJoinWaitlist = {},
+                        navController = navController,
+                        onRegister = {
+                            isRegistered.value = true;
+                        }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Upcoming Events Title
-                Text(
-                    text = "Upcoming Events",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-                )
-
-                // Display Event cards for all upcoming events
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    items(upcomingEvents) { event ->
-                        // Display event card
-                        CalendarEventCard(
-                            event = event,
-                            onClick = {
-                                selectedEvent.value = event // Show event details dialog
+                // Show the popup dialog with the list of events for the selected day
+                if (showEventsPopup.value) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { showEventsPopup.value = false },
+                        title = { Text(text = "Events on ${selectedDay.value}") },
+                        text = {
+                            LazyColumn {
+                                items(eventsForSelectedDay.value) { event ->
+                                    Text(
+                                        text = event.eventName,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .clickable {
+                                                // Show the details of the selected event
+                                                selectedEvent.value = event
+                                                showEventsPopup.value = false // Close popup
+                                            }
+                                    )
+                                }
                             }
-                        )
-                    }
-                }
-            }
-
-            // Show event detail popup when an event is selected
-            selectedEvent.value?.let { event ->
-                EventDetailDialog(event = event, onDismiss = { selectedEvent.value = null },
-                    showRegisterButton = false,
-                    showWaitListButton = false,
-                    onJoinWaitlist = {},
-                    navController = navController,
-                    onRegister =  {
-                        isRegistered.value = true;
-                }
-                )
-            }
-
-            // Show the popup dialog with the list of events for the selected day
-            if (showEventsPopup.value) {
-                androidx.compose.material3.AlertDialog(
-                    onDismissRequest = { showEventsPopup.value = false },
-                    title = { Text(text = "Events on ${selectedDay.value}") },
-                    text = {
-                        LazyColumn {
-                            items(eventsForSelectedDay.value) { event ->
-                                Text(
-                                    text = event.eventName,
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .clickable {
-                                            // Show the details of the selected event
-                                            selectedEvent.value = event
-                                            showEventsPopup.value = false // Close popup
-                                        }
-                                )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { showEventsPopup.value = false }  // Close popup
+                            ) {
+                                Text("Close")
                             }
                         }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = { showEventsPopup.value = false }  // Close popup
-                        ) {
-                            Text("Close")
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -458,7 +477,7 @@ fun DayCell(
     ) {
         Text(
             text = day.toString(),
-            color = if (isSelected) Color.White else Color.Black,
+            color = if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface,
             style = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = if (currentDay) FontWeight.Bold else FontWeight.Normal

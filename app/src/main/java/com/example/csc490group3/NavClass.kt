@@ -7,10 +7,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.ui.admin.AdminScreen
 
 @Composable
-fun Navigation(context: Context) {
+fun Navigation(context: Context, appStorage: AppStorage) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "splash_screen") {
@@ -27,22 +28,22 @@ fun Navigation(context: Context) {
             SignUpActivity(navController)
         }
         composable("Home_Screen") {
-            HomeScreen(navController)
+            HomeScreen(navController, appStorage)
         }
         composable("search_screen") {
-            SearchScreen(navController)
+            SearchScreen(navController, appStorage)
         }
         composable("register_event_screen") {
             RegisterEventScreen(navController)
         }
         composable("calendar_screen") {
-            CalendarScreen(navController)
+            CalendarScreen(navController, appStorage)
         }
         composable("settings_screen") {
             SettingsScreen(navController)
         }
         composable("profile_screen") {
-            UserProfileScreen(navController)
+            UserProfileScreen(navController, appStorage)
         }
 
         composable("friend_requests_screen") {
