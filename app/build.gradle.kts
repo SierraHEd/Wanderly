@@ -112,7 +112,8 @@ dependencies {
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
     implementation("io.github.jan-tennert.supabase:storage-kt:2.3.1")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.ktor:ktor-client-android:3.1.0")
+    implementation("io.ktor:ktor-client-okhttp:3.1.0")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:1.2.0")
 
     //Navigation
     implementation ("androidx.navigation:navigation-compose:2.8.7")
