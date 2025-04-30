@@ -39,9 +39,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.Notification
@@ -70,7 +74,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = viewModel()) {
+fun HomeScreen(navController: NavController, appStorage: AppStorage, viewModel: HomeScreenViewModel = viewModel()) {
     val hasMessages by viewModel.hasMessages
     val events by viewModel.events
     val suggestedEvents by viewModel.suggestedEvents
@@ -86,7 +90,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val showDialog = remember { mutableStateOf(false) }
     val showNotificationsDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val isDarkMode by appStorage.isDarkMode.collectAsState(initial = false)
 
+    MaterialTheme(
+        colorScheme = if (isDarkMode) lightColorScheme() else darkColorScheme()
+    ) {
     //Icon change for notifications
     LaunchedEffect(Unit) {
         UserSession.currentUser?.id?.let { userId ->
@@ -99,29 +107,21 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
         if (currentUser != null) {
             val userID = currentUser.id
 
-            LaunchedEffect(userID, event.id) {
-                isCheckingRegistration.value = true
-                isCheckingWaitlist.value = true
+        // Check if the user is registered or on the waitlist for the event when an event is selected
+        selectedEvent.value?.let { event ->
+            val currentUser = UserSession.currentUser
+            if (currentUser != null) {
+                val userID = currentUser.id
 
-                // Check if user is registered for the event
-                isRegistered.value =
-                    (userID != null && event.id != null) && viewModel.isUserRegisteredForEvent(
-                        userID,
-                        event.id
-                    )
-                // Check if user is on the waiting list for the event
-                isOnWaitlist.value =
-                    (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
-                        userID,
-                        event.id
-                    )
-                isCheckingRegistration.value = false
-                isCheckingWaitlist.value = false
-                showDialog.value = true
-            }
-        }
-    }
+                LaunchedEffect(userID, event.id) {
+                    isCheckingRegistration.value = true
+                    isCheckingWaitlist.value = true
 
+                    // Check if user is registered for the event
+                    isRegistered.value =
+                        (userID != null && event.id != null) && viewModel.isUserRegisteredForEvent(
+                            userID,
+                            event.id
     Scaffold(
         containerColor = PurpleBKG,
         bottomBar = { BottomNavBar(navController) }
@@ -215,103 +215,188 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
-                    }
-                    Button(
-                        onClick = { navController.navigate("register_event_screen") },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Create Event",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSecondary
+                    // Check if user is on the waiting list for the event
+                    isOnWaitlist.value =
+                        (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
+                            userID,
+                            event.id
                         )
-                    }
-                }
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-            // Scrollable content area using LazyColumn
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-            ) {
-
-                if (suggestedEvents.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Suggested Events",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(PurpleBKG)
-                        ) {
-                            items(suggestedEvents) { event ->
-                                EventCard(
-                                    event = event,
-                                    onBottomButtonClick = {},
-                                    onEditEvent = {},
-                                    isHorizontal = true,
-                                    onClick = { selectedEvent.value = event }
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-
-                when {
-                    isLoading -> {
-                        item {
-                            Text(
-                                "Loading events...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    errorMessage != null -> {
-                        item {
-                            Text(
-                                errorMessage!!,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Red
-                            )
-                        }
-                    }
-
-                    else -> {
-                        items(events) { event ->
-                            EventCard(
-                                onClick = {
-                                    if (selectedEvent.value != event) {
-                                        selectedEvent.value = event
-                                    }
-                                },
-                                event = event,
-                                onBottomButtonClick = { selectedEvent ->
-                                    viewModel.registerForEvent(
-                                        selectedEvent,
-                                        UserSession.currentUser
-                                    )
-                                    Toast.makeText(context, "REGISTERED!", Toast.LENGTH_SHORT)
-                                        .show()
-                                },
-                                onEditEvent = {}
-                            )
-                        }
-                    }
+                    isCheckingRegistration.value = false
+                    isCheckingWaitlist.value = false
+                    showDialog.value = true
                 }
             }
         }
 
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.primary,
+            bottomBar = { BottomNavBar(navController) }
+        ) { paddingValues ->
+            // Use a Column as the root so that header and content are separate.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(paddingValues)
+            ) {
+                // Header section (non-scrollable content at the top)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Home Page",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White  // Adjust if needed
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Button(
+                            onClick = { navController.navigate("start_up_screen") },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Sign Out",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Button(
+                            onClick = { navController.navigate("register_event_screen") },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Create Event",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+                // Scrollable content area using LazyColumn
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp)
+                ) {
+
+                    if (suggestedEvents.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Suggested Events",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primary)
+                            ) {
+                                items(suggestedEvents) { event ->
+                                    EventCard(
+                                        event = event,
+                                        onBottomButtonClick = {},
+                                        onEditEvent = {},
+                                        isHorizontal = true,
+                                        onClick = { selectedEvent.value = event }
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+
+                    when {
+                        isLoading -> {
+                            item {
+                                Text(
+                                    "Loading events...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        errorMessage != null -> {
+                            item {
+                                Text(
+                                    errorMessage!!,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+
+                        else -> {
+                            items(events) { event ->
+                                EventCard(
+                                    onClick = {
+                                        if (selectedEvent.value != event) {
+                                            selectedEvent.value = event
+                                        }
+                                    },
+                                    event = event,
+                                    onBottomButtonClick = { selectedEvent ->
+                                        viewModel.registerForEvent(
+                                            selectedEvent,
+                                            UserSession.currentUser
+                                        )
+                                        Toast.makeText(context, "REGISTERED!", Toast.LENGTH_SHORT)
+                                            .show()
+                                    },
+                                    onEditEvent = {}
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Show event detail popup when an event is selected
+            selectedEvent.value?.let { event ->
+                if (showDialog.value && selectedEvent.value != null) {
+                    EventDetailDialog(
+                        event = event,
+                        onDismiss = {
+                            selectedEvent.value = null
+                            showDialog.value = false
+                        },
+                        isUserRegistered = isRegistered.value,   // Pass isUserRegistered
+                        isUserOnWaitList = isOnWaitlist.value,   // Pass isUserOnWaitList
+                        showRegisterButton = !isRegistered.value && !isCheckingRegistration.value,  // Show register button only if not registered
+                        onRegister = {
+                            // When the user clicks the register button, we manually trigger the registration
+                            isRegistered.value = true // Mark the user as registered
+                            viewModel.registerForEvent(
+                                event,
+                                UserSession.currentUser
+                            ) // Perform registration
+                            Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
+                                .show()
+                        },
+                        showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
+                        onJoinWaitlist = {
+                            isOnWaitlist.value = true
+                            viewModel.addToWaitingList(UserSession.currentUser, event)
+                            Toast.makeText(
+                                context,
+                                "You've been added to the waiting list.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        navController = navController
+                    )
+                }
         // Show event detail popup when an event is selected
         selectedEvent.value?.let { event ->
             if (showDialog.value && selectedEvent.value != null) {
