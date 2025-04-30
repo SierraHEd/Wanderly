@@ -13,6 +13,7 @@ import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import com.example.csc490group3.supabase.addUserToWaitingList
+import com.example.csc490group3.supabase.getTotalUnread
 import com.example.csc490group3.supabase.getAllNotifications
 import com.example.csc490group3.supabase.getUnreadNotifications
 import com.example.csc490group3.supabase.insertNotification
@@ -21,6 +22,8 @@ import com.example.csc490group3.supabase.updateNotificationAsReadInDatabase
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel: ViewModel() {
+    val hasMessages = mutableStateOf(false)
+
     var events = mutableStateOf<List<Event>>(emptyList())
         private set
 
@@ -57,11 +60,13 @@ class HomeScreenViewModel: ViewModel() {
                 if (result != null) {
                     suggestedEvents.value = result
                 }
+                hasMessages.value = (UserSession.currentUser?.id?.let { getTotalUnread(it) } != 0)
             } catch (e: Exception) {
                 errorMessage.value = "Error: ${e.localizedMessage}"
             } finally {
                 isLoading.value = false
             }
+
 
         }
     }

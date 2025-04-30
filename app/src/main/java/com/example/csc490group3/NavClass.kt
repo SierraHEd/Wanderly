@@ -2,12 +2,22 @@ package com.example.csc490group3
 
 import UserProfileScreen
 import android.content.Context
-import android.util.Log
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.csc490group3.model.IndividualUser
+import com.example.csc490group3.model.User
+import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.admin.AdminScreen
+import com.example.csc490group3.viewModels.MessageScreenViewModel
+import kotlinx.serialization.json.Json
 
 @Composable
 fun Navigation(context: Context) {
@@ -54,6 +64,21 @@ fun Navigation(context: Context) {
         }
         composable("Admin_Screen") {
             AdminScreen(navController)
+        }
+        composable("messages_screen") {
+            MessagesScreen(navController)
+        }
+        composable("conversation_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: -1
+
+            ConversationScreen(
+                otherUser = userId,
+                navController = navController
+            )
+        }
+        composable("new_conversation_screen/{friendEmail}") { backStackEntry ->
+            val friendEmail = backStackEntry.arguments?.getString("friendEmail") ?: ""
+            NewConversationScreen(navController = navController, friendEmail = friendEmail)
         }
     }
 }
