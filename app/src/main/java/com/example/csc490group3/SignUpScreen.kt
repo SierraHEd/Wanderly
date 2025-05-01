@@ -174,8 +174,7 @@ fun SignUpActivity(navController: NavController) {
                 email = email,
                 firstName = firstName,
                 lastName = lastName,
-                //If date is null use today's date.
-                birthday = birthdate ?: Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
+                birthday = birthdate!!,
                 public = true
             )
             addRecord("private_users", newUser)
@@ -600,5 +599,3 @@ fun SignUpActivity(navController: NavController) {
         }
     }
 }
-
-
