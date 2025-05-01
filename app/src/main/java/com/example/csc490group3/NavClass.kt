@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
+import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.ui.admin.AdminScreen
 import com.example.csc490group3.viewModels.MessageScreenViewModel
@@ -75,6 +76,9 @@ fun Navigation(context: Context) {
                 otherUser = userId,
                 navController = navController
             )
+        }
+        composable("map_screen") {
+            AllEventsMapScreen(eventRepo = { getAllEvents() })
         }
     }
 }

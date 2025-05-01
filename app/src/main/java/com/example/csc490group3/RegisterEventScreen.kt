@@ -1,8 +1,10 @@
 package com.example.csc490group3
 
 
+import android.app.Activity
 import android.net.Uri
 import android.app.TimePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -111,6 +113,10 @@ import java.util.Calendar
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.StatePickerBottomSheet
 import com.example.csc490group3.ui.components.CountryPickerBottomSheet
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,8 +139,8 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     var isFamilyFriendly by remember { mutableStateOf(initialEvent?.isFamilyFriendly ?: false) }
     var selectedCategories by remember { mutableStateOf(emptyList<Category>()) }
     var eventTime by remember { mutableStateOf(initialEvent?.eventTime?.toString() ?: "00:00") }
-    var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "Country") }
-    var selectedState by remember { mutableStateOf(initialEvent?.state ?: "State") }
+    var selectedCountry by remember { mutableStateOf(initialEvent?.country ?: "") }
+    var selectedState by remember { mutableStateOf(initialEvent?.state ?: "") }
     var eventDateString by remember { mutableStateOf("") }
     var eventDate by remember { mutableStateOf(initialEvent?.eventDate) }
     var showDateErrorToast by remember { mutableStateOf(false) }
@@ -143,6 +149,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     var eventImageFile by remember { mutableStateOf<File?>(null) }
     val context = LocalContext.current
     val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
+
 
     if (initialEvent != null) {
         LaunchedEffect(initialEvent.id) {
@@ -225,7 +232,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
             null
         }
     }
-
+    Places.initialize(context, "MAPS_API_KEY")
     if (isDatePickerVisible) {
         Popup(
             alignment = Alignment.Center,
@@ -386,63 +393,86 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     )
                 }
             }
-            EventTextField("Venue", venue) { venue = it }
-            EventTextField("Address", address) { address = it }
-            EventTextField("City", city) { city = it }
-            Button(
-                onClick = { showStatePicker = true },
-                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 15.dp)
-            ) {
-                Text(
-                    text = selectedState,
-                    fontSize = 22.sp,
-                    color = Black,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Left,
-                    fontFamily = FontFamily.Default
-                )
+
+
+            // Define a variable to hold the Places API key.
+            val apiKey = BuildConfig.MAPS_API_KEY
+
+            // Log an error if apiKey is not set.
+            if (apiKey.isEmpty()) {
+                Log.e("Places test", "No api key")
+                return
             }
-            StatePickerBottomSheet(
-                showSheet = showStatePicker,
-                onDismiss = { showStatePicker = false },
-                onStateSelected = { selectedState = it }
-            )
-            EventTextField("Zipcode", zipcode) { zipcode = it }
-            Button(
-                onClick = { showCountryPicker = true },
-                colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 15.dp)
-            ) {
-                Text(
-                    text = selectedCountry,
-                    fontSize = 22.sp,
-                    color = Black,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Left,
-                    fontFamily = FontFamily.Default
-                )
+
+            // Initialize the SDK
+            Places.initializeWithNewPlacesApiEnabled(context, apiKey)
+
+
+            val placeLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val place = result.data?.let { Autocomplete.getPlaceFromIntent(it) }
+                    val components = place?.addressComponents?.asList() ?: emptyList()
+
+                    components.forEach {
+                        when (it.types.firstOrNull()) {
+                            "street_number" -> address = it.name + " " + address
+                            "route" -> address = (address ?: "") + " " + it.name
+                            "locality" -> city = it.name
+                            "administrative_area_level_1" -> selectedState = it.name
+                            "country" -> selectedCountry = it.name
+                            "postal_code" -> zipcode = it.name
+                        }
+                    }
+                }
             }
-            CountryPickerBottomSheet(
-                showSheet = showCountryPicker,
-                onDismiss = { showCountryPicker = false },
-                onStateSelected = { selectedCountry = it }
+
+            val fields = listOf(
+                Place.Field.ID,
+                Place.Field.NAME,
+                Place.Field.ADDRESS_COMPONENTS
             )
+
+            val intent = remember {
+                Autocomplete.IntentBuilder(
+                    AutocompleteActivityMode.FULLSCREEN, fields
+                ).build(context)
+            }
+
+
+            Button(onClick = {
+                placeLauncher.launch(intent)
+            }) {
+                Text("Pick Address")
+
+
+            }
+
+
+
+            EventTextFieldUnchangeable("Venue", venue) { venue = it }
+            EventTextFieldUnchangeable("Address", address) { address = it }
+            EventTextFieldUnchangeable("City", city) { city = it }
+            EventTextFieldUnchangeable("State", selectedState) { selectedState = it }
+            EventTextFieldUnchangeable("Country", selectedCountry) { selectedCountry = it }
+
+            EventTextFieldUnchangeable("Zipcode", zipcode) { zipcode = it }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) { price = it }
+                EventTextField("Price", price, KeyboardType.Number, Modifier.weight(1f)) {
+                    price = it
+                }
                 Spacer(modifier = Modifier.width(4.dp))
-                EventTextField("Guest Limit", maxAttendees, KeyboardType.Number, Modifier.weight(1f)) { maxAttendees = it }
+                EventTextField(
+                    "Guest Limit",
+                    maxAttendees,
+                    KeyboardType.Number,
+                    Modifier.weight(1f)
+                ) { maxAttendees = it }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -529,7 +559,7 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                         coroutineScope.launch {
                             // If an event image is selected, upload it first.
                             val eventPhotoUrl = eventImageFile?.let { file ->
-                               StorageManagement.uploadEventPhoto(
+                                StorageManagement.uploadEventPhoto(
                                     file,
                                     UUID.randomUUID().toString()
                                 )
@@ -604,8 +634,9 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 )
             }
         }
+        }
     }
-}
+
 
 class DateInputVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -659,6 +690,49 @@ fun EventTextField(
             )
         },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = RoundedCornerShape(20.dp),
+        colors = TextFieldDefaults.colors(
+            focusedLabelColor = Black,
+            unfocusedContainerColor = PurpleContainer,
+            cursorColor = Black,
+            focusedContainerColor = PurpleContainer,
+            unfocusedIndicatorColor = White,
+            focusedIndicatorColor = White
+        ),
+        trailingIcon = {
+            Icon(
+                Icons.Filled.Create,
+                "",
+                tint = Purple40,
+                modifier = Modifier.padding(horizontal = 30.dp)
+            )
+        },
+        modifier = modifier
+    )
+}
+
+
+@Composable
+fun EventTextFieldUnchangeable(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 10.dp),
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        readOnly = true, // Make the field uneditable
+        label = {
+            Text(
+                text = label,
+                fontSize = 22.sp,
+                color = Black,
+                fontFamily = FontFamily.Default
+            )
+        },
         shape = RoundedCornerShape(20.dp),
         colors = TextFieldDefaults.colors(
             focusedLabelColor = Black,

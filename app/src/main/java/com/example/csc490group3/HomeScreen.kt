@@ -172,6 +172,20 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                         }
 
                     }
+                    Box{
+                        IconButton(
+                            onClick = {
+                                // Handle message icon click here, e.g. navigate to messages screen
+                                navController.navigate("map_screen")
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn, // You can use other icons if preferred
+                                contentDescription = "Map",
+                                tint = Color.White
+                            )
+                        }
+                    }
                     Box {
                         IconButton(onClick = {
                             UserSession.currentUser?.id?.let { userId ->
