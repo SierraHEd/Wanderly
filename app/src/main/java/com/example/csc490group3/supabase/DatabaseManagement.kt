@@ -22,6 +22,7 @@ import io.github.jan.supabase.postgrest.query.Order
 import com.example.csc490group3.model.UserSession
 
 import com.example.csc490group3.model.UserSession.currentUser
+import com.example.csc490group3.supabase.DatabaseManagement.getEventById
 
 
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
@@ -169,6 +170,16 @@ object DatabaseManagement {
 
                 // Attempt to promote someone from the waitlist
                 promoteFirstUserFromWaitlist(eventID!!)
+
+                insertNotification( //Send user notification for unregistered event
+                    Notification(
+                        user_id = userID!!,
+                        message = "You have unregistered from the event: ${event.eventName}",
+                        is_read = false,
+                        type = NotificationType.EVENT
+                    )
+                )
+
                 true
 
             }catch(e: Exception) {
@@ -197,6 +208,20 @@ object DatabaseManagement {
 
             }catch(e: Exception) {
                 println("Error fetching events: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+    suspend fun getEventById(eventId: Int): Event? {
+        return withContext(Dispatchers.IO) {
+            try {
+                postgrest.from("events").select {
+                    filter { eq("id", eventId) }
+                    limit(1)
+                }.decodeSingle<Event>()
+            } catch (e: Exception) {
+                println("Error fetching event by ID: ${e.localizedMessage}")
                 null
             }
         }
@@ -825,6 +850,18 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
                             eq("event_id", eventId)
                         }
                     }
+                    val event = getEventById(eventId)
+                    // Send notification
+                    if (event != null) {
+                        val message = "You have been promoted from the waitlist to registered for: ${event.eventName}"
+                        val notification = Notification(
+                            user_id = userId,
+                            message = message,
+                            is_read = false,
+                            type = NotificationType.EVENT
+                        )
+                        insertNotification(notification)
+                    }
 
                     println("User $userId promoted from waitlist to registered.")
                 } else {
@@ -1082,5 +1119,41 @@ suspend fun sendFriendNotification(currentUser: Int, userToFriend: Int, action: 
                 type = NotificationType.FRIEND_ACTION
             )
         )
+    }
+}
+
+suspend fun deleteAllNotificationsForUser(userId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications")
+                .delete {
+                    filter {
+                        eq("user_id", userId)
+                    }
+                }
+            println("All notifications deleted for user $userId.")
+            true
+        } catch (e: Exception) {
+            println("Error deleting all notifications: ${e.localizedMessage}")
+            false
+        }
+    }
+}
+
+suspend fun deleteAllUnreadNotificationsForUser(userId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_notifications")
+                .delete {
+                    filter {
+                        eq("user_id", userId)
+                        eq("is_read", false) // Only delete unread notifications
+                    }
+                }
+            true
+        } catch (e: Exception) {
+            println("Error deleting notifications: ${e.localizedMessage}")
+            false
+        }
     }
 }

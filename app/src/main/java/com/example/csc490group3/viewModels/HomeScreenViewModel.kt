@@ -13,11 +13,13 @@ import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
 import com.example.csc490group3.supabase.DatabaseManagement.getAllSuggestedEvents
 import com.example.csc490group3.supabase.DatabaseManagement.registerEvent
 import com.example.csc490group3.supabase.addUserToWaitingList
+import com.example.csc490group3.supabase.deleteAllNotificationsForUser
 import com.example.csc490group3.supabase.getTotalUnread
 import com.example.csc490group3.supabase.getAllNotifications
 import com.example.csc490group3.supabase.getUnreadNotifications
 import com.example.csc490group3.supabase.insertNotification
 import com.example.csc490group3.supabase.isUserOnWaitingList
+import com.example.csc490group3.supabase.markAllNotificationsAsRead
 import com.example.csc490group3.supabase.updateNotificationAsReadInDatabase
 import kotlinx.coroutines.launch
 
@@ -183,6 +185,23 @@ class HomeScreenViewModel: ViewModel() {
         }
     }
 
+    fun markAllNotificationAsReadInViewModel(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val success = markAllNotificationsAsRead(userId)
+                if (success) {
+                    loadAllNotifications(userId)
+                    loadUnreadNotifications(userId)
+                } else {
+                    errorMessage.value = "Failed to mark all notifications as read."
+                }
+            } catch (e: Exception) {
+                errorMessage.value =
+                    "Error marking all notifications as read: ${e.localizedMessage}"
+            }
+        }
+    }
+
     //load all unread notifications
     fun loadUnreadNotifications(userId: Int) {
         viewModelScope.launch {
@@ -209,12 +228,34 @@ class HomeScreenViewModel: ViewModel() {
                     val message =
                         "You have successfully registered for the event: ${event.eventName}"
                     val notification =
-                        Notification(user_id = userId, message = message, is_read = false, type = NotificationType.EVENT)
+                        Notification(
+                            user_id = userId,
+                            message = message,
+                            is_read = false,
+                            type = NotificationType.EVENT
+                        )
                     insertNotification(notification)
                     loadUnreadNotifications(userId)
                 }
             } catch (e: Exception) {
                 errorMessage.value = "Error creating notification: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun deleteAllNotifications(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val success = deleteAllNotificationsForUser(userId)
+                if (success) {
+                    allNotifications.value = emptyList()
+                    unreadNotifications.value = emptyList()
+                    hasUnreadNotifications.value = false
+                } else {
+                    errorMessage.value = "Failed to clear notifications."
+                }
+            } catch (e: Exception) {
+                errorMessage.value = "Error clearing notifications: ${e.localizedMessage}"
             }
         }
     }

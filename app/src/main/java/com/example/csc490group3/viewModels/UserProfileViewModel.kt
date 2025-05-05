@@ -96,28 +96,32 @@ class UserProfileViewModel: ViewModel() {
             }
         }
     }
-
     fun unregisterForEvent(event: Event, user: User?) {
         if (user == null) return
+        viewModelScope.launch {
+            try {
+                val result = unregisterEvent(event, user)
+                if (result) {
+                    fetchEvents() // refresh UI
+                }
+            } catch (e: Exception) {
+                errorMessage.value = "Failed to unregister: ${e.localizedMessage}"
+            }
+        }
+    }
 
-        viewModelScope.launch {
-            try {
-                unregisterEvent(event, user)
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to Unregister: ${e.localizedMessage}"
+            fun deleteEvent(event: Event) {
+                viewModelScope.launch {
+                    try {
+                        event.id?.let { removeEvent(it) }
+                        println("Event ${event.eventName} deleted")
+                    } catch (e: Exception) {
+                        errorMessage.value = "Failed to delete event: ${e.localizedMessage}"
+                    }
+                }
             }
-        }
-    }
-    fun deleteEvent(event: Event) {
-        viewModelScope.launch {
-            try {
-                event.id?.let { removeEvent(it) }
-                println("Event ${event.eventName} deleted")
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to delete event: ${e.localizedMessage}"
-            }
-        }
-    }
+
+
 
     fun editEvent(event: Event) {
         println("You are editing an event")
