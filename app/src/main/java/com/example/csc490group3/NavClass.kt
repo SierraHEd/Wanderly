@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.User
 import com.example.csc490group3.supabase.DatabaseManagement.getAllEvents
@@ -21,7 +22,7 @@ import com.example.csc490group3.viewModels.MessageScreenViewModel
 import kotlinx.serialization.json.Json
 
 @Composable
-fun Navigation(context: Context) {
+fun Navigation(context: Context, appStorage: AppStorage) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "splash_screen") {
@@ -38,22 +39,22 @@ fun Navigation(context: Context) {
             SignUpActivity(navController)
         }
         composable("Home_Screen") {
-            HomeScreen(navController)
+            HomeScreen(navController, appStorage)
         }
         composable("search_screen") {
-            SearchScreen(navController)
+            SearchScreen(navController, appStorage)
         }
         composable("register_event_screen") {
             RegisterEventScreen(navController)
         }
         composable("calendar_screen") {
-            CalendarScreen(navController)
+            CalendarScreen(navController, appStorage)
         }
         composable("settings_screen") {
             SettingsScreen(navController)
         }
         composable("profile_screen") {
-            UserProfileScreen(navController)
+            UserProfileScreen(navController, appStorage)
         }
 
         composable("friend_requests_screen") {
