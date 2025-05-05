@@ -316,7 +316,7 @@ fun SignUpActivity(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(PurpleBKG)
-                .verticalScroll(rememberScrollState()), // Make the Column scrollable
+                .verticalScroll(scrollState), // Make the Column scrollable
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         )
