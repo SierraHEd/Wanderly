@@ -394,9 +394,9 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
     AlertDialog(
 
         onDismissRequest = onDismiss,
-        title = { Text("Account Settings") },
+        title = { Text("Account Settings", color = MaterialTheme.colorScheme.onSecondary) },
         containerColor = MaterialTheme.colorScheme.primary,
-        icon = { Icon(Icons.Filled.Settings, "", tint = Purple40, modifier = Modifier.padding(horizontal = (30.dp))) },
+        icon = { Icon(Icons.Filled.Settings, "", tint = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.padding(horizontal = (30.dp))) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
@@ -528,7 +528,7 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = MaterialTheme.colorScheme.onSurface)
+                Text("Close", color = MaterialTheme.colorScheme.onSecondary)
             }
         }
     )
