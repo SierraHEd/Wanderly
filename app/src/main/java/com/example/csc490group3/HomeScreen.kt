@@ -157,7 +157,7 @@ fun HomeScreen(navController: NavController, appStorage: AppStorage, viewModel: 
                         Text(
                             text = "Home Page",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSecondary
                         )
                         Box {
                             IconButton(
@@ -228,32 +228,31 @@ fun HomeScreen(navController: NavController, appStorage: AppStorage, viewModel: 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(PurpleBKG)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Button(
                             onClick = { navController.navigate("start_up_screen") },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = "Sign Out",
                                 style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Button(
                             onClick = { navController.navigate("register_event_screen") },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = "Create Event",
                                 style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSecondary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
