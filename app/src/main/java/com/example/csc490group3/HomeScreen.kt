@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
@@ -172,6 +173,20 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             )
                         }
 
+                    }
+                    Box{
+                        IconButton(
+                            onClick = {
+                                // Handle message icon click here, e.g. navigate to messages screen
+                                navController.navigate("map_screen")
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn, // You can use other icons if preferred
+                                contentDescription = "Map",
+                                tint = Color.White
+                            )
+                        }
                     }
                     Box {
                         IconButton(onClick = {
