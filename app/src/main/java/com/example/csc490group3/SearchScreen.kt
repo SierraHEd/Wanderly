@@ -170,7 +170,7 @@ fun EventSearchTab(navController: NavHostController, viewModel: SearchScreenView
 
         when {
             isLoading -> {
-                Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+                Text("Loading...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondary)
             }
             errorMessage != null -> {
                 Text(

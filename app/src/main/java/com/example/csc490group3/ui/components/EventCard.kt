@@ -141,7 +141,7 @@ fun EventCard(
                                 "$numAttendees Out Of $maxAttendees"
                             else
                                 "Max Attendees Reached!",
-                            color = if (numAttendees >= maxAttendees) Color.Red else Color.Black
+                            color = if (numAttendees >= maxAttendees) Color.Red else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }

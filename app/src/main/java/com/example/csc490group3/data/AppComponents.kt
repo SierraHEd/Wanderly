@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -96,8 +97,8 @@ fun ButtonComponent(value : String, onButtonClick : () -> Unit, isEnabled: Boole
 @Composable
 fun BottomNavBar(navController: NavController) {
     NavigationBar(
-        containerColor = PurpleContainer, // Background color
-        contentColor = Color.White // Text and icon color
+        containerColor = MaterialTheme.colorScheme.primaryContainer, // Background color
+        contentColor = MaterialTheme.colorScheme.onSurface // Text and icon color
     ) {
         NavigationBarItem(
             selected = false,
