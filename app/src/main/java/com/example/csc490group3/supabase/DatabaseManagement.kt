@@ -826,7 +826,14 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
             }
         }
     }
-
+/**
+ * Check the user_waitList table for the oldest entry of a user for a specific event.
+ * Adds user to user_events table for specific event.
+ * Removes user from user_waitList table for specific event.
+ *
+ * @param eventId is Id passed when active user selects an event.
+ *
+ */
     private suspend fun promoteFirstUserFromWaitlist(eventId: Int) {
         return withContext(Dispatchers.IO) {
             try {
@@ -872,6 +879,32 @@ suspend fun getPendingIncomingRequests(user: Int, incoming: Boolean):List<Indivi
             }
         }
     }
+/**
+ * Delete record the user_waitList table for user and event.
+ *
+ * Removes user from user_waitList table for specific event.
+ *
+ * @param userId is the user that will be removed from table.
+ * @param eventId is Id passed when active user selects an event.
+ *
+ */
+suspend fun removeUserFromWaitingList(userId: Int, eventId: Int): Boolean {
+    return withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("user_waitingList").delete {
+                filter {
+                    eq("user_id", userId)
+                    eq("event_id", eventId)
+                }
+            }
+            println("Removed from waiting list successfully.")
+            true
+        } catch (e: Exception) {
+            println("Error removing from waiting list: ${e.localizedMessage}")
+            false
+        }
+    }
+}
 ///////////////////////
 //MESSAGING  FUNCTIONS
 //////////////////////

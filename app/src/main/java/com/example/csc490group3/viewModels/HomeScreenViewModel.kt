@@ -20,6 +20,7 @@ import com.example.csc490group3.supabase.getUnreadNotifications
 import com.example.csc490group3.supabase.insertNotification
 import com.example.csc490group3.supabase.isUserOnWaitingList
 import com.example.csc490group3.supabase.markAllNotificationsAsRead
+import com.example.csc490group3.supabase.removeUserFromWaitingList
 import com.example.csc490group3.supabase.updateNotificationAsReadInDatabase
 import kotlinx.coroutines.launch
 
@@ -148,15 +149,59 @@ class HomeScreenViewModel: ViewModel() {
                 errorMessage.value = "User or event is missing ID."
                 return@launch
             }
-
             val success = user.id?.let { addUserToWaitingList(it, event.id) }
             if (success == true) {
                 isUserOnWaitlist.value = true
+                val message =
+                    "You have joined the waitlist for the event: ${event.eventName}"
+                val notification =
+                    Notification(
+                        user_id = user.id,
+                        message = message,
+                        is_read = false,
+                        type = NotificationType.EVENT
+                    )
+                insertNotification(notification)
+                loadUnreadNotifications(user.id!!)
+
             } else {
                 errorMessage.value = "Error adding to waiting list."
             }
         }
     }
+
+    // Remove user from waitingList
+    fun removeFromWaitingList(user: User?, event: Event) {
+        viewModelScope.launch {
+            if (user == null || event.id == null) {
+                errorMessage.value = "User or event is missing ID."
+                return@launch
+            }
+
+            try {
+                val success = removeUserFromWaitingList(user.id!!, event.id)
+                if (success) {
+                    isUserOnWaitlist.value = false
+                    val message =
+                        "You have left the waitlist for the event: ${event.eventName}"
+                    val notification =
+                        Notification(
+                            user_id = user.id,
+                            message = message,
+                            is_read = false,
+                            type = NotificationType.EVENT
+                        )
+                    insertNotification(notification)
+                    loadUnreadNotifications(user.id!!)
+                } else {
+                    errorMessage.value = "Error removing from waiting list."
+                }
+            } catch (e: Exception) {
+                errorMessage.value = "Exception: ${e.localizedMessage}"
+            }
+        }
+    }
+
 
     fun markNotificationAsReadInViewModel(notification: Notification) {
         viewModelScope.launch {

@@ -337,13 +337,25 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     },
                     showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
                     onJoinWaitlist = {
-                        isOnWaitlist.value = true
-                        viewModel.addToWaitingList(UserSession.currentUser, event)
-                        Toast.makeText(
-                            context,
-                            "You've been added to the waiting list.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        if (isOnWaitlist.value) {
+                            // Remove from waitlist
+                            isOnWaitlist.value = false
+                            viewModel.removeFromWaitingList(UserSession.currentUser, event)
+                            Toast.makeText(
+                                context,
+                                "You've been removed from the waiting list.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            // Add to waitlist
+                            isOnWaitlist.value = true
+                            viewModel.addToWaitingList(UserSession.currentUser, event)
+                            Toast.makeText(
+                                context,
+                                "You've been added to the waiting list.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     navController = navController
                 )
