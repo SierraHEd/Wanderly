@@ -41,8 +41,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.Notification
@@ -70,7 +74,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = viewModel()) {
+fun HomeScreen(navController: NavController, appStorage: AppStorage, viewModel: HomeScreenViewModel = viewModel()) {
     val hasMessages by viewModel.hasMessages
     val events by viewModel.events
     val suggestedEvents by viewModel.suggestedEvents
@@ -88,345 +92,354 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val showConfirmationDialog = remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
+    val isDarkMode by appStorage.isDarkMode.collectAsState(initial = false)
 
-    //Icon change for notifications
-    LaunchedEffect(Unit) {
-        UserSession.currentUser?.id?.let { userId ->
-            viewModel.loadUnreadNotifications(userId)
-        }
-    }
-    // Check if the user is registered or on the waitlist for the event when an event is selected
-    selectedEvent.value?.let { event ->
-        val currentUser = UserSession.currentUser
-        if (currentUser != null) {
-            val userID = currentUser.id
+    MaterialTheme(
+        colorScheme = if (isDarkMode) lightColorScheme() else darkColorScheme()
+    ) {
 
-            LaunchedEffect(userID, event.id) {
-                isCheckingRegistration.value = true
-                isCheckingWaitlist.value = true
-
-                // Check if user is registered for the event
-                isRegistered.value =
-                    (userID != null && event.id != null) && viewModel.isUserRegisteredForEvent(
-                        userID,
-                        event.id
-                    )
-                // Check if user is on the waiting list for the event
-                isOnWaitlist.value =
-                    (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
-                        userID,
-                        event.id
-                    )
-                isCheckingRegistration.value = false
-                isCheckingWaitlist.value = false
-                showDialog.value = true
+        //Icon change for notifications
+        LaunchedEffect(Unit) {
+            UserSession.currentUser?.id?.let { userId ->
+                viewModel.loadUnreadNotifications(userId)
             }
         }
-    }
+        // Check if the user is registered or on the waitlist for the event when an event is selected
+        selectedEvent.value?.let { event ->
+            val currentUser = UserSession.currentUser
+            if (currentUser != null) {
+                val userID = currentUser.id
 
-    Scaffold(
-        containerColor = PurpleBKG,
-        bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
-        // Use a Column as the root so that header and content are separate.
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(PurpleBKG)
-                .padding(paddingValues)
-        ) {
-            // Header section (non-scrollable content at the top)
-            Column(modifier = Modifier.padding(16.dp)) {
+                LaunchedEffect(userID, event.id) {
+                    isCheckingRegistration.value = true
+                    isCheckingWaitlist.value = true
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Home Page",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White
-                    )
-                    Box {
-                        IconButton(
-                            onClick = {
-                                // Handle message icon click here, e.g. navigate to messages screen
-                                navController.navigate("messages_screen")
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Message, // You can use other icons if preferred
-                                contentDescription = "Messages",
-                                tint = Color.White
-                            )
-                        }
-                        if (hasMessages) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .background(Color.Red, shape = CircleShape)
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
-                            )
-                        }
-
-                    }
-                    Box{
-                        IconButton(
-                            onClick = {
-                                // Handle message icon click here, e.g. navigate to messages screen
-                                navController.navigate("map_screen")
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn, // You can use other icons if preferred
-                                contentDescription = "Map",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                    Box {
-                        IconButton(onClick = {
-                            UserSession.currentUser?.id?.let { userId ->
-                                viewModel.loadAllNotifications(userId)
-                                showNotificationsDialog.value = true
-                            }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
-                                tint = Color.White
-                            )
-                        }
-                        // Red dot if there are unread notifications
-                        if (viewModel.hasUnreadNotifications.value) {
-                            Box(
-                                modifier = Modifier.size(8.dp)
-                                    .background(Color.Red, shape = CircleShape)
-                                    .align(Alignment.TopEnd)  // This will position the dot in the top-right corner of the icon
-                            )
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(PurpleBKG)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = { navController.navigate("start_up_screen") },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Sign Out",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
+                    // Check if user is registered for the event
+                    isRegistered.value =
+                        (userID != null && event.id != null) && viewModel.isUserRegisteredForEvent(
+                            userID,
+                            event.id
                         )
-                    }
-                    Button(
-                        onClick = { navController.navigate("register_event_screen") },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Create Event",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSecondary
+                    // Check if user is on the waiting list for the event
+                    isOnWaitlist.value =
+                        (userID != null && event.id != null) && viewModel.isUserWaitingForEvent(
+                            userID,
+                            event.id
                         )
-                    }
+                    isCheckingRegistration.value = false
+                    isCheckingWaitlist.value = false
+                    showDialog.value = true
                 }
-                Spacer(modifier = Modifier.height(20.dp))
             }
-            // Scrollable content area using LazyColumn
-            LazyColumn(
+        }
+
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.primary,
+            bottomBar = { BottomNavBar(navController) }
+        ) { paddingValues ->
+            // Use a Column as the root so that header and content are separate.
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(paddingValues)
             ) {
+                // Header section (non-scrollable content at the top)
+                Column(modifier = Modifier.padding(16.dp)) {
 
-                if (suggestedEvents.isNotEmpty()) {
-                    item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            text = "Suggested Events",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = Color.White
+                            text = "Home Page",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(PurpleBKG)
-                        ) {
-                            items(suggestedEvents) { event ->
-                                EventCard(
-                                    event = event,
-                                    onBottomButtonClick = {},
-                                    onEditEvent = {},
-                                    isHorizontal = true,
-                                    onClick = { selectedEvent.value = event }
+                        Box {
+                            IconButton(
+                                onClick = {
+                                    // Handle message icon click here, e.g. navigate to messages screen
+                                    navController.navigate("messages_screen")
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Message, // You can use other icons if preferred
+                                    contentDescription = "Messages",
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+                            }
+                            if (hasMessages) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color.Red, shape = CircleShape)
+                                        .align(Alignment.TopEnd)
+                                        .offset(
+                                            x = (-4).dp,
+                                            y = 4.dp
+                                        ) // adjust for nicer positioning
+                                )
+                            }
+
+                        }
+                        Box {
+                            IconButton(
+                                onClick = {
+                                    // Handle message icon click here, e.g. navigate to messages screen
+                                    navController.navigate("map_screen")
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn, // You can use other icons if preferred
+                                    contentDescription = "Map",
+                                    tint = MaterialTheme.colorScheme.onSecondary
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Box {
+                            IconButton(onClick = {
+                                UserSession.currentUser?.id?.let { userId ->
+                                    viewModel.loadAllNotifications(userId)
+                                    showNotificationsDialog.value = true
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+                            }
+                            // Red dot if there are unread notifications
+                            if (viewModel.hasUnreadNotifications.value) {
+                                Box(
+                                    modifier = Modifier.size(8.dp)
+                                        .background(Color.Red, shape = CircleShape)
+                                        .align(Alignment.TopEnd)  // This will position the dot in the top-right corner of the icon
+                                )
+                            }
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(PurpleBKG)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Button(
+                            onClick = { navController.navigate("start_up_screen") },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Sign Out",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        Button(
+                            onClick = { navController.navigate("register_event_screen") },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Create Event",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
+                // Scrollable content area using LazyColumn
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp)
+                ) {
 
-                when {
-                    isLoading -> {
+                    if (suggestedEvents.isNotEmpty()) {
                         item {
                             Text(
-                                "Loading events...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White
+                                text = "Suggested Events",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                        }
-                    }
-
-                    errorMessage != null -> {
-                        item {
-                            Text(
-                                errorMessage!!,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Red
-                            )
-                        }
-                    }
-
-                    else -> {
-                        items(events) { event ->
-                            EventCard(
-                                onClick = {
-                                    if (selectedEvent.value != event) {
-                                        selectedEvent.value = event
-                                    }
-                                },
-                                event = event,
-                                onBottomButtonClick = { selectedEvent ->
-                                    viewModel.registerForEvent(
-                                        selectedEvent,
-                                        UserSession.currentUser
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primary)
+                            ) {
+                                items(suggestedEvents) { event ->
+                                    EventCard(
+                                        event = event,
+                                        onBottomButtonClick = {},
+                                        onEditEvent = {},
+                                        isHorizontal = true,
+                                        onClick = { selectedEvent.value = event }
                                     )
-                                    Toast.makeText(context, "REGISTERED!", Toast.LENGTH_SHORT)
-                                        .show()
-                                },
-                                onEditEvent = {}
-                            )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+
+                    when {
+                        isLoading -> {
+                            item {
+                                Text(
+                                    "Loading events...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        errorMessage != null -> {
+                            item {
+                                Text(
+                                    errorMessage!!,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+
+                        else -> {
+                            items(events) { event ->
+                                EventCard(
+                                    onClick = {
+                                        if (selectedEvent.value != event) {
+                                            selectedEvent.value = event
+                                        }
+                                    },
+                                    event = event,
+                                    onBottomButtonClick = { selectedEvent ->
+                                        viewModel.registerForEvent(
+                                            selectedEvent,
+                                            UserSession.currentUser
+                                        )
+                                        Toast.makeText(context, "REGISTERED!", Toast.LENGTH_SHORT)
+                                            .show()
+                                    },
+                                    onEditEvent = {}
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Show event detail popup when an event is selected
-        selectedEvent.value?.let { event ->
-            if (showDialog.value && selectedEvent.value != null) {
-                EventDetailDialog(
-                    event = event,
-                    onDismiss = {
-                        selectedEvent.value = null
-                        showDialog.value = false
-                    },
-                    isUserRegistered = isRegistered.value,   // Pass isUserRegistered
-                    isUserOnWaitList = isOnWaitlist.value,   // Pass isUserOnWaitList
-                    showRegisterButton = !isRegistered.value && !isCheckingRegistration.value,  // Show register button only if not registered
-                    onRegister = {
-                        // When the user clicks the register button, we manually trigger the registration
-                        isRegistered.value = true // Mark the user as registered
-                        viewModel.registerForEvent(
-                            event,
-                            UserSession.currentUser
-                        ) // Perform registration
-                        Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
-                            .show()
-                    },
-                    showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
-                    onJoinWaitlist = {
-                        if (isOnWaitlist.value) {
-                            // Remove from waitlist
-                            isOnWaitlist.value = false
-                            viewModel.removeFromWaitingList(UserSession.currentUser, event)
-                            Toast.makeText(
-                                context,
-                                "You've been removed from the waiting list.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            // Add to waitlist
-                            isOnWaitlist.value = true
-                            viewModel.addToWaitingList(UserSession.currentUser, event)
-                            Toast.makeText(
-                                context,
-                                "You've been added to the waiting list.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+            // Show event detail popup when an event is selected
+            selectedEvent.value?.let { event ->
+                if (showDialog.value && selectedEvent.value != null) {
+                    EventDetailDialog(
+                        event = event,
+                        onDismiss = {
+                            selectedEvent.value = null
+                            showDialog.value = false
+                        },
+                        isUserRegistered = isRegistered.value,   // Pass isUserRegistered
+                        isUserOnWaitList = isOnWaitlist.value,   // Pass isUserOnWaitList
+                        showRegisterButton = !isRegistered.value && !isCheckingRegistration.value,  // Show register button only if not registered
+                        onRegister = {
+                            // When the user clicks the register button, we manually trigger the registration
+                            isRegistered.value = true // Mark the user as registered
+                            viewModel.registerForEvent(
+                                event,
+                                UserSession.currentUser
+                            ) // Perform registration
+                            Toast.makeText(context, "Successfully Registered!", Toast.LENGTH_SHORT)
+                                .show()
+                        },
+                        showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
+                        onJoinWaitlist = {
+                            if (isOnWaitlist.value) {
+                                // Remove from waitlist
+                                isOnWaitlist.value = false
+                                viewModel.removeFromWaitingList(UserSession.currentUser, event)
+                                Toast.makeText(
+                                    context,
+                                    "You've been removed from the waiting list.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                // Add to waitlist
+                                isOnWaitlist.value = true
+                                viewModel.addToWaitingList(UserSession.currentUser, event)
+                                Toast.makeText(
+                                    context,
+                                    "You've been added to the waiting list.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        navController = navController
+                    )
+                }
+            }
+
+            // show notifications popup
+            if (showNotificationsDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showNotificationsDialog.value = false },
+                    confirmButton = {
+                        Row(horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = {
+                                showNotificationsDialog.value = false
+                            }) {
+                                Text("Close")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Mark All as Read Button
+                            TextButton(onClick = {
+                                UserSession.currentUser?.id?.let {
+                                    viewModel.markAllNotificationAsReadInViewModel(it)
+                                }
+                                showNotificationsDialog.value = false
+                            }) {
+                                Text("Mark All as Read")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
                     },
-                    navController = navController
+                    title = {
+                        Text("Notifications")
+                    },
+                    text = {
+                        val notifications = viewModel.allNotifications.value
+                        if (notifications.isEmpty()) {
+                            Text("No notifications.")
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                notifications.forEach { notification ->
+                                    NotificationCard(
+                                        notification = notification,
+                                        onClick = {
+                                            viewModel.markNotificationAsReadInViewModel(notification)
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+                    }
                 )
             }
-        }
-
-        // show notifications popup
-        if (showNotificationsDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showNotificationsDialog.value = false },
-                confirmButton = {
-                    Row(horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = {
-                            showNotificationsDialog.value = false
-                        }) {
-                            Text("Close")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        // Mark All as Read Button
-                        TextButton(onClick = {
-                            UserSession.currentUser?.id?.let {
-                                viewModel.markAllNotificationAsReadInViewModel(it)
-                            }
-                            showNotificationsDialog.value = false
-                        }) {
-                            Text("Mark All as Read")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                },
-                title = {
-                    Text("Notifications")
-                },
-                text = {
-                    val notifications = viewModel.allNotifications.value
-                    if (notifications.isEmpty()) {
-                        Text("No notifications.")
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .heightIn(max = 400.dp)
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            notifications.forEach { notification ->
-                                NotificationCard(
-                                    notification = notification,
-                                    onClick = {
-                                        viewModel.markNotificationAsReadInViewModel(notification)
-                                    }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                        }
-                    }
-                }
-            )
         }
     }
 }

@@ -39,14 +39,19 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +74,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.R
+import com.example.csc490group3.data.AppStorage
 import com.example.csc490group3.data.BottomNavBar
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.IndividualUser
@@ -95,133 +101,148 @@ import java.io.File
 import java.util.UUID
 
 @Composable
-fun UserProfileScreen(navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
+fun UserProfileScreen(navController: NavController, appStorage: AppStorage, viewModel: UserProfileViewModel = viewModel()) {
     var showSettings by remember { mutableStateOf(false) }
     var showFriends by remember { mutableStateOf(false) }
     val isCurrentUser = true // Make it so that we can tell if viewed user is the logged in user
     val profilePictureUrl = UserSession.currentUser?.profile_picture_url
     var user by remember { mutableStateOf<IndividualUser?>(null) }
+    val isDarkMode by appStorage.isDarkMode.collectAsState(initial = false)
 
-   LaunchedEffect(UserSession.currentUserEmail) {
-       user= UserSession.currentUserEmail?.let { getPrivateUser(it) }
-    }
-    val firstName = user?.firstName
+    MaterialTheme(
+        colorScheme = if (isDarkMode) lightColorScheme() else darkColorScheme()
+    ) {
+
+        LaunchedEffect(UserSession.currentUserEmail) {
+            user = UserSession.currentUserEmail?.let { getPrivateUser(it) }
+        }
+        val firstName = user?.firstName
 
 
-    // val CurrentUser = UserSession.currentUser?.email.?
-    var context = LocalContext.current
-    val selectedEvent = remember { mutableStateOf<Event?>(null) }
-    var isRegistered = remember { mutableStateOf(false) }
+        // val CurrentUser = UserSession.currentUser?.email.?
+        var context = LocalContext.current
+        val selectedEvent = remember { mutableStateOf<Event?>(null) }
+        var isRegistered = remember { mutableStateOf(false) }
 
-    Scaffold(
-        bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
-        Surface(
-            modifier = Modifier
-                .background(PurpleBKG)
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Column(
+        Scaffold(
+            bottomBar = { BottomNavBar(navController) }
+        ) { paddingValues ->
+            Surface(
                 modifier = Modifier
+                    .background(MaterialTheme.colorScheme.primary)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .background(PurpleBKG)
-                    .padding(16.dp)
+                    .padding(paddingValues)
             ) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = { navController.navigate("home_screen") }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                    IconButton(onClick = { showFriends = true }) {
-                        Icon(imageVector = Icons.Default.People, contentDescription = "Friends")
-                    }
-                    if (isCurrentUser) {
-                        Box {
-                            IconButton(onClick = { navController.navigate("friend_requests_screen") }) {
-                                Icon(
-                                    imageVector = Icons.Default.PersonAdd,
-                                    contentDescription = "Friend Requests"
-                                )
-                            }
-                            if (viewModel.incomingRequests.value?.isNotEmpty() == true) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .background(Color.Red, shape = CircleShape)
-                                        .align(Alignment.TopEnd)
-                                        .offset(x = (-4).dp, y = 4.dp) // adjust for nicer positioning
-                                )
-                            }
-                        }
-                        IconButton(onClick = { showSettings = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings"
-                            )
-
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(16.dp)
                 ) {
-                    //pfp
-                    Image(
-                        painter = rememberAsyncImagePainter(profilePictureUrl ?: R.drawable.app_icon),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, Color.Black, CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(onClick = { navController.navigate("home_screen") }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSecondary)
+                        }
+                        IconButton(onClick = { showFriends = true }) {
+                            Icon(imageVector = Icons.Default.People, contentDescription = "Friends", tint = MaterialTheme.colorScheme.onSecondary)
+                        }
+                        if (isCurrentUser) {
+                            Box {
+                                IconButton(onClick = { navController.navigate("friend_requests_screen") }) {
+                                    Icon(
+                                        imageVector = Icons.Default.PersonAdd,
+                                        contentDescription = "Friend Requests",
+                                        tint = MaterialTheme.colorScheme.onSecondary
+                                    )
+                                }
+                                if (viewModel.incomingRequests.value?.isNotEmpty() == true) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .background(Color.Red, shape = CircleShape)
+                                            .align(Alignment.TopEnd)
+                                            .offset(
+                                                x = (-4).dp,
+                                                y = 4.dp
+                                            ) // adjust for nicer positioning
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { showSettings = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Welcome back, $firstName",
-                        fontSize = 24.sp,
-                        color = Color.Black
-                    )
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                // Saved Events (seen by current user only)
-                if (isCurrentUser) {
-                    Section1(title = "My Saved Events",
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        //pfp
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                profilePictureUrl ?: R.drawable.app_icon
+                            ),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, MaterialTheme.colorScheme.onSecondary, CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Welcome back, $firstName",
+                            fontSize = 24.sp,
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Saved Events (seen by current user only)
+                    if (isCurrentUser) {
+                        Section1(
+                            title = "My Saved Events",
+                            fontSize = 20.sp,
+                            navController = navController
+                        )
+                    }
+
+                    // Hosted Events (seen by non current users)
+                    Section2(
+                        title = "My Hosted Events",
                         fontSize = 20.sp,
-                        navController = navController
+                        navController = navController,
                     )
                 }
 
-                // Hosted Events (seen by non current users)
-                Section2(
-                    title = "My Hosted Events",
-                    fontSize = 20.sp,
-                    navController = navController,
-                )
-            }
+                if (showSettings) {
+                    SettingsDialog(
+                        onDismiss = { showSettings = false },
+                        navController
+                    )
+                }
 
-            if (showSettings) {
-                SettingsDialog(
-                    onDismiss = { showSettings = false },
-                    navController
-                )
-            }
-
-            if (showFriends) {
-                FriendsDialog(onDismiss = { showFriends = false },
-                    navController
-                )
+                if (showFriends) {
+                    FriendsDialog(
+                        onDismiss = { showFriends = false },
+                        navController
+                    )
+                }
             }
         }
     }
@@ -236,6 +257,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
     Row() {
         Text(
             text = title,
+            color = MaterialTheme.colorScheme.onSecondary
         )
     }
     LazyRow {
@@ -268,7 +290,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSize: TextUnit, navController: NavController) {
+fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(), fontSize: TextUnit, navController: NavController) {
     val events by viewModel.createdEvents
     val selectedEvent = remember { mutableStateOf<Event?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -278,6 +300,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     Row() {
         Text(
             text = title,
+            color = MaterialTheme.colorScheme.onSecondary
         )
     }
     LazyRow {
@@ -337,6 +360,8 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewModel: UserProfileViewModel = viewModel()) {
     val context = LocalContext.current
+    val store = AppStorage(LocalContext.current)
+    var darkModeEnabled by remember { mutableStateOf(false) }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -362,19 +387,22 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
         UserSession.currentUser?.id?.let {
             isPublic = isUserPublicById(it)
         }
+        store.isDarkMode.collect { enabled ->
+            darkModeEnabled = enabled
+        }
     }
     AlertDialog(
 
         onDismissRequest = onDismiss,
         title = { Text("Account Settings") },
-        containerColor = PurpleStart,
+        containerColor = MaterialTheme.colorScheme.primary,
         icon = { Icon(Icons.Filled.Settings, "", tint = Purple40, modifier = Modifier.padding(horizontal = (30.dp))) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Public Account")
+                    Text("Public Account", color = MaterialTheme.colorScheme.onSecondary)
                     Spacer(Modifier.weight(1f))
                     Switch(checked = isPublic, onCheckedChange = {
 
@@ -389,27 +417,44 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
 
 
 
-                        isPublic = it }
+                        isPublic = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Purple40,
+                            uncheckedThumbColor = Color.Gray,
+                            checkedTrackColor = Color.LightGray,
+                            uncheckedTrackColor = Color.DarkGray
+                        )
                         //Make it so that account will remember change
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Dark Mode")
+                    Text("Dark Mode", color = MaterialTheme.colorScheme.onSecondary)
                     Spacer(Modifier.weight(1f))
-                    Switch(checked = isDarkMode, onCheckedChange = {isDarkMode = it }
+                    Switch(checked = darkModeEnabled,
+                        onCheckedChange = { isChecked ->
+                            coroutineScope.launch {
+                                store.saveDarkMode(isChecked)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Purple40,
+                            uncheckedThumbColor = Color.Gray,
+                            checkedTrackColor = Color.LightGray,
+                            uncheckedTrackColor = Color.DarkGray
+                        )
                         //Make it so that account will remember change
                     )
                 }
 
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { /* Handle location preferences */ }) {
-                    Text("Location Preferences")
+                    Text("Location Preferences", color = MaterialTheme.colorScheme.onSurface)
                 }
 
                 Button(
                     onClick = { showCategoryPicker = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -422,21 +467,21 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Edit Icon",
-                            tint = White,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Event Suggestion Preferences:",
                                 fontSize = 18.sp,
-                                color = White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Left,
                                 fontFamily = FontFamily.Default
                             )
                             Text(
                                 text = selectedCategories.joinToString(", ") { it.name },
                                 fontSize = 22.sp,
-                                color = White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Left,
                                 fontFamily = FontFamily.Default
                             )
@@ -458,32 +503,32 @@ fun SettingsDialog(onDismiss: () -> Unit, navController: NavController, viewMode
 
 
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { filePicker.launch("image/*") }) {
-                    Text("Change Profile Picture")
+                    Text("Change Profile Picture", color = MaterialTheme.colorScheme.onSurface)
                 }
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { navController.navigate("start_up_screen") }) {
-                    Text("Log Out")
+                    Text("Log Out", color = MaterialTheme.colorScheme.onSurface)
                 }
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { /* Handle profile picture change */ },
                 ) {
-                    Text("Contact Us")
+                    Text("Contact Us", color = MaterialTheme.colorScheme.onSurface)
                 }
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleDarkBKG),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     onClick = { /* TOS stuff */ })
                 {
-                    Text("Terms of Service")
+                    Text("Terms of Service", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Close", color = MaterialTheme.colorScheme.onSurface)
             }
         }
     )
