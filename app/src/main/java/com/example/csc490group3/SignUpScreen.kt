@@ -20,10 +20,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -76,11 +79,12 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate as JLocalDate
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -174,8 +178,7 @@ fun SignUpActivity(navController: NavController) {
                 email = email,
                 firstName = firstName,
                 lastName = lastName,
-                //If date is null use today's date.
-                birthday = birthdate ?: Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
+                birthday = birthdate!!,
                 public = true
             )
             addRecord("private_users", newUser)
@@ -187,6 +190,9 @@ fun SignUpActivity(navController: NavController) {
             Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+    //Function to format date to be more user friendly.
+    val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy")
 
     // Convert milliseconds to LocalDate so DatePicker can display date back to user
     fun convertMillisToLocalDate(millis: Long): LocalDate {
@@ -235,6 +241,21 @@ fun SignUpActivity(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(30.dp),  // Space between buttons
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Cancel Button
+                    TextButton(
+                        onClick = {
+                            isDatePickerVisible = false
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color.Red)
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = Color.Black,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                     // Confirm Button
                     TextButton(
                         onClick = {
@@ -251,21 +272,6 @@ fun SignUpActivity(navController: NavController) {
                         Text(
                             text = "Confirm",
                             color = Color.White,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                    // Cancel Button
-                    TextButton(
-                        onClick = {
-                            isDatePickerVisible = false
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(Color.Red)
-                    ) {
-                        Text(
-                            text = "Cancel",
-                            color = Color.Black,
                             modifier = Modifier.padding(8.dp)
                         )
                     }
@@ -303,7 +309,9 @@ fun SignUpActivity(navController: NavController) {
 // --------------------------
 // 6. Main UI/Form
 // --------------------------
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()
+        .padding(WindowInsets.navigationBars.asPaddingValues()))
+        {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -489,7 +497,11 @@ fun SignUpActivity(navController: NavController) {
 
             //Birthdate Section
             TextField(
-                value = birthdate?.toString() ?: "",
+                value = birthdate?.let {
+                    // Convert LocalDate to java.time.LocalDate for formatting and user readability
+                    val javaLocalDate = JLocalDate.of(it.year, it.monthNumber, it.dayOfMonth)
+                    javaLocalDate.format(dateFormatter)
+                } ?: "Select your birthdate",
                 onValueChange = {},
                 label = { Text("Click here to select your birthdate") },
                 readOnly = true,
@@ -600,5 +612,3 @@ fun SignUpActivity(navController: NavController) {
         }
     }
 }
-
-

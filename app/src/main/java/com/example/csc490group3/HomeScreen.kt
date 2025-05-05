@@ -64,7 +64,6 @@ import com.example.csc490group3.ui.components.EventCard
 import com.example.csc490group3.ui.components.EventDetailDialog
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.viewModels.HomeScreenViewModel
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -86,6 +85,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
     val isCheckingWaitlist = remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val showNotificationsDialog = remember { mutableStateOf(false) }
+    val showConfirmationDialog = remember { mutableStateOf(false) }
+
     val coroutineScope = rememberCoroutineScope()
 
     //Icon change for notifications
@@ -351,19 +352,32 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                     },
                     showWaitListButton = !isOnWaitlist.value && !isCheckingWaitlist.value,  // Show waitlist button only if not on waitlist
                     onJoinWaitlist = {
-                        isOnWaitlist.value = true
-                        viewModel.addToWaitingList(UserSession.currentUser, event)
-                        Toast.makeText(
-                            context,
-                            "You've been added to the waiting list.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        if (isOnWaitlist.value) {
+                            // Remove from waitlist
+                            isOnWaitlist.value = false
+                            viewModel.removeFromWaitingList(UserSession.currentUser, event)
+                            Toast.makeText(
+                                context,
+                                "You've been removed from the waiting list.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            // Add to waitlist
+                            isOnWaitlist.value = true
+                            viewModel.addToWaitingList(UserSession.currentUser, event)
+                            Toast.makeText(
+                                context,
+                                "You've been added to the waiting list.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     navController = navController
                 )
             }
         }
-    // show notifications popup
+
+        // show notifications popup
         if (showNotificationsDialog.value) {
             AlertDialog(
                 onDismissRequest = { showNotificationsDialog.value = false },
@@ -375,13 +389,16 @@ fun HomeScreen(navController: NavController, viewModel: HomeScreenViewModel = vi
                             Text("Close")
                         }
                         Spacer(modifier = Modifier.width(8.dp))
+                        // Mark All as Read Button
                         TextButton(onClick = {
                             UserSession.currentUser?.id?.let {
-                                viewModel.loadAllNotifications(it)
+                                viewModel.markAllNotificationAsReadInViewModel(it)
                             }
+                            showNotificationsDialog.value = false
                         }) {
-                            Text("Refresh")
+                            Text("Mark All as Read")
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 },
                 title = {

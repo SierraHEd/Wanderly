@@ -255,7 +255,7 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
                 },
                 onEditEvent = {},
                 isHorizontal = true,
-                showUnregisterButton = true
+                showUnregisterButton = false
             )
         }
     }
@@ -269,11 +269,9 @@ fun Section1(title: String, viewModel: UserProfileViewModel = viewModel(), fontS
             onJoinWaitlist = {},
             onRegister = { isRegistered.value = true },
             navController = navController
-        )
+         )
+        }
     }
-
-}
-
 }
 
 @Composable
@@ -307,6 +305,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
     LazyRow {
 
         items(events) { event ->
+            val isCurrentUserEvent = event.createdBy == UserSession.currentUser?.id
             EventCard(
                 event = event,
                 onBottomButtonClick = { selectedEvent ->
@@ -318,7 +317,7 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
                 },
                 onClick = { selectedEvent.value = event },
                 isHorizontal = true,
-                showOptionsButton = true,
+                showOptionsButton = isCurrentUserEvent,
             )
         }
     }
@@ -355,6 +354,6 @@ fun Section2(title: String, viewModel: UserProfileViewModel = viewModel(),fontSi
             navController = navController,
             onRegister = { isRegistered.value = true })
 
+        }
     }
-}
 }

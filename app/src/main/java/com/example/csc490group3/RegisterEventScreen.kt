@@ -13,20 +13,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,27 +36,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,17 +62,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -93,23 +82,23 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.addCategoryRelationship
 import com.example.csc490group3.supabase.DatabaseManagement.addEvent
-import com.example.csc490group3.supabase.DatabaseManagement.addRecord
-import com.example.csc490group3.supabase.StorageManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getCategories
+import com.example.csc490group3.supabase.StorageManagement
+import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
+import com.example.csc490group3.ui.components.CountryPickerBottomSheet
+import com.example.csc490group3.ui.components.StatePickerBottomSheet
 import com.example.csc490group3.ui.theme.Purple40
 import com.example.csc490group3.ui.theme.PurpleBKG
 import com.example.csc490group3.ui.theme.PurpleContainer
 import com.example.csc490group3.ui.theme.PurpleDarkBKG
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import java.io.File
-import java.util.UUID
 import kotlinx.datetime.LocalTime
+import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.UUID
 import com.example.csc490group3.ui.components.CategoryPickerBottomSheet
 import com.example.csc490group3.ui.components.StatePickerBottomSheet
 import com.example.csc490group3.ui.components.CountryPickerBottomSheet
@@ -117,7 +106,6 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -283,12 +271,15 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
         }
     }
 
-    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+    Column(modifier = Modifier
+        .verticalScroll(rememberScrollState())
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(PurpleBKG)
                 .padding(16.dp)
+                .padding(WindowInsets.navigationBars.asPaddingValues())
         ) {
             Spacer(modifier = Modifier.height(36.dp))
             Row(
@@ -533,7 +524,9 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
             Button(
                 onClick = { eventImagePicker.launch("image/*") },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleContainer),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             ) {
                 Text(text = "Select Event Photo")
             }
