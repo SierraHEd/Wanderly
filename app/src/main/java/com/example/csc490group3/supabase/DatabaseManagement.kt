@@ -28,8 +28,10 @@ import com.example.csc490group3.supabase.DatabaseManagement.getEventById
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 
 import kotlinx.serialization.descriptors.PrimitiveKind
 
@@ -283,6 +285,51 @@ object DatabaseManagement {
             }
         }
     }
+
+
+@Serializable
+    data class CategoryIdWrapper(val category_id: Int)
+
+    suspend fun getCategoriesForEvent(eventId: Int): List<Category>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Step 1: Fetch category_ids for the given event_id from the event_categories table
+                val categoryIds = postgrest.from("event_categories")
+                    .select(Columns.raw("category_id")) {
+                        filter { eq("event_id", eventId) }
+                    }
+                    .decodeList<CategoryIdWrapper>() // Decode as a list of objects with a category_id field
+
+                // Step 2: Debugging - Print the category_ids to check
+                Log.d("CATEGORY DEBUG", "Fetched category IDs for event $eventId: ${categoryIds.map { it.category_id }}")
+
+                // Step 3: Fetch the full Category objects using the category_ids
+                val categories = categoryIds.mapNotNull { wrapper ->
+                    try {
+                        postgrest.from("categories")
+                            .select() {
+                                filter { eq("id", wrapper.category_id) } // Use the actual category_id value
+                            }
+                            .decodeSingle<Category>() // Decode as a single Category object
+                    } catch (e: Exception) {
+                        Log.d("CATEGORY DEBUG", "Error fetching category with id ${wrapper.category_id}: ${e.localizedMessage}")
+                        null
+                    }
+                }
+
+                // Step 4: Return the list of full Category objects
+                categories
+            } catch (e: Exception) {
+                Log.d("CATEGORY DEBUG", "Error fetching categories for event $eventId: ${e.localizedMessage}")
+                null
+            }
+        }
+    }
+
+
+
+
+
 
     suspend fun setUserPrivacy(userId: Int, isPublic: Boolean): Boolean {
         return withContext(Dispatchers.IO) {

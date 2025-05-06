@@ -43,9 +43,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement
+import com.example.csc490group3.supabase.DatabaseManagement.getCategoriesForEvent
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import kotlinx.coroutines.launch
 
@@ -203,12 +205,14 @@ fun EventDetailDialog(
 ) {
     
     var firstName by remember { mutableStateOf("") }
+
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var navToUser by remember { mutableStateOf(false) }
     var userEmail by remember { mutableStateOf("") }
     var showReportDialog by remember { mutableStateOf(false) }
     var hasReported by remember { mutableStateOf(false) }
+    var categories by remember { mutableStateOf<List<Category>?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(event.createdBy) {
@@ -217,6 +221,9 @@ fun EventDetailDialog(
         lastName = user?.lastName ?: ""
         email = user?.email ?: ""
         userEmail = UserSession.currentUser?.email ?: ""
+    }
+    LaunchedEffect(event.id) {
+        categories = event.id?.let { getCategoriesForEvent(it) }
     }
 
     AlertDialog(
@@ -262,7 +269,12 @@ fun EventDetailDialog(
                 Text(text = "Location: ${event.address}, ${event.city}, ${event.state}, ${event.zipcode}")
                 Text(text = "Country: ${event.country}")
                 Text(text = "Description: ${event.description}")
-                Text(text = "Categories: ${event.categories?.joinToString(", ") ?: "No categories"}")
+
+                Text(
+                    text = "Categories: ${
+                        categories?.joinToString(", ") { it.name } ?: "Loading..."
+                    }"
+                )
                 Text(text = "Max Attendees: ${event.maxAttendees}")
                 Text(text = "Number of Attendees: ${event.numAttendees ?: 0}")
                 Text(text = "Public: ${event.isPublic?.let { if (it) "Yes" else "No" } ?: "Unknown"}")

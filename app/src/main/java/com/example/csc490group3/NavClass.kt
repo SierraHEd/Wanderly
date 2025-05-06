@@ -79,7 +79,7 @@ fun Navigation(context: Context, appStorage: AppStorage) {
             )
         }
         composable("map_screen") {
-            AllEventsMapScreen(eventRepo = { getAllEvents() })
+            AllEventsMapScreen(navController, eventRepo = { getAllEvents() })
         }
     }
 }
