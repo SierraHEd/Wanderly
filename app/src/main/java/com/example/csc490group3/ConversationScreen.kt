@@ -1,5 +1,6 @@
 package com.example.csc490group3
 
+import MessageBubble
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,9 +12,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,32 +21,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp // Import this for 'sp'
 import coil.compose.rememberAsyncImagePainter
-import com.example.csc490group3.model.Message
-import com.example.csc490group3.model.User
 import com.example.csc490group3.model.UserSession
-import com.example.csc490group3.ui.components.IncomingMessageBubble
-import com.example.csc490group3.ui.components.OutgoingMessageBubble
-import kotlinx.datetime.LocalDateTime
-import java.util.UUID
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.csc490group3.model.IndividualUser
-import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
 import com.example.csc490group3.viewModels.ConversationScreenViewModel
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.DurationUnit
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationScreen(
     otherUser: Int,
@@ -132,7 +114,6 @@ fun ConversationScreen(
             }
         }
 
-        // Message List (LazyColumn)
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -140,11 +121,9 @@ fun ConversationScreen(
             reverseLayout = false
         ) {
             items(messages) { message ->
-                if (message.senderID == currentUserId) {
-                    OutgoingMessageBubble(message)
-                } else {
-                    IncomingMessageBubble(message)
-                }
+                MessageBubble(navController= navController,
+                    message = message,
+                    isFromCurrentUser = (message.senderID == UserSession.currentUser?.id))
             }
         }
 
