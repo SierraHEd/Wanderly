@@ -138,6 +138,19 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
     val context = LocalContext.current
     val localEventTime: LocalTime = LocalTime.parse("$eventTime:00")
 
+    val priceValue = price.toDoubleOrNull()
+    val isLocationValid = selectedCountry.isNotBlank() &&
+            selectedState.isNotBlank() &&
+            city.isNotBlank() &&
+            address.isNotBlank() &&
+            zipcode.isNotBlank()
+
+
+
+
+
+
+
 
     if (initialEvent != null) {
         LaunchedEffect(initialEvent.id) {
@@ -459,11 +472,13 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 EventTextField(
-                    "Guest Limit",
-                    maxAttendees,
-                    KeyboardType.Number,
-                    Modifier.weight(1f)
-                ) { maxAttendees = it }
+                    label = "Guest Limit",
+                    value = maxAttendees,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.weight(1f)
+                ) { input ->
+                    maxAttendees = input // Accept any input, including empty
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -549,51 +564,70 @@ fun RegisterEventScreen(navController: NavController, initialEvent: Event? = nul
                     if (eventDate == null) {
                         showDateErrorToast = true
                     } else {
-                        coroutineScope.launch {
-                            // If an event image is selected, upload it first.
-                            val eventPhotoUrl = eventImageFile?.let { file ->
-                                StorageManagement.uploadEventPhoto(
-                                    file,
-                                    UUID.randomUUID().toString()
-                                )
-                            }
+                        val num = maxAttendees.toIntOrNull()
+                        if (num == null || num < 1 || num > 500) {
+                            Toast.makeText(context, "Guest limit must be a number between 1 and 500", Toast.LENGTH_SHORT).show()
+                        } else {
+                            if (eventName.isBlank()) {
+                                Toast.makeText(context, "Please enter an event name.", Toast.LENGTH_SHORT).show()
 
-                            eventToAdd = UserSession.currentUser?.id?.let {
-                                Event(
-                                    eventName = eventName,
-                                    zipcode = zipcode,
-                                    city = city,
-                                    address = address,
-                                    venue = venue,
-                                    maxAttendees = maxAttendees.toIntOrNull() ?: 0,
-                                    description = description,
-                                    isPublic = isPublic,
-                                    isFamilyFriendly = isFamilyFriendly,
-                                    price = price.toDoubleOrNull() ?: 0.0,
-                                    country = selectedCountry,
-                                    state = selectedState,
-                                    createdBy = it,
-                                    numAttendees = 0,
-                                    eventDate = eventDate!!,
-                                    eventTime = localEventTime,
-                                    photoUrl = eventPhotoUrl
-                                )
-                            }!!
-                            coroutineScope.launch {
-                                val newEventID = addEvent(eventToAdd)
-                                if (newEventID == -1) {
-                                    println("Error adding event")
+                            } else {
+                                if (!isLocationValid) {
+                                    Toast.makeText(context, "Please complete the location fields.", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    addCategoryRelationship(
-                                        selectedCategories,
-                                        "event_categories",
-                                        newEventID
-                                    )
+                                    if (priceValue == null || priceValue < 0 || priceValue > 1000) {
+                                        Toast.makeText(context, "Price must be between 0 and 1000.", Toast.LENGTH_SHORT).show()
+                                    } else{
+
+                                    coroutineScope.launch {
+                                        // If an event image is selected, upload it first.
+                                        val eventPhotoUrl = eventImageFile?.let { file ->
+                                            StorageManagement.uploadEventPhoto(
+                                                file,
+                                                UUID.randomUUID().toString()
+                                            )
+                                        }
+
+                                        eventToAdd = UserSession.currentUser?.id?.let {
+                                            Event(
+                                                eventName = eventName,
+                                                zipcode = zipcode,
+                                                city = city,
+                                                address = address,
+                                                venue = venue,
+                                                maxAttendees = maxAttendees.toIntOrNull() ?: 0,
+                                                description = description,
+                                                isPublic = isPublic,
+                                                isFamilyFriendly = isFamilyFriendly,
+                                                price = price.toDoubleOrNull() ?: 0.0,
+                                                country = selectedCountry,
+                                                state = selectedState,
+                                                createdBy = it,
+                                                numAttendees = 0,
+                                                eventDate = eventDate!!,
+                                                eventTime = localEventTime,
+                                                photoUrl = eventPhotoUrl
+                                            )
+                                        }!!
+                                        coroutineScope.launch {
+                                            val newEventID = addEvent(eventToAdd)
+                                            if (newEventID == -1) {
+                                                println("Error adding event")
+                                            } else {
+                                                addCategoryRelationship(
+                                                    selectedCategories,
+                                                    "event_categories",
+                                                    newEventID
+                                                )
+                                            }
+                                        }
+                                        showRegisterSuccessToast = true
+                                        navController.navigate("Home_Screen")
+                                    }
                                 }
                             }
-                            showRegisterSuccessToast = true
-                            navController.navigate("Home_Screen")
                         }
+                    }
                     }
                 },
                 modifier = Modifier
