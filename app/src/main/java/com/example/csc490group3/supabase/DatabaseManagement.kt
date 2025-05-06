@@ -962,7 +962,6 @@ suspend fun getConversations(userID: Int): List<ConversationPreview>? {
             val userID = JsonObject(mapOf("user_id" to JsonPrimitive(userID)))
 
             val result = postgrest.rpc("get_conversations_for_user", userID).decodeList<ConversationPreview>()
-            println(result)
             result
         }catch(e: Exception) {
             println("Error fetching conversations: ${e.localizedMessage}")
@@ -981,6 +980,7 @@ suspend fun getConversationWithUser(otherUserID:Int): List<Message>{
 
             // Get the raw JSON response as a string.
             val result = postgrest.rpc("get_conversation_between_users", params).decodeList<Message>()
+            print(result)
             result
 
         }catch(e: Exception) {
@@ -1056,6 +1056,28 @@ suspend fun getUnreadCountBetween(receiverId: Int,   senderId: Int): Int {
             println("Error fetching unread‐between count: ${e.localizedMessage}")
             0
         }
+    }
+}
+
+suspend fun sendEvent(eventId: Int, otherUserID: Int): Boolean{
+    return withContext(Dispatchers.IO) {
+        try {
+            val messageText = "Check out this event:"
+            val params = buildJsonObject {
+                put("p_sender_id", currentUser?.id)
+                put("p_receiver_id", otherUserID)
+                put("p_content", messageText)
+                put("p_event_id", eventId)
+            }
+
+            // Get the raw JSON response as a string.
+            postgrest.rpc("send_event_message", params)
+            true
+
+        }catch(e: Exception) {
+            println("Error sending event message: ${e.localizedMessage}")
+        }
+        false
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.People
@@ -26,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,14 +45,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.csc490group3.model.Category
 import com.example.csc490group3.model.Event
+import com.example.csc490group3.model.IndividualUser
 import com.example.csc490group3.model.UserSession
 import com.example.csc490group3.supabase.DatabaseManagement
 import com.example.csc490group3.supabase.DatabaseManagement.getCategoriesForEvent
 import com.example.csc490group3.supabase.DatabaseManagement.getPrivateUser
+import com.example.csc490group3.supabase.getFriends
+import com.example.csc490group3.supabase.sendEvent
+import com.example.csc490group3.ui.theme.Purple40
+import com.example.csc490group3.ui.theme.PurpleStart
 import kotlinx.coroutines.launch
 
 @Composable
@@ -211,6 +221,7 @@ fun EventDetailDialog(
     var navToUser by remember { mutableStateOf(false) }
     var userEmail by remember { mutableStateOf("") }
     var showReportDialog by remember { mutableStateOf(false) }
+    var showSendDialog by remember { mutableStateOf(false) }
     var hasReported by remember { mutableStateOf(false) }
     var categories by remember { mutableStateOf<List<Category>?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -409,6 +420,26 @@ fun EventDetailDialog(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { showSendDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)) // Teal/Blue
+                    ) {
+                        Text("Send Event", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+
+                    if (showSendDialog) {
+                        SendEventDialog(
+                            event = event,
+                            onDismiss = { showSendDialog = false },
+                            onSendSuccess = {
+                                showSendDialog = false
+                            }
+                        )
+                    }
+
                 }
 
             }
@@ -482,6 +513,81 @@ fun ReportEventDialog(
         dismissButton = {
             Button(onClick = onDismiss) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun SendEventDialog(
+    event: Event,
+    onDismiss: () -> Unit,
+    onSendSuccess: () -> Unit // optional callback after successful send
+) {
+    val friendsList = remember { mutableStateOf<List<IndividualUser>?>(null) }
+
+    LaunchedEffect(Unit) {
+        friendsList.value = getFriends(UserSession.currentUser?.id ?: return@LaunchedEffect)
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Send Event To") },
+        containerColor = PurpleStart,
+        icon = {
+            Icon(
+                Icons.Filled.People,
+                contentDescription = "Send Event",
+                tint = Purple40,
+                modifier = Modifier.padding(horizontal = 30.dp)
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                Text("Select a friend to send this event to:", fontSize = 20.sp, color = Color.Black)
+
+                friendsList.value?.forEach { friend ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${friend.firstName} ${friend.lastName}",
+                            fontSize = 16.sp
+                        )
+
+                        Button(
+                            onClick = {
+                                coroutineScope.launch {
+                                    val success = friend.id?.let { event.id?.let { it1 ->
+                                        sendEvent(
+                                            it1, it)
+                                    } }
+                                    if (success == true) {
+                                        onSendSuccess()
+                                    }
+                                    onDismiss()
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text("Send", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                } ?: Text("Loading friends...", fontSize = 16.sp)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
             }
         }
     )
