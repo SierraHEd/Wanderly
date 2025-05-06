@@ -162,7 +162,7 @@ fun NewConvoDialogue(onDismiss: () -> Unit, navController: NavController) {
                 Text("Suggestions:", fontSize = 20.sp, color = Color.Black)
                 val coroutineScope = rememberCoroutineScope()
                 friendsList.value?.forEach { friend ->
-                    //TODO: Check if there is an existing chat with friend. If so, do not include.
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -173,7 +173,6 @@ fun NewConvoDialogue(onDismiss: () -> Unit, navController: NavController) {
                             fontSize = 16.sp,
                             modifier = Modifier.clickable {
                                navController.navigate("conversation_screen/${friend.id}")
-                                //NAV TO NEW CHAT HERE.
                             }
                         )
 

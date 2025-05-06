@@ -16,5 +16,7 @@ data class Message (
     @SerialName("sent_at")
     val timeSent: Instant,
     @SerialName("is_read")
-    val isRead: Boolean
+    val isRead: Boolean,
+    @SerialName("event_id")
+    val eventID: Int? = null
 )
